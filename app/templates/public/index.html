@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-xl-7">
+                <div class="hero-content">
+                    <p class="hero-eyebrow"><i class="bi bi-star-fill"></i> Welcome to TAG</p>
+                    <h1 class="hero-title">
+                        A Place of <span class="accent">Triumph</span>, Love & Purpose
+                    </h1>
+                    <p class="hero-subtitle">
+                        Serving Accra and beyond since 1998. Join us for a life-changing spiritual journey through worship, community, and faith.
+                    </p>
+                    <div class="hero-ctas">
+                        <a href="#events" class="btn-primary-gold">
+                            <i class="bi bi-play-circle-fill"></i> Join Us Live
+                        </a>
+                        <a href="{{ url_for('main.about') }}" class="btn-outline-white">
+                            <i class="bi bi-arrow-right"></i> Learn More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-scroll-indicator">
+        <span>Scroll to explore</span>
+        <div class="scroll-line"></div>
+    </div>
+</section>
+
+<!-- Welcome Message Section -->
+<section class="welcome-section bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <img src="https://source.unsplash.com/500x400/?pastor+african+man" alt="Pastor" class="img-fluid rounded-lg shadow-lg">
+            </div>
+            <div class="col-lg-6">
+                <h2>Welcome from Our Pastor</h2>
+                <p class="lead text-gold">Rev. Rexford Peprah</p>
+                <p>
+                    Welcome to Triumphant Assemblies of God! We are delighted to have you join our church family. 
+                    Our mission is to lead individuals into a life-changing relationship with Jesus Christ, nurture them in faith and community, 
+                    and equip them to serve with purpose.
+                </p>
+                <p>
+                    Whether you are seeking spiritual growth, community fellowship, or simply a place to worship, we invite you to experience 
+                    the warmth, love, and spiritual power that defines our church. Together, we are building a thriving, Spirit-empowered community 
+                    that mirrors the first church.
+                </p>
+                <a href="{{ url_for('main.about') }}" class="btn btn-primary">Meet Our Pastor</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Church Stats Section -->
+<section class="stats-section bg-blue text-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="stat-number" data-counter="2500">0</h3>
+                    <p class="stat-label">Members</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="stat-number" data-counter="30">0</h3>
+                    <p class="stat-label">Years of Service</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="stat-number" data-counter="8">0</h3>
+                    <p class="stat-label">Active Ministries</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stat-card">
+                    <h3 class="stat-number" data-counter="5000">0</h3>
+                    <p class="stat-label">Souls Won</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Upcoming Events Preview -->
+<section class="events-preview">
+    <div class="container">
+        <div class="section-title">
+            <h2>Upcoming Events</h2>
+            <p class="section-subtitle">Join us for these exciting church activities and programs</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card event-card">
+                    <img src="https://source.unsplash.com/400x300/?church+service" alt="Sunday Service" class="card-img-top">
+                    <div class="card-body">
+                        <span class="badge bg-gold mb-2">This Sunday</span>
+                        <h5 class="card-title">Sunday Worship Service</h5>
+                        <p class="card-text">Join us for our inspiring Sunday worship service with powerful sermons and spirit-filled worship.</p>
+                        <p class="text-muted"><i class="fas fa-clock"></i> 7:00 AM & 9:30 AM</p>
+                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Register</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card event-card">
+                    <img src="https://source.unsplash.com/400x300/?prayer+meeting" alt="Prayer Meeting" class="card-img-top">
+                    <div class="card-body">
+                        <span class="badge bg-gold mb-2">Wednesday</span>
+                        <h5 class="card-title">Midweek Prayer Meeting</h5>
+                        <p class="card-text">A powerful time of intercession and spiritual renewal. Come and experience the presence of God.</p>
+                        <p class="text-muted"><i class="fas fa-clock"></i> 6:00 PM</p>
+                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Register</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card event-card">
+                    <img src="https://source.unsplash.com/400x300/?youth+gathering" alt="Youth Program" class="card-img-top">
+                    <div class="card-body">
+                        <span class="badge bg-gold mb-2">Next Month</span>
+                        <h5 class="card-title">Youth Conference</h5>
+                        <p class="card-text">An inspiring gathering for young adults to grow spiritually and connect with peers in faith.</p>
+                        <p class="text-muted"><i class="fas fa-calendar"></i> Date TBA</p>
+                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-lg">View All Events</a>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Sermons Preview -->
+<section class="sermons-preview bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Recent Sermons</h2>
+            <p class="section-subtitle">Listen to inspiring messages from our pastoral team</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card sermon-card">
+                    <div class="sermon-thumbnail">
+                        <img src="https://source.unsplash.com/400x300/?sermon+church" alt="Sermon">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Faith in the Storm</h5>
+                        <p class="text-muted">Rev. Rexford Peprah</p>
+                        <p class="card-text">A powerful message about trusting God during life's challenges and uncertainties.</p>
+                        <small class="text-muted"><i class="fas fa-calendar"></i> April 28, 2024</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card sermon-card">
+                    <div class="sermon-thumbnail">
+                        <img src="https://source.unsplash.com/400x300/?worship+music" alt="Sermon">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">The Power of Prayer</h5>
+                        <p class="text-muted">Rev. Rexford Peprah</p>
+                        <p class="card-text">Discover how prayer transforms lives and brings us closer to God's heart and purpose.</p>
+                        <small class="text-muted"><i class="fas fa-calendar"></i> April 21, 2024</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card sermon-card">
+                    <div class="sermon-thumbnail">
+                        <img src="https://source.unsplash.com/400x300/?spiritual+growth" alt="Sermon">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Growing in Grace</h5>
+                        <p class="text-muted">Rev. Rexford Peprah</p>
+                        <p class="card-text">Learn how to mature in your faith and develop a deeper relationship with Christ.</p>
+                        <small class="text-muted"><i class="fas fa-calendar"></i> April 14, 2024</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.sermons') }}" class="btn btn-primary btn-lg">Listen to More Sermons</a>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="cta-banner" style="background: linear-gradient(135deg, #C8973A 0%, #0D2B6B 100%);">
+    <div class="container text-center text-white">
+        <h2>Plan Your Visit</h2>
+        <p class="lead mb-4">We welcome you to join our church family</p>
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="cta-item">
+                    <i class="fas fa-calendar-alt fa-2x mb-3"></i>
+                    <h5>Sunday Services</h5>
+                    <p>7:00 AM & 9:30 AM</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cta-item">
+                    <i class="fas fa-map-marker-alt fa-2x mb-3"></i>
+                    <h5>Location</h5>
+                    <p>{{ church_info.address }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cta-item">
+                    <i class="fas fa-phone fa-2x mb-3"></i>
+                    <h5>Contact</h5>
+                    <p>{{ church_info.phone }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <a href="{{ url_for('main.contact') }}" class="btn btn-light btn-lg">Get Directions</a>
+    </div>
+</section>
+
+<!-- Ministries Preview -->
+<section class="ministries-preview">
+    <div class="container">
+        <div class="section-title">
+            <h2>Our Ministries</h2>
+            <p class="section-subtitle">Discover the various ways we serve and minister to our community</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card ministry-card">
+                    <div class="ministry-icon">
+                        <i class="fas fa-child fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Children's Ministry</h5>
+                    <p class="card-text">Nurturing young hearts in the knowledge and love of Christ through age-appropriate programs.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card ministry-card">
+                    <div class="ministry-icon">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Youth Ministry</h5>
+                    <p class="card-text">Empowering young adults to grow in faith and develop leadership skills for service.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card ministry-card">
+                    <div class="ministry-icon">
+                        <i class="fas fa-music fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Worship Team</h5>
+                    <p class="card-text">Leading the congregation in spirit-filled worship through music and praise.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.ministries') }}" class="btn btn-primary btn-lg">Explore All Ministries</a>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Signup -->
+<section class="newsletter-section bg-blue text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2>Stay Connected</h2>
+                <p class="lead">Subscribe to our newsletter for updates, devotionals, and church news.</p>
+            </div>
+            <div class="col-lg-6">
+                <form id="newsletterForm" class="newsletter-form">
+                    <div class="input-group">
+                        <input type="email" id="newsletterEmail" class="form-control" placeholder="Enter your email" required>
+                        <button class="btn btn-gold" type="submit">Subscribe</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+{% endblock %}

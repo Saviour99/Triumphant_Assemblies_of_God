@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Blog & Devotionals</h1>
+        <p class="lead">Inspiration, encouragement, and spiritual growth</p>
+    </div>
+</section>
+
+<!-- Blog Posts -->
+<section class="blog-section">
+    <div class="container">
+        <div class="row">
+            <!-- Main Blog Posts -->
+            <div class="col-lg-8">
+                <div class="section-title text-start">
+                    <h2>Latest Articles</h2>
+                </div>
+
+                <!-- Featured Post -->
+                <article class="blog-post featured-post mb-5">
+                    <img src="https://source.unsplash.com/800x400/?faith+prayer" alt="Featured Article" class="img-fluid rounded-lg mb-3">
+                    <span class="badge bg-gold mb-2">Featured</span>
+                    <h3>The Power of Persistent Prayer</h3>
+                    <div class="post-meta mb-3">
+                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
+                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 28, 2024</span>
+                        <span class="category ms-3"><i class="fas fa-tag"></i> Devotional</span>
+                    </div>
+                    <p class="lead">
+                        Discover how consistent prayer transforms our lives and deepens our relationship with God. 
+                        In this article, we explore biblical principles of intercession and practical ways to develop a powerful prayer life.
+                    </p>
+                    <p>
+                        Prayer is not just a religious duty; it's a powerful tool that connects us directly to God's heart. 
+                        Throughout Scripture, we see examples of men and women whose persistent prayers changed their circumstances, 
+                        their families, and even nations. From Daniel's prayer in the lion's den to the prayers of the early church, 
+                        we learn that God honors those who seek Him with sincerity and persistence.
+                    </p>
+                    <a href="#" class="btn btn-primary">Read Full Article</a>
+                </article>
+
+                <!-- Blog Post 1 -->
+                <article class="blog-post mb-4">
+                    <img src="https://source.unsplash.com/600x300/?worship+church" alt="Article" class="img-fluid rounded-lg mb-3">
+                    <span class="badge bg-gold mb-2">Worship</span>
+                    <h4>Living a Life of Worship</h4>
+                    <div class="post-meta mb-3">
+                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
+                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 21, 2024</span>
+                    </div>
+                    <p>
+                        Worship is more than singing songs on Sunday morning. It's a lifestyle of honoring God with our thoughts, 
+                        words, and actions. Learn how to cultivate a spirit of worship in every area of your life.
+                    </p>
+                    <a href="#" class="btn btn-primary btn-sm">Read More</a>
+                </article>
+
+                <!-- Blog Post 2 -->
+                <article class="blog-post mb-4">
+                    <img src="https://source.unsplash.com/600x300/?family+faith" alt="Article" class="img-fluid rounded-lg mb-3">
+                    <span class="badge bg-gold mb-2">Family</span>
+                    <h4>Strengthening Your Family Through Faith</h4>
+                    <div class="post-meta mb-3">
+                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
+                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 14, 2024</span>
+                    </div>
+                    <p>
+                        In today's fast-paced world, families need a strong spiritual foundation. Discover practical ways to 
+                        integrate faith into your family life and build lasting spiritual bonds with your loved ones.
+                    </p>
+                    <a href="#" class="btn btn-primary btn-sm">Read More</a>
+                </article>
+
+                <!-- Blog Post 3 -->
+                <article class="blog-post mb-4">
+                    <img src="https://source.unsplash.com/600x300/?community+service" alt="Article" class="img-fluid rounded-lg mb-3">
+                    <span class="badge bg-gold mb-2">Community</span>
+                    <h4>Serving Others With Love and Purpose</h4>
+                    <div class="post-meta mb-3">
+                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
+                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 7, 2024</span>
+                    </div>
+                    <p>
+                        Jesus taught us that serving others is a reflection of our love for God. Explore how you can make a 
+                        meaningful difference in your community through compassionate service and genuine care.
+                    </p>
+                    <a href="#" class="btn btn-primary btn-sm">Read More</a>
+                </article>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" class="mt-5">
+                    <ul class="pagination">
+                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Search -->
+                <div class="sidebar-widget mb-4">
+                    <h5 class="widget-title">Search Articles</h5>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search...">
+                        <button class="btn btn-gold" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="sidebar-widget mb-4">
+                    <h5 class="widget-title">Categories</h5>
+                    <ul class="category-list">
+                        <li><a href="#">Devotional <span class="count">(12)</span></a></li>
+                        <li><a href="#">Worship <span class="count">(8)</span></a></li>
+                        <li><a href="#">Family <span class="count">(6)</span></a></li>
+                        <li><a href="#">Community <span class="count">(9)</span></a></li>
+                        <li><a href="#">Leadership <span class="count">(5)</span></a></li>
+                        <li><a href="#">Testimonies <span class="count">(14)</span></a></li>
+                    </ul>
+                </div>
+
+                <!-- Recent Posts -->
+                <div class="sidebar-widget mb-4">
+                    <h5 class="widget-title">Recent Posts</h5>
+                    <ul class="recent-posts">
+                        <li>
+                            <a href="#">The Power of Persistent Prayer</a>
+                            <small class="text-muted">April 28, 2024</small>
+                        </li>
+                        <li>
+                            <a href="#">Living a Life of Worship</a>
+                            <small class="text-muted">April 21, 2024</small>
+                        </li>
+                        <li>
+                            <a href="#">Strengthening Your Family Through Faith</a>
+                            <small class="text-muted">April 14, 2024</small>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="sidebar-widget bg-blue text-white p-3 rounded-lg">
+                    <h5 class="widget-title text-white">Subscribe to Our Newsletter</h5>
+                    <p class="small mb-3">Get inspiring articles and devotionals delivered to your inbox.</p>
+                    <form id="newsletterForm">
+                        <div class="mb-2">
+                            <input type="email" id="newsletterEmail" class="form-control" placeholder="Your email" required>
+                        </div>
+                        <button type="submit" class="btn btn-gold w-100">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonies Section -->
+<section class="testimonies-section bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Member Testimonies</h2>
+            <p class="section-subtitle">Stories of faith, transformation, and God's faithfulness</p>
+        </div>
+
+        <div id="testimoniesCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <!-- Testimony 1 -->
+                <div class="carousel-item active">
+                    <div class="testimony-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <img src="https://source.unsplash.com/300x300/?african+woman+1" alt="Testimony" class="img-fluid rounded-circle mb-3" style="max-width: 250px;">
+                                <h5>Ama Mensah</h5>
+                                <p class="text-muted">Church Member</p>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="testimony-text">
+                                    "My life changed completely when I gave my life to Christ at TAG. The love, support, and spiritual guidance 
+                                    I've received from this church family has been transformational. I went from a life of despair to a life 
+                                    filled with purpose, joy, and hope. I'm forever grateful to God and to this wonderful church."
+                                </p>
+                                <div class="rating">
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimony 2 -->
+                <div class="carousel-item">
+                    <div class="testimony-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <img src="https://source.unsplash.com/300x300/?african+man+1" alt="Testimony" class="img-fluid rounded-circle mb-3" style="max-width: 250px;">
+                                <h5>Kwame Asante</h5>
+                                <p class="text-muted">Church Member</p>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="testimony-text">
+                                    "TAG has been instrumental in my spiritual journey. The powerful sermons, caring community, and active 
+                                    ministries have helped me grow in my faith and discover my purpose. I've made lifelong friendships and 
+                                    found a true church family. I highly recommend TAG to anyone seeking a genuine spiritual home."
+                                </p>
+                                <div class="rating">
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimony 3 -->
+                <div class="carousel-item">
+                    <div class="testimony-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <img src="https://source.unsplash.com/300x300/?african+woman+2" alt="Testimony" class="img-fluid rounded-circle mb-3" style="max-width: 250px;">
+                                <h5>Abena Owusu</h5>
+                                <p class="text-muted">Church Member</p>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="testimony-text">
+                                    "Joining TAG was the best decision I ever made. The pastoral care, Bible-based teaching, and loving community 
+                                    have strengthened my faith immensely. I've witnessed God's faithfulness in my life and seen Him work miracles. 
+                                    This church is truly a place of triumph, love, and purpose!"
+                                </p>
+                                <div class="rating">
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                    <i class="fas fa-star text-gold"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carousel Controls -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+    </div>
+</section>
+
+
+
+{% endblock %}

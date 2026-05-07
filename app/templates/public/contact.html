@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p class="lead">We'd love to hear from you. Get in touch with us today!</p>
+    </div>
+</section>
+
+<!-- Contact Information -->
+<section class="contact-info-section">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-map-marker-alt fa-2x"></i>
+                    </div>
+                    <h5>Address</h5>
+                    <p>{{ church_info.address }}</p>
+                    <p class="text-muted">Digital Address: {{ church_info.digital_address }}</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-phone fa-2x"></i>
+                    </div>
+                    <h5>Phone</h5>
+                    <p><a href="tel:{{ church_info.phone }}">{{ church_info.phone }}</a></p>
+                    <p class="text-muted">Available during office hours</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-envelope fa-2x"></i>
+                    </div>
+                    <h5>Email</h5>
+                    <p><a href="mailto:{{ church_info.email }}">{{ church_info.email }}</a></p>
+                    <p class="text-muted">We'll respond within 24 hours</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h5>Service Times</h5>
+                    <p><strong>Sunday:</strong> 7:00 AM & 9:30 AM</p>
+                    <p><strong>Wednesday:</strong> 6:00 PM</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Contact Section -->
+<section class="contact-main bg-light">
+    <div class="container">
+        <div class="row">
+            <!-- Contact Form -->
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2>Send Us a Message</h2>
+                <p class="lead mb-4">Have a question or prayer request? We'd love to hear from you.</p>
+
+                <form id="contactForm">
+                    <div class="mb-3">
+                        <label for="contactName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="contactName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contactEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="contactEmail" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contactSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="contactSubject" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contactMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="contactMessage" rows="5" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
+                </form>
+            </div>
+
+            <!-- Prayer Request Form -->
+            <div class="col-lg-6">
+                <h2>Prayer Request</h2>
+                <p class="lead mb-4">Share your prayer needs with our church family. We'll pray for you.</p>
+
+                <form id="prayerForm">
+                    <div class="mb-3">
+                        <label for="prayerName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="prayerName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prayerEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="prayerEmail" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prayerTopic" class="form-label">Prayer Topic</label>
+                        <input type="text" class="form-control" id="prayerTopic" placeholder="e.g., Healing, Guidance, Strength" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prayerMessage" class="form-label">Prayer Request</label>
+                        <textarea class="form-control" id="prayerMessage" rows="5" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg">Submit Prayer Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="map-section">
+    <div class="container-fluid p-0">
+        <h2 class="text-center mb-4">Find Us On The Map</h2>
+        <div class="map-container">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.5234567890!2d-0.2!3d5.6!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sTriumphant%20Assemblies%20of%20God!5e0!3m2!1sen!2sgh!4v1234567890" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </div>
+</section>
+
+<!-- Online Giving Section -->
+<section class="giving-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Online Giving</h2>
+            <p class="section-subtitle">Support the work of God through your generous giving</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="giving-card">
+                    <form id="givingForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="givingAmount" class="form-label">Amount (GHS)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₵</span>
+                                    <input type="number" class="form-control" id="givingAmount" placeholder="Enter amount" step="0.01" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="givingType" class="form-label">Giving Type</label>
+                                <select class="form-select" id="givingType" required>
+                                    <option value="">Select giving type</option>
+                                    <option value="tithe">Tithe</option>
+                                    <option value="offering">Offering</option>
+                                    <option value="missions">Missions</option>
+                                    <option value="building_fund">Building Fund</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="donorName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="donorName" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="donorEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="donorEmail" required>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle"></i> Your giving is secure and confidential. 
+                            A receipt will be sent to your email.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">Give Now</button>
+                    </form>
+                </div>
+
+                <!-- Quick Amount Buttons -->
+                <div class="quick-amounts mt-4">
+                    <p class="text-center mb-3"><strong>Quick Amounts:</strong></p>
+                    <div class="d-flex gap-2 flex-wrap justify-content-center">
+                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="50">₵50</button>
+                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="100">₵100</button>
+                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="200">₵200</button>
+                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="500">₵500</button>
+                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="1000">₵1000</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Additional Contact Options -->
+<section class="additional-contact bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Other Ways to Connect</h2>
+            <p class="section-subtitle">Stay connected with TAG through multiple channels</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="contact-option">
+                    <div class="option-icon">
+                        <i class="fab fa-whatsapp fa-3x"></i>
+                    </div>
+                    <h5>WhatsApp</h5>
+                    <p>Chat with us on WhatsApp for quick responses</p>
+                    <a href="https://wa.me/233501116130" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-whatsapp"></i> Message Us
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="contact-option">
+                    <div class="option-icon">
+                        <i class="fab fa-facebook fa-3x"></i>
+                    </div>
+                    <h5>Facebook</h5>
+                    <p>Follow us on Facebook for updates and news</p>
+                    <a href="https://facebook.com" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-facebook"></i> Follow Us
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="contact-option">
+                    <div class="option-icon">
+                        <i class="fab fa-youtube fa-3x"></i>
+                    </div>
+                    <h5>YouTube</h5>
+                    <p>Subscribe to our channel for sermons and videos</p>
+                    <a href="https://youtube.com" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-youtube"></i> Subscribe
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<script>
+// Quick amount buttons
+document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('givingAmount').value = this.dataset.amount;
+        document.getElementById('givingAmount').focus();
+    });
+});
+</script>
+
+{% endblock %}

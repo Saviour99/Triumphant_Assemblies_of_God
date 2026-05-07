@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Triumphant Assemblies of God (TAG) - A Place of Triumph, Love & Purpose">
+    <meta name="keywords" content="church, Ghana, Accra, Pentecostal, worship, community">
+    <meta property="og:title" content="Triumphant Assemblies of God (TAG)">
+    <meta property="og:description" content="A Place of Triumph, Love & Purpose">
+    <meta property="og:type" content="website">
+    
+    <title>{% block title %}Triumphant Assemblies of God (TAG){% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader" class="preloader">
+        <div class="preloader-content">
+            <div class="golden-cross">
+                <i class="fas fa-cross"></i>
+            </div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-cross brand-icon"></i>
+                <span class="brand-text">TAG</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.about') }}">About Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.ministries') }}">Ministries</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.sermons') }}">Sermons</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.events') }}">Events</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.blog') }}">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.contact') }}">Contact</a>
+                    </li>
+                </ul>
+                <a href="#giving" class="btn btn-gold ms-3">Give Online</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top" title="Back to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/233501116130" class="whatsapp-btn" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="row g-5">
+                <!-- Brand -->
+                <div class="col-lg-4 col-md-6 reveal">
+                    <div class="footer-brand">
+                        <div class="brand-icon"><i class="bi bi-plus-lg"></i></div>
+                        <div class="brand-text">
+                            <strong>Triumphant AG</strong>
+                            <small>Assemblies of God · Accra</small>
+                        </div>
+                    </div>
+                    <p class="footer-about">
+                        A Place of Triumph, Love &amp; Purpose. Serving the people of Accra, Ghana, and the nations since 1998 through the power of the Holy Spirit.
+                    </p>
+                    <div class="social-row">
+                        <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter/X"><i class="bi bi-twitter-x"></i></a>
+                        <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 reveal delay-1">
+                    <h5 class="footer-heading">Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('main.index') }}"><i class="bi bi-chevron-right"></i> Home</a></li>
+                        <li><a href="{{ url_for('main.about') }}"><i class="bi bi-chevron-right"></i> About Us</a></li>
+                        <li><a href="{{ url_for('main.ministries') }}"><i class="bi bi-chevron-right"></i> Ministries</a></li>
+                        <li><a href="{{ url_for('main.sermons') }}"><i class="bi bi-chevron-right"></i> Sermons</a></li>
+                        <li><a href="{{ url_for('main.events') }}"><i class="bi bi-chevron-right"></i> Events</a></li>
+                        <li><a href="{{ url_for('main.blog') }}"><i class="bi bi-chevron-right"></i> Blog</a></li>
+                        <li><a href="{{ url_for('main.contact') }}"><i class="bi bi-chevron-right"></i> Contact</a></li>
+                        <li><a href="#giving"><i class="bi bi-chevron-right"></i> Give Online</a></li>
+                    </ul>
+                </div>
+
+                <!-- Service Times -->
+                <div class="col-lg-3 col-md-6 reveal delay-2">
+                    <h5 class="footer-heading">Service Times</h5>
+                    <div class="footer-service-item">
+                        <span class="day">Sunday Morning</span>
+                        <div style="font-size:0.85rem">First Service — 7:00 AM</div>
+                        <div style="font-size:0.85rem">Second Service — 9:30 AM</div>
+                    </div>
+                    <div class="footer-service-item">
+                        <span class="day">Wednesday</span>
+                        <div style="font-size:0.85rem">Midweek Service — 6:00 PM</div>
+                    </div>
+                    <div class="footer-service-item">
+                        <span class="day">Friday (1st of Month)</span>
+                        <div style="font-size:0.85rem">All-Night Prayer — 10:00 PM</div>
+                    </div>
+                    <div class="footer-service-item">
+                        <span class="day">Office Hours</span>
+                        <div style="font-size:0.85rem">Mon – Fri: 8AM – 5PM</div>
+                    </div>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="col-lg-3 col-md-6 reveal delay-3">
+                    <h5 class="footer-heading">Newsletter</h5>
+                    <p style="font-size:0.85rem; margin-bottom:16px">Get weekly devotionals, sermon notes, and TAG updates straight to your inbox.</p>
+                    <form id="footerNewsletterForm" action="{{ url_for('api.newsletter') }}" method="POST" novalidate>
+                        <div class="footer-newsletter">
+                            <input type="email" name="email" placeholder="Your email address" required aria-label="Footer newsletter email" autocomplete="email" />
+                            <button type="submit" class="btn-gold-sm w-100">Subscribe <i class="bi bi-arrow-right ms-1"></i></button>
+                        </div>
+                    </form>
+                    <div style="margin-top:20px; font-size:0.82rem; color:rgba(255,255,255,0.5)">
+                        <i class="bi bi-geo-alt-fill text-gold me-1"></i> Dansoman, Accra, Ghana
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="footer-bottom-text mb-0">
+                            &copy; <script>document.write(new Date().getFullYear())</script> Triumphant Assemblies of God, Accra. All Rights Reserved.
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                        <p class="footer-bottom-text mb-0">
+                            <span>Developed by <span class="text-danger"><b>DelaTech Consult</b></span></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Three.js for 3D effects (optional) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
