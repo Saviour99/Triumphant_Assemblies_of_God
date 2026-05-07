@@ -19,6 +19,7 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -28,11 +29,15 @@
 <body>
     <!-- Preloader -->
     <div id="preloader" class="preloader">
-        <div class="preloader-content">
-            <div class="golden-cross">
-                <i class="fas fa-cross"></i>
-            </div>
-            <p>Loading...</p>
+        <div class="preloader-cross"></div>
+        <div class="brand-text preloader-text">
+            <strong>Triumphant</strong>
+            <small>Assemblies of God</small>
+        </div>
+        <div class="preloader-dots">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
     </div>
 
@@ -40,8 +45,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="navbar">
         <div class="container-fluid px-4">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-cross brand-icon"></i>
-                <span class="brand-text">TAG</span>
+                <div class="brand-icon"><img src="./static/img/logo3.jpg" width="50" alt="Church Logo"></div>
+                <div class="brand-text">
+                    <strong>Triumphant</strong>
+                    <small>Assemblies of God</small>
+                </div>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -95,21 +103,22 @@
                 <!-- Brand -->
                 <div class="col-lg-4 col-md-6 reveal">
                     <div class="footer-brand">
-                        <div class="brand-icon"><i class="bi bi-plus-lg"></i></div>
+                        <div class="brand-icon"><img src="./static/img/logo3.jpg" width="50" alt="Church Logo"></div>
+                        <div class="brand-icon"><img src="./static/img/logo.jpg" width="50" alt="Church Logo"></div>
                         <div class="brand-text">
-                            <strong>Triumphant AG</strong>
-                            <small>Assemblies of God · Accra</small>
+                            <strong>Triumphant</strong>
+                            <small>Assemblies of God</small>
                         </div>
                     </div>
                     <p class="footer-about">
                         A Place of Triumph, Love &amp; Purpose. Serving the people of Accra, Ghana, and the nations since 1998 through the power of the Holy Spirit.
                     </p>
                     <div class="social-row">
-                        <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-                        <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
-                        <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-                        <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter/X"><i class="bi bi-twitter-x"></i></a>
-                        <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+                        <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter/X"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
                     </div>
                 </div>
 
@@ -117,14 +126,14 @@
                 <div class="col-lg-2 col-md-6 reveal delay-1">
                     <h5 class="footer-heading">Quick Links</h5>
                     <ul class="footer-links">
-                        <li><a href="{{ url_for('main.index') }}"><i class="bi bi-chevron-right"></i> Home</a></li>
-                        <li><a href="{{ url_for('main.about') }}"><i class="bi bi-chevron-right"></i> About Us</a></li>
-                        <li><a href="{{ url_for('main.ministries') }}"><i class="bi bi-chevron-right"></i> Ministries</a></li>
-                        <li><a href="{{ url_for('main.sermons') }}"><i class="bi bi-chevron-right"></i> Sermons</a></li>
-                        <li><a href="{{ url_for('main.events') }}"><i class="bi bi-chevron-right"></i> Events</a></li>
-                        <li><a href="{{ url_for('main.blog') }}"><i class="bi bi-chevron-right"></i> Blog</a></li>
-                        <li><a href="{{ url_for('main.contact') }}"><i class="bi bi-chevron-right"></i> Contact</a></li>
-                        <li><a href="#giving"><i class="bi bi-chevron-right"></i> Give Online</a></li>
+                        <li><a href="{{ url_for('main.index') }}"><i class="fa-solid fa-star-of-life"></i> Home</a></li>
+                        <li><a href="{{ url_for('main.about') }}"><i class="fa-solid fa-star-of-life"></i> About Us</a></li>
+                        <li><a href="{{ url_for('main.ministries') }}"><i class="fa-solid fa-star-of-life"></i> Ministries</a></li>
+                        <li><a href="{{ url_for('main.sermons') }}"><i class="fa-solid fa-star-of-life"></i> Sermons</a></li>
+                        <li><a href="{{ url_for('main.events') }}"><i class="fa-solid fa-star-of-life"></i> Events</a></li>
+                        <li><a href="{{ url_for('main.blog') }}"><i class="fa-solid fa-star-of-life"></i> Blog</a></li>
+                        <li><a href="{{ url_for('main.contact') }}"><i class="fa-solid fa-star-of-life"></i> Contact</a></li>
+                        <li><a href="#giving"><i class="fa-solid fa-star-of-life"></i> Give Online</a></li>
                     </ul>
                 </div>
 
@@ -133,21 +142,21 @@
                     <h5 class="footer-heading">Service Times</h5>
                     <div class="footer-service-item">
                         <span class="day">Sunday Morning</span>
-                        <div style="font-size:0.85rem">First Service — 7:00 AM</div>
-                        <div style="font-size:0.85rem">Second Service — 9:30 AM</div>
+                        <div style="font-size:0.85rem">Joint Service:   7:00 — 10:30 AM</div>
                     </div>
                     <div class="footer-service-item">
-                        <span class="day">Wednesday</span>
-                        <div style="font-size:0.85rem">Midweek Service — 6:00 PM</div>
+                        <span class="day">Monday</span>
+                        <div style="font-size:0.85rem">Women Follow — 7:00 PM</div>
                     </div>
                     <div class="footer-service-item">
-                        <span class="day">Friday (1st of Month)</span>
-                        <div style="font-size:0.85rem">All-Night Prayer — 10:00 PM</div>
+                        <span class="day">Tuesday</span>
+                        <div style="font-size:0.85rem">Prayer Service — 7:00 PM</div>
                     </div>
                     <div class="footer-service-item">
-                        <span class="day">Office Hours</span>
-                        <div style="font-size:0.85rem">Mon – Fri: 8AM – 5PM</div>
+                        <span class="day">Thursday</span>
+                        <div style="font-size:0.85rem">Youth Meeting — 7:00 PM</div>
                     </div>
+                    
                 </div>
 
                 <!-- Newsletter -->
@@ -161,7 +170,7 @@
                         </div>
                     </form>
                     <div style="margin-top:20px; font-size:0.82rem; color:rgba(255,255,255,0.5)">
-                        <i class="bi bi-geo-alt-fill text-gold me-1"></i> Dansoman, Accra, Ghana
+                        <i class="fa-solid fa-location-dot text-gold me-1"></i> Dansoman - Accra, Ghana
                     </div>
                 </div>
             </div>
