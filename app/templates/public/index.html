@@ -98,13 +98,17 @@
         <div class="row text-center">
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stat-card">
-                    <h3 class="stat-number" data-counter="1000">0</h3>
+                    <h3>
+                        <span class="stat-number" data-counter="1000">0</span><span class="stat-suffix">+</span>
+                    </h3>
                     <p class="stat-label">Members</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stat-card">
-                    <h3 class="stat-number" data-counter="20">0</h3>
+                    <h3>
+                        <span class="stat-number" data-counter="20">0</span><span class="stat-suffix">+</span>
+                    </h3>
                     <p class="stat-label">Years of Service</p>
                 </div>
             </div>
@@ -116,7 +120,9 @@
             </div>
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stat-card">
-                    <h3 class="stat-number" data-counter="5000">0</h3>
+                    <h3>
+                        <span class="stat-number" data-counter="5000">0</span><span class="stat-suffix">+</span>
+                    </h3>
                     <p class="stat-label">Souls Won</p>
                 </div>
             </div>
@@ -135,38 +141,38 @@
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card event-card">
-                    <img src="https://source.unsplash.com/400x300/?church+service" alt="Sunday Service" class="card-img-top">
+                    <img src="{{ url_for('static', filename='img/sunday_service.jpg') }}" alt="Sunday Service" class="card-img-top">
                     <div class="card-body">
                         <span class="badge bg-gold mb-2">This Sunday</span>
                         <h5 class="card-title">Sunday Worship Service</h5>
                         <p class="card-text">Join us for our inspiring Sunday worship service with powerful sermons and spirit-filled worship.</p>
-                        <p class="text-muted"><i class="fas fa-clock"></i> 7:00 AM & 9:30 AM</p>
-                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Register</a>
+                        <p class="text-muted"><i class="fas fa-clock"></i> 7:00 AM - 10:30 AM</p>
+                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Learn More</a>
                     </div>
                 </div>
             </div>
             
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card event-card">
-                    <img src="https://source.unsplash.com/400x300/?prayer+meeting" alt="Prayer Meeting" class="card-img-top">
+                    <img src="{{ url_for('static', filename='img/prayer_service.jpg') }}" alt="Prayer Meeting" class="card-img-top">
                     <div class="card-body">
-                        <span class="badge bg-gold mb-2">Wednesday</span>
+                        <span class="badge bg-gold mb-2">Wednesday's</span>
                         <h5 class="card-title">Midweek Prayer Meeting</h5>
                         <p class="card-text">A powerful time of intercession and spiritual renewal. Come and experience the presence of God.</p>
-                        <p class="text-muted"><i class="fas fa-clock"></i> 6:00 PM</p>
-                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Register</a>
+                        <p class="text-muted"><i class="fas fa-clock"></i> 7:00 PM</p>
+                        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Learn More</a>
                     </div>
                 </div>
             </div>
             
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card event-card">
-                    <img src="https://source.unsplash.com/400x300/?youth+gathering" alt="Youth Program" class="card-img-top">
+                    <img src="{{ url_for('static', filename='img/youth_service.jpg') }}" alt="Youth Program" class="card-img-top">
                     <div class="card-body">
-                        <span class="badge bg-gold mb-2">Next Month</span>
-                        <h5 class="card-title">Youth Conference</h5>
+                        <span class="badge bg-gold mb-2">Thursday's</span>
+                        <h5 class="card-title">Youth Meeting</h5>
                         <p class="card-text">An inspiring gathering for young adults to grow spiritually and connect with peers in faith.</p>
-                        <p class="text-muted"><i class="fas fa-calendar"></i> Date TBA</p>
+                        <p class="text-muted"><i class="fas fa-clock"></i> 7:00 PM</p>
                         <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-sm">Learn More</a>
                     </div>
                 </div>
@@ -191,16 +197,13 @@
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card sermon-card">
                     <div class="sermon-thumbnail">
-                        <img src="https://source.unsplash.com/400x300/?sermon+church" alt="Sermon">
-                        <div class="play-button">
-                            <i class="fas fa-play"></i>
-                        </div>
+                        <img src="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Sermon">
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">Faith in the Storm</h5>
-                        <p class="text-muted">Rev. Rexford Peprah</p>
+                        <p style="color: var(--gold);">Rev. Rexford Peprah</p>
                         <p class="card-text">A powerful message about trusting God during life's challenges and uncertainties.</p>
-                        <small class="text-muted"><i class="fas fa-calendar"></i> April 28, 2024</small>
+                        <small class="text-muted"><i class="fas fa-calendar"></i> May 10, 2026</small>
                     </div>
                 </div>
             </div>
@@ -208,16 +211,13 @@
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card sermon-card">
                     <div class="sermon-thumbnail">
-                        <img src="https://source.unsplash.com/400x300/?worship+music" alt="Sermon">
-                        <div class="play-button">
-                            <i class="fas fa-play"></i>
-                        </div>
+                        <img src="https://images.unsplash.com/photo-1673322882205-add3ff85764b?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Sermon">
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">The Power of Prayer</h5>
-                        <p class="text-muted">Rev. Rexford Peprah</p>
+                        <p style="color: var(--gold);">Rev. Rexford Peprah</p>
                         <p class="card-text">Discover how prayer transforms lives and brings us closer to God's heart and purpose.</p>
-                        <small class="text-muted"><i class="fas fa-calendar"></i> April 21, 2024</small>
+                        <small class="text-muted"><i class="fas fa-calendar"></i> May 17, 2026</small>
                     </div>
                 </div>
             </div>
@@ -225,16 +225,13 @@
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card sermon-card">
                     <div class="sermon-thumbnail">
-                        <img src="https://source.unsplash.com/400x300/?spiritual+growth" alt="Sermon">
-                        <div class="play-button">
-                            <i class="fas fa-play"></i>
-                        </div>
+                        <img src="https://plus.unsplash.com/premium_photo-1725075087579-41b5092d60ff?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Sermon">
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">Growing in Grace</h5>
-                        <p class="text-muted">Rev. Rexford Peprah</p>
+                        <p style="color: var(--gold);">Rev. Rexford Peprah</p>
                         <p class="card-text">Learn how to mature in your faith and develop a deeper relationship with Christ.</p>
-                        <small class="text-muted"><i class="fas fa-calendar"></i> April 14, 2024</small>
+                        <small class="text-muted"><i class="fas fa-calendar"></i> May 24, 2026</small>
                     </div>
                 </div>
             </div>
@@ -243,40 +240,6 @@
         <div class="text-center mt-4">
             <a href="{{ url_for('main.sermons') }}" class="btn btn-primary btn-lg">Listen to More Sermons</a>
         </div>
-    </div>
-</section>
-
-<!-- Call to Action Banner -->
-<section class="cta-banner" style="background: linear-gradient(135deg, #C8973A 0%, #0D2B6B 100%);">
-    <div class="container text-center text-white">
-        <h2>Plan Your Visit</h2>
-        <p class="lead mb-4">We welcome you to join our church family</p>
-        
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="cta-item">
-                    <i class="fas fa-calendar-alt fa-2x mb-3"></i>
-                    <h5>Sunday Services</h5>
-                    <p>7:00 AM & 9:30 AM</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="cta-item">
-                    <i class="fas fa-map-marker-alt fa-2x mb-3"></i>
-                    <h5>Location</h5>
-                    <p>{{ church_info.address }}</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="cta-item">
-                    <i class="fas fa-phone fa-2x mb-3"></i>
-                    <h5>Contact</h5>
-                    <p>{{ church_info.phone }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <a href="{{ url_for('main.contact') }}" class="btn btn-light btn-lg">Get Directions</a>
     </div>
 </section>
 
@@ -326,12 +289,90 @@
     </div>
 </section>
 
+<!-- =============================================
+     LIVE STREAM
+============================================= -->
+<section id="livestream">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+                <span class="live-badge"><span class="dot"></span> Watch Live</span>
+                <h2 class="section-title" style="color:white">Worship With Us <span style="color:var(--gold)">From Anywhere</span></h2>
+                <div class="section-divider"></div>
+                <p>Can't make it in person? Join our live stream every Sunday and Wednesday. Thousands across Ghana and the world worship with us online.</p>
+                <div class="mt-4">
+                    <div class="stream" style="background:rgba(255,255,255,0.08); text-align:left; display:inline-block; min-width:auto; padding:16px 24px;">
+                        <div class="day" style="color:var(--gold-light);">Live Every</div>
+                        <div class="time" style="color:white; font-size:1.1rem">Sun 7AM - 10:30AM · Wed 7PM</div>
+                    </div>
+                </div>
+                <!-- <div class="d-flex gap-3 mt-4 flex-wrap">
+                    <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="btn-primary-gold">
+                        <i class="fa-brands fa-youtube"></i> YouTube
+                    </a>
+                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="btn-outline-white">
+                        <i class="fa-brands fa-facebook-f"></i> Facebook Live
+                    </a>
+                </div> -->
+            </div>
+            <div class="col-lg-7">
+                <div class="live-embed-wrap">
+                <!-- YouTube embed placeholder. Replace VIDEO_ID with your actual YouTube video ID -->
+                    <iframe
+                        src="https://www.youtube.com/embed/pYD5LagqTbM?si=AcbicsSRPVdzNp8g"
+                        title="Triumphant Assemblies of God Live Stream"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="cta-banner">
+    <div class="container text-center text-white">
+        <h2>Plan Your Visit</h2>
+        <p class="lead mb-4 text-dark">We welcome you to join our church family</p>
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="cta-item">
+                    <i class="fas fa-calendar-alt fa-2x mb-3"></i>
+                    <h5>Sunday Services</h5>
+                    <p class="text-dark">7:00 AM - 10:30 AM</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cta-item">
+                    <i class="fas fa-map-marker-alt fa-2x mb-3"></i>
+                    <h5>Location</h5>
+                    <p class="text-dark">Dansoman - Accra, Ghana</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cta-item">
+                    <i class="fas fa-phone fa-2x mb-3"></i>
+                    <h5>Contact</h5>
+                    <p class="text-dark">{{ church_info.phone }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <a href="{{ url_for('main.contact') }}" class="btn btn-light btn-lg">Get Directions</a>
+    </div>
+</section>
+
+
+
 <!-- Newsletter Signup -->
 <section class="newsletter-section bg-blue text-white">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 mb-4 mb-lg-0">
-                <h2>Stay Connected</h2>
+                <h2 style="color: whitesmoke;">Stay Connected</h2>
                 <p class="lead">Subscribe to our newsletter for updates, devotionals, and church news.</p>
             </div>
             <div class="col-lg-6">
@@ -345,7 +386,5 @@
         </div>
     </div>
 </section>
-
-
 
 {% endblock %}
