@@ -22,10 +22,10 @@
                     </p>
                     <div class="hero-ctas">
                         <a href="{{ url_for('main.events') }}" class="btn-primary-gold">
-                            <i class="bi bi-play-circle-fill"></i> Join Us Live
+                            <i class="fa-solid fa-circle-play"></i> Join Us Live
                         </a>
                         <a href="{{ url_for('main.about') }}" class="btn-outline-white">
-                            <i class="bi bi-arrow-right"></i> Learn More
+                            <i class="fa-solid fa-arrow-right"></i> Learn More
                         </a>
                     </div>
                 </div>
@@ -39,30 +39,58 @@
 </section>
 
 <!-- Welcome Message Section -->
-<section class="welcome-section bg-light">
+<section id="welcome">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <img src="https://source.unsplash.com/500x400/?pastor+african+man" alt="Pastor" class="img-fluid rounded-lg shadow-lg">
+        <div class="row align-items-center g-5">
+            <!-- Pastor Image -->
+            <div class="col-lg-5 text-center">
+                <div class="pastor-image-wrap d-inline-block">
+                    <img
+                        src="{{ url_for('static', filename='img/pastor_main.png') }}"
+                        alt="Senior Pastor of Triumphant Assemblies of God, Accra Ghana"
+                        loading="lazy"
+                    />
+                    <div class="pastor-badge">
+                        Rev. Rexford Peprah
+                        <small>Senior Pastor</small>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-6">
-                <h2>Welcome from Our Pastor</h2>
-                <p class="lead text-gold">Rev. Rexford Peprah</p>
-                <p>
+        
+            <!-- Text -->
+            <div class="col-lg-7">
+                <span class="section-badge">Welcome Message</span>
+                <h2 class="section-title">
+                    Welcome from Our <span class="gold">Pastor</span>
+                </h2>
+                <div class="section-divider"></div>
+                <blockquote class="welcome-quote">
+                    "We are more than a church — we are a family rooted in the Word of God, dedicated to serving Accra and the nations."
+                </blockquote>
+                <p class="text-muted mb-3">
                     Welcome to Triumphant Assemblies of God! We are delighted to have you join our church family. 
                     Our mission is to lead individuals into a life-changing relationship with Jesus Christ, nurture them in faith and community, 
                     and equip them to serve with purpose.
                 </p>
-                <p>
+                <p class="text-muted mb-4">
                     Whether you are seeking spiritual growth, community fellowship, or simply a place to worship, we invite you to experience 
                     the warmth, love, and spiritual power that defines our church. Together, we are building a thriving, Spirit-empowered community 
                     that mirrors the first church.
+                    </p>
                 </p>
-                <a href="{{ url_for('main.about') }}" class="btn btn-primary">Meet Our Pastor</a>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{{ url_for('main.about') }}" class="btn-royal">
+                        <i class="bi bi-person-heart"></i> Meet Our Pastor
+                    </a>
+                    <a href="#cta-banner" class="btn-primary-gold">
+                        <i class="bi bi-calendar3"></i> Plan Your Visit
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </section>
+
 
 <!-- Church Stats Section -->
 <section class="stats-section bg-blue text-white">
@@ -70,13 +98,13 @@
         <div class="row text-center">
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stat-card">
-                    <h3 class="stat-number" data-counter="2500">0</h3>
+                    <h3 class="stat-number" data-counter="1000">0</h3>
                     <p class="stat-label">Members</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stat-card">
-                    <h3 class="stat-number" data-counter="30">0</h3>
+                    <h3 class="stat-number" data-counter="20">0</h3>
                     <p class="stat-label">Years of Service</p>
                 </div>
             </div>
