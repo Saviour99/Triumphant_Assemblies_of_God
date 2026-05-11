@@ -12,11 +12,12 @@ window.addEventListener('load', function() {
     }
 });
 
-// ============ NAVBAR SCROLL EFFECT ============
+// ============ NAVBAR SCROLL EFFECT (FIXED FOR ALL PAGES) ============
 const navbar = document.getElementById('navbar');
 let lastScrollTop = 0;
 
-window.addEventListener('scroll', function() {
+// Function to update navbar state based on scroll
+function updateNavbarState() {
     let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     
     if (scrollTop > 100) {
@@ -26,25 +27,40 @@ window.addEventListener('scroll', function() {
     }
     
     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+}
+
+// Call on page load to set initial state
+updateNavbarState();
+
+// Call on scroll
+window.addEventListener('scroll', updateNavbarState);
+
+// Call when page becomes visible (tab switching)
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        updateNavbarState();
+    }
 });
 
 // ============ BACK TO TOP BUTTON ============
 const backToTopBtn = document.getElementById('backToTop');
 
-window.addEventListener('scroll', function() {
-    if (window.pageYOffset > 300) {
-        backToTopBtn.classList.add('show');
-    } else {
-        backToTopBtn.classList.remove('show');
-    }
-});
-
-backToTopBtn.addEventListener('click', function() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
+if (backToTopBtn) {
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
     });
-});
+
+    backToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
 
 // ============ SCROLL REVEAL ANIMATION ============
 const observerOptions = {
@@ -61,9 +77,20 @@ const observer = new IntersectionObserver(function(entries) {
     });
 }, observerOptions);
 
-// Observe all cards and sections
-document.querySelectorAll('.card, section').forEach(el => {
-    observer.observe(el);
+// Observe all cards and sections - delay to ensure DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.card, section').forEach(el => {
+        observer.observe(el);
+    });
+});
+
+// Also observe on page load
+window.addEventListener('load', function() {
+    document.querySelectorAll('.card, section').forEach(el => {
+        if (!el.classList.contains('fade-in')) {
+            observer.observe(el);
+        }
+    });
 });
 
 // ============ ANIMATED COUNTERS ============
@@ -82,285 +109,326 @@ function animateCounter(element, target, duration = 2000) {
 }
 
 // Initialize counters when they come into view
-const counterElements = document.querySelectorAll('[data-counter]');
-if (counterElements.length > 0) {
-    const counterObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
-                const target = parseInt(entry.target.getAttribute('data-counter'));
-                animateCounter(entry.target, target);
-                entry.target.classList.add('counted');
+function initializeCounters() {
+    const counterElements = document.querySelectorAll('[data-counter]');
+    if (counterElements.length > 0) {
+        const counterObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+                    const target = parseInt(entry.target.getAttribute('data-counter'));
+                    animateCounter(entry.target, target);
+                    entry.target.classList.add('counted');
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        counterElements.forEach(el => counterObserver.observe(el));
+    }
+}
+
+// Initialize on DOM ready and page load
+document.addEventListener('DOMContentLoaded', initializeCounters);
+window.addEventListener('load', initializeCounters);
+
+// ============ SERMON SEARCH & PAGINATION (FIXED) ============
+function initializeSermonSearch() {
+    const SERMONS_PER_PAGE = 4;
+    let currentPage = 1;
+    let filteredSermons = [];
+
+    const allSermons = document.querySelectorAll('.col-lg-6.mb-4');
+    const sermonSearch = document.getElementById('sermonSearch');
+    const pagination = document.querySelector('.pagination');
+
+    if (!allSermons.length || !sermonSearch || !pagination) {
+        return; // Exit if sermon elements don't exist
+    }
+
+    function getSermonText(sermon) {
+        const title = sermon.querySelector('.sermon-title')?.textContent.toLowerCase() || '';
+        const speaker = sermon.querySelector('.sermon-speaker')?.textContent.toLowerCase() || '';
+        const description = sermon.querySelector('.sermon-description')?.textContent.toLowerCase() || '';
+        const date = sermon.querySelector('.sermon-date')?.textContent.toLowerCase() || '';
+        return `${title} ${speaker} ${description} ${date}`;
+    }
+
+    function renderSermons() {
+        const start = (currentPage - 1) * SERMONS_PER_PAGE;
+        const end = start + SERMONS_PER_PAGE;
+
+        allSermons.forEach(sermon => sermon.style.display = 'none');
+
+        filteredSermons.slice(start, end).forEach(sermon => {
+            sermon.style.display = 'block';
+        });
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredSermons.length / SERMONS_PER_PAGE);
+
+        pagination.innerHTML = '';
+
+        // Previous button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="javascript:void(0);">Previous</a>`;
+        prevLi.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentPage > 1) { 
+                currentPage--; 
+                renderSermons();
             }
         });
-    }, { threshold: 0.5 });
-    
-    counterElements.forEach(el => counterObserver.observe(el));
+        pagination.appendChild(prevLi);
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link" href="javascript:void(0);">${i}</a>`;
+            li.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                currentPage = i;
+                renderSermons();
+            });
+            pagination.appendChild(li);
+        }
+
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);">Next</a>`;
+        nextLi.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentPage < totalPages) { 
+                currentPage++; 
+                renderSermons();
+            }
+        });
+        pagination.appendChild(nextLi);
+    }
+
+    function filterSermons(query) {
+        currentPage = 1;
+        if (!query.trim()) {
+            filteredSermons = [...allSermons];
+        } else {
+            filteredSermons = [...allSermons].filter(sermon =>
+                getSermonText(sermon).includes(query.toLowerCase())
+            );
+        }
+        renderSermons();
+        checkEmpty();
+    }
+
+    // No results message
+    function checkEmpty() {
+        const sermonRow = document.querySelector('.sermons-section .row:last-of-type');
+        if (!sermonRow) return;
+        
+        let noResults = document.getElementById('no-results');
+
+        if (filteredSermons.length === 0) {
+            if (!noResults) {
+                noResults = document.createElement('p');
+                noResults.id = 'no-results';
+                noResults.className = 'text-center text-muted mt-4';
+                noResults.textContent = 'No sermons found matching your search.';
+                sermonRow.after(noResults);
+            }
+        } else {
+            if (noResults) noResults.remove();
+        }
+    }
+
+    // Init
+    if (allSermons.length > 0) {
+        filteredSermons = [...allSermons];
+        renderSermons();
+    }
+
+    // Search listener with debounce
+    let searchTimeout;
+    sermonSearch.addEventListener('input', function () {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterSermons(this.value);
+        }, 300);
+    });
 }
+
+// Initialize sermon search on DOM ready and page load
+document.addEventListener('DOMContentLoaded', initializeSermonSearch);
+window.addEventListener('load', initializeSermonSearch);
 
 // ============ FORM HANDLING ============
 
 // Prayer Request Form
-const prayerForm = document.getElementById('prayerForm');
-if (prayerForm) {
-    prayerForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = {
-            name: document.getElementById('prayerName').value,
-            email: document.getElementById('prayerEmail').value,
-            topic: document.getElementById('prayerTopic').value,
-            message: document.getElementById('prayerMessage').value
-        };
-        
-        try {
-            const response = await fetch('/api/prayer-request', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                showNotification('Prayer request submitted successfully!', 'success');
-                prayerForm.reset();
-            } else {
-                showNotification(data.message || 'Error submitting prayer request', 'error');
-            }
-        } catch (error) {
-            showNotification('Error: ' + error.message, 'error');
-        }
-    });
-}
-
-// ============ SERMON SEARCH & PAGINATION ============
-const SERMONS_PER_PAGE = 4;
-let currentPage = 1;
-let filteredSermons = [];
-
-const allSermons = document.querySelectorAll('.col-lg-6.mb-4');
-const sermonSearch = document.getElementById('sermonSearch');
-const pagination = document.querySelector('.pagination');
-
-function getSermonText(sermon) {
-    const title = sermon.querySelector('.sermon-title')?.textContent.toLowerCase() || '';
-    const speaker = sermon.querySelector('.sermon-speaker')?.textContent.toLowerCase() || '';
-    const description = sermon.querySelector('.sermon-description')?.textContent.toLowerCase() || '';
-    const date = sermon.querySelector('.sermon-date')?.textContent.toLowerCase() || '';
-    return `${title} ${speaker} ${description} ${date}`;
-}
-
-function changePage(newPage) {
-    const sermonRow = document.querySelector('.sermons-section .row:last-of-type');
-    sermonRow.style.opacity = '0';
-    sermonRow.style.transition = 'opacity 0.4s ease';
-
-    setTimeout(() => {
-        currentPage = newPage;
-        renderSermons();
-        sermonRow.style.opacity = '1';
-    }, 400);
-}
-
-function renderSermons() {
-    const start = (currentPage - 1) * SERMONS_PER_PAGE;
-    const end = start + SERMONS_PER_PAGE;
-
-    allSermons.forEach(sermon => sermon.style.display = 'none');
-
-    filteredSermons.slice(start, end).forEach(sermon => {
-        sermon.style.display = 'block';
-    });
-
-    renderPagination();
-}
-
-function renderPagination() {
-    const totalPages = Math.ceil(filteredSermons.length / SERMONS_PER_PAGE);
-
-    pagination.innerHTML = '';
-
-    // Previous button
-    const prevLi = document.createElement('li');
-    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-    prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
-    prevLi.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentPage > 1) changePage(currentPage - 1);
-    });
-    pagination.appendChild(prevLi);
-
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
-        const li = document.createElement('li');
-        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-        li.addEventListener('click', (e) => {
+function initializePrayerForm() {
+    const prayerForm = document.getElementById('prayerForm');
+    if (prayerForm) {
+        prayerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            changePage(i);
+            
+            const formData = {
+                name: document.getElementById('prayerName').value,
+                email: document.getElementById('prayerEmail').value,
+                topic: document.getElementById('prayerTopic').value,
+                message: document.getElementById('prayerMessage').value
+            };
+            
+            try {
+                const response = await fetch('/api/prayer-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Prayer request submitted successfully!', 'success');
+                    prayerForm.reset();
+                } else {
+                    showNotification(data.message || 'Error submitting prayer request', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            }
         });
-        pagination.appendChild(li);
-    }
-
-    // Next button
-    const nextLi = document.createElement('li');
-    nextLi.className = `page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}`;
-    nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
-    nextLi.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentPage < totalPages) changePage(currentPage + 1);
-    });
-    pagination.appendChild(nextLi);
-}
-
-function filterSermons(query) {
-    currentPage = 1;
-    if (!query.trim()) {
-        filteredSermons = [...allSermons];
-    } else {
-        filteredSermons = [...allSermons].filter(sermon =>
-            getSermonText(sermon).includes(query.toLowerCase())
-        );
-    }
-    renderSermons();
-}
-
-// No results message
-function checkEmpty() {
-    const sermonRow = document.querySelector('.sermons-section .row:last-of-type');
-    let noResults = document.getElementById('no-results');
-
-    if (filteredSermons.length === 0) {
-        if (!noResults) {
-            noResults = document.createElement('p');
-            noResults.id = 'no-results';
-            noResults.className = 'text-center text-muted mt-4';
-            noResults.textContent = 'No sermons found matching your search.';
-            sermonRow.after(noResults);
-        }
-    } else {
-        if (noResults) noResults.remove();
     }
 }
-
-// Init
-filteredSermons = [...allSermons];
-renderSermons();
-
-// Search listener with debounce
-let searchTimeout;
-sermonSearch.addEventListener('input', function () {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        filterSermons(this.value);
-        checkEmpty();
-    }, 300);
-});
 
 // Contact Form
-const contactForm = document.getElementById('contactForm');
-if (contactForm) {
-    contactForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = {
-            name: document.getElementById('contactName').value,
-            email: document.getElementById('contactEmail').value,
-            subject: document.getElementById('contactSubject').value,
-            message: document.getElementById('contactMessage').value
-        };
-        
-        try {
-            const response = await fetch('/api/contact-form', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+function initializeContactForm() {
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            const data = await response.json();
+            const formData = {
+                name: document.getElementById('contactName').value,
+                email: document.getElementById('contactEmail').value,
+                subject: document.getElementById('contactSubject').value,
+                message: document.getElementById('contactMessage').value
+            };
             
-            if (response.ok) {
-                showNotification('Message sent successfully!', 'success');
-                contactForm.reset();
-            } else {
-                showNotification(data.message || 'Error sending message', 'error');
+            try {
+                const response = await fetch('/api/contact-form', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Message sent successfully!', 'success');
+                    contactForm.reset();
+                } else {
+                    showNotification(data.message || 'Error sending message', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
             }
-        } catch (error) {
-            showNotification('Error: ' + error.message, 'error');
-        }
-    });
+        });
+    }
 }
 
 // Newsletter Form
-const newsletterForm = document.getElementById('newsletterForm');
-if (newsletterForm) {
-    newsletterForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('newsletterEmail').value;
-        
-        try {
-            const response = await fetch('/api/newsletter', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
-            });
+function initializeNewsletterForm() {
+    const newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            const data = await response.json();
+            const email = document.getElementById('newsletterEmail').value;
             
-            if (response.ok) {
-                showNotification('Successfully subscribed to newsletter!', 'success');
-                newsletterForm.reset();
-            } else {
-                showNotification(data.message || 'Error subscribing', 'error');
+            try {
+                const response = await fetch('/api/newsletter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Successfully subscribed to newsletter!', 'success');
+                    newsletterForm.reset();
+                } else {
+                    showNotification(data.message || 'Error subscribing', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
             }
-        } catch (error) {
-            showNotification('Error: ' + error.message, 'error');
-        }
-    });
+        });
+    }
 }
 
 // Giving Form
-const givingForm = document.getElementById('givingForm');
-if (givingForm) {
-    givingForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = {
-            amount: document.getElementById('givingAmount').value,
-            giving_type: document.getElementById('givingType').value,
-            donor_name: document.getElementById('donorName').value,
-            donor_email: document.getElementById('donorEmail').value
-        };
-        
-        try {
-            const response = await fetch('/api/giving', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+function initializeGivingForm() {
+    const givingForm = document.getElementById('givingForm');
+    if (givingForm) {
+        givingForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            const data = await response.json();
+            const formData = {
+                amount: document.getElementById('givingAmount').value,
+                giving_type: document.getElementById('givingType').value,
+                donor_name: document.getElementById('donorName').value,
+                donor_email: document.getElementById('donorEmail').value
+            };
             
-            if (response.ok) {
-                showNotification('Thank you for your generous giving!', 'success');
-                givingForm.reset();
-            } else {
-                showNotification(data.message || 'Error processing giving', 'error');
+            try {
+                const response = await fetch('/api/giving', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('Thank you for your generous giving!', 'success');
+                    givingForm.reset();
+                } else {
+                    showNotification(data.message || 'Error processing giving', 'error');
+                }
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
             }
-        } catch (error) {
-            showNotification('Error: ' + error.message, 'error');
-        }
-    });
+        });
+    }
 }
+
+// Initialize all forms on DOM ready and page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializePrayerForm();
+    initializeContactForm();
+    initializeNewsletterForm();
+    initializeGivingForm();
+});
+
+window.addEventListener('load', function() {
+    initializePrayerForm();
+    initializeContactForm();
+    initializeNewsletterForm();
+    initializeGivingForm();
+});
 
 // ============ NOTIFICATION SYSTEM ============
 function showNotification(message, type = 'info') {
@@ -402,13 +470,19 @@ function sanitizeInput(input) {
 }
 
 // ============ CAROUSEL AUTO-PLAY ============
-const carousels = document.querySelectorAll('.carousel');
-carousels.forEach(carousel => {
-    const bsCarousel = new bootstrap.Carousel(carousel, {
-        interval: 5000,
-        wrap: true
+function initializeCarousels() {
+    const carousels = document.querySelectorAll('.carousel');
+    carousels.forEach(carousel => {
+        try {
+            const bsCarousel = new bootstrap.Carousel(carousel, {
+                interval: 5000,
+                wrap: true
+            });
+        } catch (e) {
+            console.log('Carousel initialization error:', e);
+        }
     });
-});
+}
 
 // ============ SMOOTH SCROLL ============
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
