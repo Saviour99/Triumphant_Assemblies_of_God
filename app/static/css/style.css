@@ -1987,10 +1987,6 @@ section { padding: 100px 0; }
    LEADERSHIP SECTION
    ============================================ */
 
-/* ============================================
-   LEADERSHIP SECTION — INLINE BIO DESIGN
-   ============================================ */
-
 .ls-badge {
     display: inline-block;
     background: rgba(200, 151, 58, 0.13);
@@ -2638,40 +2634,71 @@ section { padding: 100px 0; }
     }
 }
 
-/* ministries */
+/* =============================================
+   MINISTRIES
+============================================= */
+#ministries { background: white; }
 .ministry-card {
-    border: none;
-    height: 100%;
-    transition: all 0.3s ease;
-    overflow: hidden;
+  background: var(--off-white);
+  border-radius: var(--border-radius);
+  padding: 36px 28px;
+  text-align: center;
+  transition: var(--transition);
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
-
-.ministry-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
+.ministry-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-blue);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
 }
-
-.ministry-header {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-    padding: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.ministry-card:hover::before { opacity: 1; }
+.ministry-card:hover { border-color: var(--gold); transform: translateY(-8px); box-shadow: var(--shadow-blue); }
+.ministry-card > * { position: relative; z-index: 1; }
+.ministry-icon {
+  width: 72px; height: 72px;
+  background: var(--gradient-gold);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: white;
+  margin: 0 auto 20px;
+  box-shadow: var(--shadow-gold);
+  transition: var(--transition);
 }
-
-.ministry-icon-large {
-    color: white;
-    animation: float 3s ease-in-out infinite;
+.ministry-card:hover .ministry-icon { transform: rotate(10deg) scale(1.1); }
+.ministry-card h5 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--royal-blue);
+  margin-bottom: 10px;
+  transition: var(--transition);
 }
-
-.ministry-card .card-title {
-    color: var(--blue);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+.ministry-card:hover h5 { color: white; }
+.ministry-card p { color: var(--text-muted); font-size: 0.88rem; transition: var(--transition); }
+.ministry-card:hover p { color: rgba(255,255,255,0.8); }
+.ministry-link {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  transition: var(--transition);
 }
+.ministry-card:hover .ministry-link { color: var(--gold-light); }
 
-.ministry-card .card-text {
+/* .ministry-card .card-text {
     color: var(--text-secondary);
     font-size: 0.95rem;
     line-height: 1.6;
@@ -2681,9 +2708,9 @@ section { padding: 100px 0; }
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border-color);
-}
+} */
 
-.detail-card {
+/* .detail-card {
     background: white;
     padding: 2rem;
     border-radius: 12px;
@@ -2708,7 +2735,9 @@ section { padding: 100px 0; }
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 1rem;
-}
+} */
+
+
 
 .volunteer-benefits {
     list-style: none;

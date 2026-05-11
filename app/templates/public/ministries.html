@@ -15,24 +15,16 @@
 <!-- Ministries Grid -->
 <section class="ministries-grid">
     <div class="container">
-        <div class="row">
+        <div class="row g-4">
             {% for ministry in ministries %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card ministry-card">
-                    <div class="ministry-header">
-                        <div class="ministry-icon-large">
-                            <i class="fas {{ ministry.icon }} fa-3x"></i>
-                        </div>
+            <div class="col-sm-6 col-lg-4 {{ loop.index }}">
+                <div class="ministry-card">
+                    <div class="ministry-icon">
+                        <i class="fas {{ ministry.icon }}"></i>
                     </div>
-                    <div class="card-body">
-                        <h5 class="card-title">{{ ministry.name }}</h5>
-                        <p class="card-text">{{ ministry.description }}</p>
-                        <div class="ministry-footer">
-                            <small class="text-muted">
-                                <i class="fas fa-envelope"></i> {{ ministry.contact }}
-                            </small>
-                        </div>
-                    </div>
+                    <h5>{{ ministry.name }}</h5>
+                    <p>{{ ministry.description }}</p>
+                    <a href="{{ url_for('main.contact') }}" class="ministry-link">Get Involved <i class="fa-solid fa-arrow-right"></i></a>
                 </div>
             </div>
             {% endfor %}
@@ -41,7 +33,7 @@
 </section>
 
 <!-- Ministry Details Section -->
-<section class="ministry-details bg-light">
+<!-- <section class="ministry-details bg-light">
     <div class="container">
         <div class="section-title">
             <h2>Get Involved</h2>
@@ -122,15 +114,16 @@
             </div>
         </div>
     </div>
-</section>
+</section> -->
 
 <!-- Volunteer Section -->
-<section class="volunteer-section">
+<section class="volunteer-section bg-light">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 mb-4 mb-lg-0">
                 <h2>Volunteer With Us</h2>
-                <p class="lead">Make a meaningful impact in our church and community</p>
+                <p class="lead text-gold">Make a meaningful impact in our church and community</p>
+                <div class="section-divider"></div>
                 <p>
                     Whether you have a specific skill or just a willing heart, there's a place for you in our ministries. 
                     Volunteering is a wonderful way to grow spiritually, connect with others, and serve God's purpose.
@@ -144,7 +137,7 @@
                 <a href="{{ url_for('main.contact') }}" class="btn btn-primary btn-lg mt-3">Volunteer Today</a>
             </div>
             <div class="col-lg-6">
-                <img src="https://source.unsplash.com/500x400/?volunteers+community" alt="Volunteers" class="img-fluid rounded-lg shadow-lg">
+                <img src="https://images.unsplash.com/photo-1571260765714-e2b955496436?q=80&w=798&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Volunteers" class="img-fluid rounded-lg shadow-lg">
             </div>
         </div>
     </div>

@@ -72,7 +72,7 @@ MINISTRIES = [
         'contact': 'men@triumphantag.com'
     },
     {
-        'name': 'Worship Team',
+        'name': 'Praises & Worship Team',
         'icon': 'fa-music',
         'description': 'Leading the congregation in spirit-filled worship through music, praise, and creating an atmosphere for God\'s presence.',
         'contact': 'worship@triumphantag.com'
