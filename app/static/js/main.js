@@ -135,6 +135,130 @@ if (prayerForm) {
     });
 }
 
+// ============ SERMON SEARCH & PAGINATION ============
+const SERMONS_PER_PAGE = 4;
+let currentPage = 1;
+let filteredSermons = [];
+
+const allSermons = document.querySelectorAll('.col-lg-6.mb-4');
+const sermonSearch = document.getElementById('sermonSearch');
+const pagination = document.querySelector('.pagination');
+
+function getSermonText(sermon) {
+    const title = sermon.querySelector('.sermon-title')?.textContent.toLowerCase() || '';
+    const speaker = sermon.querySelector('.sermon-speaker')?.textContent.toLowerCase() || '';
+    const description = sermon.querySelector('.sermon-description')?.textContent.toLowerCase() || '';
+    const date = sermon.querySelector('.sermon-date')?.textContent.toLowerCase() || '';
+    return `${title} ${speaker} ${description} ${date}`;
+}
+
+function changePage(newPage) {
+    const sermonRow = document.querySelector('.sermons-section .row:last-of-type');
+    sermonRow.style.opacity = '0';
+    sermonRow.style.transition = 'opacity 0.4s ease';
+
+    setTimeout(() => {
+        currentPage = newPage;
+        renderSermons();
+        sermonRow.style.opacity = '1';
+    }, 400);
+}
+
+function renderSermons() {
+    const start = (currentPage - 1) * SERMONS_PER_PAGE;
+    const end = start + SERMONS_PER_PAGE;
+
+    allSermons.forEach(sermon => sermon.style.display = 'none');
+
+    filteredSermons.slice(start, end).forEach(sermon => {
+        sermon.style.display = 'block';
+    });
+
+    renderPagination();
+}
+
+function renderPagination() {
+    const totalPages = Math.ceil(filteredSermons.length / SERMONS_PER_PAGE);
+
+    pagination.innerHTML = '';
+
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
+    prevLi.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage > 1) changePage(currentPage - 1);
+    });
+    pagination.appendChild(prevLi);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+        li.addEventListener('click', (e) => {
+            e.preventDefault();
+            changePage(i);
+        });
+        pagination.appendChild(li);
+    }
+
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
+    nextLi.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage < totalPages) changePage(currentPage + 1);
+    });
+    pagination.appendChild(nextLi);
+}
+
+function filterSermons(query) {
+    currentPage = 1;
+    if (!query.trim()) {
+        filteredSermons = [...allSermons];
+    } else {
+        filteredSermons = [...allSermons].filter(sermon =>
+            getSermonText(sermon).includes(query.toLowerCase())
+        );
+    }
+    renderSermons();
+}
+
+// No results message
+function checkEmpty() {
+    const sermonRow = document.querySelector('.sermons-section .row:last-of-type');
+    let noResults = document.getElementById('no-results');
+
+    if (filteredSermons.length === 0) {
+        if (!noResults) {
+            noResults = document.createElement('p');
+            noResults.id = 'no-results';
+            noResults.className = 'text-center text-muted mt-4';
+            noResults.textContent = 'No sermons found matching your search.';
+            sermonRow.after(noResults);
+        }
+    } else {
+        if (noResults) noResults.remove();
+    }
+}
+
+// Init
+filteredSermons = [...allSermons];
+renderSermons();
+
+// Search listener with debounce
+let searchTimeout;
+sermonSearch.addEventListener('input', function () {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        filterSermons(this.value);
+        checkEmpty();
+    }, 300);
+});
+
 // Contact Form
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {

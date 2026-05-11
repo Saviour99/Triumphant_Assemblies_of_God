@@ -2524,7 +2524,10 @@ section { padding: 100px 0; }
 .facility-card { animation: slideInUp 0.6s ease-out; }
 
 
-/* sermons */
+/* ============================================
+  SERMONS
+   ============================================ */
+
 .sermon-search {
     margin-bottom: 2rem;
 }
@@ -2591,6 +2594,14 @@ section { padding: 100px 0; }
 .sermon-actions {
     display: flex;
     gap: 0.5rem;
+}
+
+.pagination .page-item.active .page-link {
+    color: white;
+}
+
+.pagination .page-link {
+    transition: all 0.4s ease;
 }
 
 .audio-list {
