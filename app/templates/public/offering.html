@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Giving - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+
+<!-- Online Giving Section -->
+<section class="giving-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Online Giving</h2>
+            <p class="section-subtitle">Support the work of God through your generous giving</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="giving-card">
+                    <form id="givingForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="givingAmount" class="form-label">Amount (GHS)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₵</span>
+                                    <input type="number" class="form-control" id="givingAmount" placeholder="Enter Amount" step="0.01" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="givingType" class="form-label">Giving Type</label>
+                                <select class="form-select" id="givingType" required>
+                                    <option value="">Select giving type</option>
+                                    <option value="tithe">Tithe</option>
+                                    <option value="offering">Offering</option>
+                                    <option value="missions">Missions</option>
+                                    <option value="building_fund">Building Fund</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="donorName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="donorName" placeholder="Enter Fullname" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="donorEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="donorEmail" placeholder="Enter a valid Email" required>
+                            </div>
+                        </div>
+
+                        <!-- Quick Amount Buttons -->
+                        <div class="quick-amounts mt-4">
+                            <p class="text-center mb-3"><strong>Quick Amounts:</strong></p>
+                            <div class="d-flex gap-2 flex-wrap justify-content-center">
+                                <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="50">₵50</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="100">₵100</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="200">₵200</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="500">₵500</button>
+                                <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="1000">₵1000</button>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4" role="alert">
+                            <i class="fas fa-info-circle"></i> Your giving is secure and confidential. 
+                            A receipt will be sent to your email.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">Give Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script>
+// Quick amount buttons
+document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('givingAmount').value = this.dataset.amount;
+        document.getElementById('givingAmount').focus();
+    });
+});
+</script>
+
+{% endblock %}

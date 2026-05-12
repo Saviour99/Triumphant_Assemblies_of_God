@@ -142,6 +142,11 @@ def contact():
     """Contact page"""
     return render_template('public/contact.html', church_info=CHURCH_INFO)
 
+@main_bp.route('/giving')
+def giving():
+    """Offering page"""
+    return render_template('public/offering.html', church_info=CHURCH_INFO)
+
 # ============ API ROUTES ============
 
 def validate_email(email):

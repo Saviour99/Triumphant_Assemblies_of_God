@@ -12,204 +12,209 @@
     </div>
 </section>
 
-<!-- Contact Information -->
-<section class="contact-info-section">
-    <div class="container">
-        <div class="row mb-5">
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="info-card">
-                    <div class="info-icon">
-                        <i class="fas fa-map-marker-alt fa-2x"></i>
-                    </div>
-                    <h5>Address</h5>
-                    <p>{{ church_info.address }}</p>
-                    <p class="text-muted">Digital Address: {{ church_info.digital_address }}</p>
-                </div>
-            </div>
 
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="info-card">
-                    <div class="info-icon">
-                        <i class="fas fa-phone fa-2x"></i>
-                    </div>
-                    <h5>Phone</h5>
-                    <p><a href="tel:{{ church_info.phone }}">{{ church_info.phone }}</a></p>
-                    <p class="text-muted">Available during office hours</p>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="info-card">
-                    <div class="info-icon">
-                        <i class="fas fa-envelope fa-2x"></i>
-                    </div>
-                    <h5>Email</h5>
-                    <p><a href="mailto:{{ church_info.email }}">{{ church_info.email }}</a></p>
-                    <p class="text-muted">We'll respond within 24 hours</p>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="info-card">
-                    <div class="info-icon">
-                        <i class="fas fa-clock fa-2x"></i>
-                    </div>
-                    <h5>Service Times</h5>
-                    <p><strong>Sunday:</strong> 7:00 AM & 9:30 AM</p>
-                    <p><strong>Wednesday:</strong> 6:00 PM</p>
-                </div>
-            </div>
-        </div>
+<!-- =============================================
+     CONTACT
+============================================= -->
+<section id="contact">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <h2 class="section-title">Get in <span class="gold">Touch</span></h2>
+      <p class="text-muted mx-auto" style="max-width:500px">We'd love to hear from you. Reach out for enquiries, counselling requests, or to plan your visit.</p>
     </div>
+    <div class="row g-4">
+      <!-- Contact Info -->
+      <div class="col-lg-5 reveal-left">
+        <div class="contact-info-card">
+          <h4 style="font-family:var(--font-display); color:white; margin-bottom:28px">Contact Information</h4>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="contact-item-text">
+              <h6>Address</h6>
+              <p>Post Office Box AN 6130 <br /> Accra North, Ghana, West Africa</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="contact-item-text">
+              <h6>Phone</h6>
+              <p>+233 50 111 6130<br /></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="contact-item-text">
+              <h6>Email</h6>
+              <p>triumphantag@gmail.com<br /></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="contact-item-text">
+              <h6>Office Hours</h6>
+              <p>Monday – Friday: 10:00 AM – 5:00 PM<br />Saturday: 10:00 AM – 2:00 PM</p>
+            </div>
+          </div>
+          <hr style="border-color:rgba(255,255,255,0.15);" />
+          <h6 style="color:var(--gold-light); font-size:0.8rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px">Follow Us</h6>
+          <div class="social-row">
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+            </a>
+            <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="YouTube">
+                <i class="fa-brands fa-youtube"></i>
+            </a>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter/X">
+                <i class="fa-brands fa-x-twitter"></i>
+            </a>
+            <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="TikTok">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Contact Form -->
+      <div class="col-lg-7 reveal-right">
+        <div class="contact-form-card">
+          <h4 style="font-family:var(--font-display); color:var(--royal-blue); margin-bottom:24px">Send Us a Message</h4>
+          <form id="contactForm" action="/contact" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="contactName" class="form-label-custom">Full Name</label>
+                <input type="text" class="form-control form-control-custom" id="contactName" name="name" placeholder="Kofi Mensah" required aria-required="true" autocomplete="name" />
+                <span class="field-error" id="contactNameError"></span>
+              </div>
+              <div class="col-md-6">
+                <label for="contactEmail" class="form-label-custom">Email Address</label>
+                <input type="email" class="form-control form-control-custom" id="contactEmail" name="email" placeholder="kofi@example.com" required aria-required="true" autocomplete="email" />
+                <span class="field-error" id="contactEmailError"></span>
+              </div>
+              <div class="col-md-6">
+                <label for="contactPhone" class="form-label-custom">Phone Number</label>
+                <input type="tel" class="form-control form-control-custom" id="contactPhone" name="phone" placeholder="+233 20 000 0000" autocomplete="tel" />
+              </div>
+              <div class="col-md-6">
+                <label for="contactSubject" class="form-label-custom">Subject</label>
+                <select class="form-control form-control-custom" id="contactSubject" name="subject" required aria-required="true">
+                  <option value="" disabled selected>Select subject...</option>
+                  <option value="general">General Enquiry</option>
+                  <option value="counselling">Counselling Request</option>
+                  <option value="visit">Plan a Visit</option>
+                  <option value="membership">Church Membership</option>
+                  <option value="partnership">Partnership / Collaboration</option>
+                  <option value="media">Media &amp; Press</option>
+                </select>
+                <span class="field-error" id="contactSubjectError"></span>
+              </div>
+              <div class="col-12">
+                <label for="contactMessage" class="form-label-custom">Message</label>
+                <textarea class="form-control form-control-custom" id="contactMessage" name="message" rows="5" placeholder="Write your message here..." required aria-required="true" maxlength="2000"></textarea>
+                <span class="field-error" id="contactMessageError"></span>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer; font-size:0.95rem">
+                  <i class="fa-solid fa-paper-plane"></i> Send Message
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- Main Contact Section -->
-<section class="contact-main bg-light">
-    <div class="container">
-        <div class="row">
-            <!-- Contact Form -->
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <h2>Send Us a Message</h2>
-                <p class="lead mb-4">Have a question or prayer request? We'd love to hear from you.</p>
-
-                <form id="contactForm">
-                    <div class="mb-3">
-                        <label for="contactName" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="contactName" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="contactEmail" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="contactEmail" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="contactSubject" class="form-label">Subject</label>
-                        <input type="text" class="form-control" id="contactSubject" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="contactMessage" class="form-label">Message</label>
-                        <textarea class="form-control" id="contactMessage" rows="5" required></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
-                </form>
-            </div>
-
-            <!-- Prayer Request Form -->
-            <div class="col-lg-6">
-                <h2>Prayer Request</h2>
-                <p class="lead mb-4">Share your prayer needs with our church family. We'll pray for you.</p>
-
-                <form id="prayerForm">
-                    <div class="mb-3">
-                        <label for="prayerName" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="prayerName" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="prayerEmail" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="prayerEmail" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="prayerTopic" class="form-label">Prayer Topic</label>
-                        <input type="text" class="form-control" id="prayerTopic" placeholder="e.g., Healing, Guidance, Strength" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="prayerMessage" class="form-label">Prayer Request</label>
-                        <textarea class="form-control" id="prayerMessage" rows="5" required></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg">Submit Prayer Request</button>
-                </form>
-            </div>
+<!-- =============================================
+     PRAYER REQUEST
+============================================= -->
+<section id="prayer">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5 reveal-left">
+        <h3 style="font-size: 2.6rem;">Submit a <span class="text-gold">Prayer Request</span></h3>
+        <div class="section-divider"></div>
+        <p class="text-muted mb-4">Our prayer team intercedes faithfully for every need shared with us. Nothing is too big or too small for God. Share your heart we stand with you.</p>
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="ministry-icon" style="width:48px;height:48px;min-width:48px;font-size:1.2rem">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <h6 class="fw-700 text-royal mb-1">Intercession Team</h6>
+            <p class="text-muted small mb-0">Our dedicated prayer warriors pray over every request submitted.</p>
+          </div>
         </div>
+        <div class="d-flex align-items-start gap-3">
+          <div class="ministry-icon" style="width:48px;height:48px;min-width:48px;font-size:1.2rem">
+            <i class="fa-solid fa-envelope-open-text"></i>
+          </div>
+          <div>
+            <h6 class="fw-700 text-royal mb-1">Confidential &amp; Caring</h6>
+            <p class="text-muted small mb-0">All prayer requests are kept private and treated with utmost care.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7 reveal-right">
+        <div class="prayer-card">
+          <form id="prayerForm" action="/prayer-request" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="prayerName" class="form-label">Your Name</label>
+                <input type="text" class="form-control prayer-form-control" id="prayerName" name="name" placeholder="Ama Ofori" required aria-required="true" autocomplete="name" />
+                <span class="field-error" id="prayerNameError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-md-6">
+                <label for="prayerEmail" class="form-label">Email Address</label>
+                <input type="email" class="form-control prayer-form-control" id="prayerEmail" name="email" placeholder="ama@example.com" required aria-required="true" autocomplete="email" />
+                <span class="field-error" id="prayerEmailError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-12">
+                <label for="prayerTopic" class="form-label">Prayer Topic</label>
+                <select class="form-control prayer-form-control" id="prayerTopic" name="topic" required aria-required="true">
+                  <option value="" disabled selected>Select a topic...</option>
+                  <option value="healing">Healing &amp; Health</option>
+                  <option value="family">Family &amp; Relationships</option>
+                  <option value="finances">Financial Breakthrough</option>
+                  <option value="salvation">Salvation of Loved One</option>
+                  <option value="guidance">Divine Direction &amp; Guidance</option>
+                  <option value="protection">Protection &amp; Safety</option>
+                  <option value="career">Career &amp; Business</option>
+                  <option value="other">Other</option>
+                </select>
+                <span class="field-error" id="prayerTopicError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-12">
+                <label for="prayerMessage" class="form-label">Your Prayer Request</label>
+                <textarea class="form-control prayer-form-control" id="prayerMessage" name="message" rows="4" placeholder="Share your prayer need here. Our team will lift you up in prayer..." required aria-required="true" maxlength="1000"></textarea>
+                <span class="field-error" id="prayerMessageError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer; font-size:1rem">
+                  <i class="fa-solid fa-paper-plane"></i> Submit Prayer Request
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
 <!-- Map Section -->
 <section class="map-section">
     <div class="container-fluid p-0">
-        <h2 class="text-center mb-4">Find Us On The Map</h2>
+        <h2 class="section-title text-center mb-4">Find Us On <span class="text-gold">The Map</span></h2>
         <div class="map-container">
             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.5234567890!2d-0.2!3d5.6!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sTriumphant%20Assemblies%20of%20God!5e0!3m2!1sen!2sgh!4v1234567890" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
 </section>
 
-<!-- Online Giving Section -->
-<section class="giving-section">
-    <div class="container">
-        <div class="section-title">
-            <h2>Online Giving</h2>
-            <p class="section-subtitle">Support the work of God through your generous giving</p>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <div class="giving-card">
-                    <form id="givingForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="givingAmount" class="form-label">Amount (GHS)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₵</span>
-                                    <input type="number" class="form-control" id="givingAmount" placeholder="Enter amount" step="0.01" min="0" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="givingType" class="form-label">Giving Type</label>
-                                <select class="form-select" id="givingType" required>
-                                    <option value="">Select giving type</option>
-                                    <option value="tithe">Tithe</option>
-                                    <option value="offering">Offering</option>
-                                    <option value="missions">Missions</option>
-                                    <option value="building_fund">Building Fund</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="donorName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="donorName" required>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="donorEmail" class="form-label">Email Address</label>
-                                <input type="email" class="form-control" id="donorEmail" required>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info" role="alert">
-                            <i class="fas fa-info-circle"></i> Your giving is secure and confidential. 
-                            A receipt will be sent to your email.
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-lg w-100">Give Now</button>
-                    </form>
-                </div>
-
-                <!-- Quick Amount Buttons -->
-                <div class="quick-amounts mt-4">
-                    <p class="text-center mb-3"><strong>Quick Amounts:</strong></p>
-                    <div class="d-flex gap-2 flex-wrap justify-content-center">
-                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="50">₵50</button>
-                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="100">₵100</button>
-                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="200">₵200</button>
-                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="500">₵500</button>
-                        <button type="button" class="btn btn-outline-primary quick-amount-btn" data-amount="1000">₵1000</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Additional Contact Options -->
 <section class="additional-contact bg-light">
@@ -261,17 +266,5 @@
         </div>
     </div>
 </section>
-
-
-
-<script>
-// Quick amount buttons
-document.querySelectorAll('.quick-amount-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.getElementById('givingAmount').value = this.dataset.amount;
-        document.getElementById('givingAmount').focus();
-    });
-});
-</script>
 
 {% endblock %}
