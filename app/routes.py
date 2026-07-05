@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
-from app import mysql
+from app import db
 from datetime import datetime
 import re
 
@@ -185,12 +185,12 @@ def prayer_request():
             return jsonify({'success': False, 'message': 'Message must be at least 10 characters'}), 400
         
         # Insert into database
-        cur = mysql.connection.cursor()
+        cur = db.connection.cursor()
         cur.execute("""
             INSERT INTO prayer_requests (name, email, topic, message, created_at)
             VALUES (%s, %s, %s, %s, %s)
         """, (name, email, topic, message, datetime.now()))
-        mysql.connection.commit()
+        db.connection.commit()
         cur.close()
         
         return jsonify({'success': True, 'message': 'Prayer request submitted successfully'}), 201
@@ -217,12 +217,12 @@ def contact_form():
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
         
         # Insert into database
-        cur = mysql.connection.cursor()
+        cur = db.connection.cursor()
         cur.execute("""
             INSERT INTO contact_messages (name, email, subject, message, created_at)
             VALUES (%s, %s, %s, %s, %s)
         """, (name, email, subject, message, datetime.now()))
-        mysql.connection.commit()
+        db.connection.commit()
         cur.close()
         
         return jsonify({'success': True, 'message': 'Message sent successfully'}), 201
@@ -244,7 +244,7 @@ def newsletter():
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
         
         # Check if already subscribed
-        cur = mysql.connection.cursor()
+        cur = db.connection.cursor()
         cur.execute("SELECT id FROM newsletter_subscribers WHERE email = %s", (email,))
         existing = cur.fetchone()
         
@@ -257,7 +257,7 @@ def newsletter():
             INSERT INTO newsletter_subscribers (email, subscribed_at)
             VALUES (%s, %s)
         """, (email, datetime.now()))
-        mysql.connection.commit()
+        db.connection.commit()
         cur.close()
         
         return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter'}), 201
@@ -291,12 +291,12 @@ def giving():
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
         
         # Insert into database
-        cur = mysql.connection.cursor()
+        cur = db.connection.cursor()
         cur.execute("""
             INSERT INTO giving (amount, giving_type, donor_name, donor_email, created_at)
             VALUES (%s, %s, %s, %s, %s)
         """, (amount, giving_type, donor_name, donor_email, datetime.now()))
-        mysql.connection.commit()
+        db.connection.commit()
         cur.close()
         
         return jsonify({'success': True, 'message': 'Giving recorded successfully'}), 201

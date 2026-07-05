@@ -13,6 +13,8 @@ class Config:
     # MySQL Configuration
     MYSQL_CURSORCLASS = 'DictCursor'
     MYSQL_AUTOCOMMIT = False
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Caching
     CACHE_TYPE = 'simple'
@@ -46,6 +48,7 @@ class DevelopmentConfig(Config):
     MYSQL_USER = os.getenv('MYSQL_USER', 'root')
     MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
     MYSQL_DB = os.getenv('MYSQL_DB', 'triumphant')
+    SQLALCHEMY_DATABASE_URI = f"mysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
     CACHE_TYPE = 'simple'
     SESSION_COOKIE_SECURE = False
     FORCE_HTTPS = False
@@ -57,6 +60,7 @@ class ProductionConfig(Config):
     MYSQL_USER = os.getenv('MYSQL_USER')
     MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
     MYSQL_DB = os.getenv('MYSQL_DB')
+    SQLALCHEMY_DATABASE_URI = f"mysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
     SESSION_COOKIE_SECURE = True
     FORCE_HTTPS = True
     CACHE_TYPE = 'redis'
@@ -68,6 +72,7 @@ class TestingConfig(Config):
     DEBUG = True
     TESTING = True
     MYSQL_DB = 'tag_church_test'
+    SQLALCHEMY_DATABASE_URI = f"mysql://{os.getenv('MYSQL_USER', 'root')}:{os.getenv('MYSQL_PASSWORD', '')}@{os.getenv('MYSQL_HOST', 'localhost')}/{MYSQL_DB}"  
     CACHE_TYPE = 'simple'
     WTF_CSRF_ENABLED = False
 

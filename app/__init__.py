@@ -3,8 +3,11 @@ Flask Application Factory
 Initializes and configures the TAG Church website application
 """
 
+import pymysql
+pymysql.install_as_MySQLdb()  # Use pymysql as a drop-in
+
 from flask import Flask
-from flask_mysqldb import MySQL
+from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache
 from flask_compress import Compress
 from flask_talisman import Talisman
@@ -13,7 +16,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 # Initialize extensions
-mysql = MySQL()
+db = SQLAlchemy()
 cache = Cache()
 compress = Compress()
 
@@ -35,7 +38,7 @@ def create_app(config_name='development'):
     app.config.from_object(config[config_name])
     
     # Initialize extensions
-    mysql.init_app(app)
+    db.init_app(app)
     cache.init_app(app)
     compress.init_app(app)
     
@@ -70,7 +73,7 @@ def create_app(config_name='development'):
     def internal_error(error):
         """Handle 500 errors"""
         try:
-            mysql.connection.rollback()
+            db.connection.rollback()
         except:
             pass
         app.logger.error(f'Server Error: {error}')
