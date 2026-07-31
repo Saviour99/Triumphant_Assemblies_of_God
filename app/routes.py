@@ -1,6 +1,12 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+import uuid
+
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
 from app import db
-from datetime import datetime
+from app.models import (
+    PrayerRequest, ContactMessage, NewsletterSubscriber, Giving,
+    VideoSermon, AudioSermon, Devotion, Ebook, Testimony
+)
+from datetime import datetime, date
 import re
 
 main_bp = Blueprint('main', __name__)
@@ -9,7 +15,7 @@ api_bp = Blueprint('api', __name__)
 # Church data (can be moved to database later)
 CHURCH_INFO = {
     'name': 'Triumphant Assemblies of God (TAG)',
-    'address': 'Post Office Box AN 6130, Accra North, Ghana, West Africa',
+    'address': 'Dansoman, between Atomic and Glefe, Accra, Ghana',
     'digital_address': 'GA-570-0529',
     'email': 'triumphantag@gmail.com',
     'phone': '0501116130',
@@ -125,7 +131,14 @@ def ministries():
 @main_bp.route('/sermons')
 def sermons():
     """Sermons page"""
-    return render_template('public/sermons.html', church_info=CHURCH_INFO)
+    video_sermons = VideoSermon.query.order_by(VideoSermon.sermon_date.desc()).all()
+    audio_sermons = AudioSermon.query.order_by(AudioSermon.sermon_date.desc()).all()
+    return render_template(
+        'public/sermons.html',
+        video_sermons=video_sermons,
+        audio_sermons=audio_sermons,
+        church_info=CHURCH_INFO
+    )
 
 @main_bp.route('/events')
 def events():
@@ -134,8 +147,66 @@ def events():
 
 @main_bp.route('/blog')
 def blog():
-    """Blog page"""
-    return render_template('public/blog.html', church_info=CHURCH_INFO)
+    """Blog / daily devotion page"""
+    requested_date = request.args.get('date')
+    if requested_date:
+        try:
+            parsed_date = datetime.strptime(requested_date, '%Y-%m-%d').date()
+        except ValueError:
+            parsed_date = None
+        devotion = Devotion.query.filter_by(devotion_date=parsed_date).first() if parsed_date else None
+        if not devotion:
+            devotion = Devotion.query.order_by(Devotion.devotion_date.desc()).first()
+    else:
+        devotion = Devotion.query.order_by(Devotion.devotion_date.desc()).first()
+
+    past_devotions = Devotion.query.order_by(Devotion.devotion_date.desc()).limit(10).all()
+    recent_testimonies = Testimony.query.order_by(Testimony.created_at.desc()).limit(3).all()
+
+    return render_template(
+        'public/blog.html',
+        devotion=devotion,
+        past_devotions=past_devotions,
+        recent_testimonies=recent_testimonies,
+        church_info=CHURCH_INFO
+    )
+
+
+@main_bp.route('/blog/devotionals')
+def blog_devotionals():
+    """Full devotion archive — every devotion ever posted, paginated."""
+    page = request.args.get('page', 1, type=int)
+    pagination = Devotion.query.order_by(Devotion.devotion_date.desc()).paginate(
+        page=page, per_page=5, error_out=False
+    )
+    return render_template(
+        'public/blog_devotionals.html',
+        pagination=pagination,
+        devotions=pagination.items,
+        church_info=CHURCH_INFO
+    )
+
+
+@main_bp.route('/blog/worship')
+def blog_worship():
+    """Worship reading list."""
+    ebooks = Ebook.query.filter_by(category='worship').order_by(Ebook.title.asc()).all()
+    return render_template('public/blog_ebooks.html', ebooks=ebooks, category='worship', church_info=CHURCH_INFO)
+
+
+@main_bp.route('/blog/leadership')
+def blog_leadership():
+    """Leadership reading list."""
+    ebooks = Ebook.query.filter_by(category='leadership').order_by(Ebook.title.asc()).all()
+    return render_template('public/blog_ebooks.html', ebooks=ebooks, category='leadership', church_info=CHURCH_INFO)
+
+
+@main_bp.route('/blog/testimonies')
+def blog_testimonies():
+    """Member testimonies."""
+    testimonies = Testimony.query.order_by(Testimony.created_at.desc()).all()
+    return render_template('public/blog_testimonies.html', testimonies=testimonies, church_info=CHURCH_INFO)
+
 
 @main_bp.route('/contact')
 def contact():
@@ -149,86 +220,66 @@ def giving():
 
 # ============ API ROUTES ============
 
-def validate_email(email):
-    """Validate email format"""
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
-
-def sanitize_input(text):
-    """Basic input sanitization"""
-    if not text:
-        return ''
-    # Remove potentially dangerous characters
-    text = text.strip()
-    text = re.sub(r'[<>\"\'%;()&+]', '', text)
-    return text
+from app.utils import validate_email, sanitize_text as sanitize_input
 
 @api_bp.route('/prayer-request', methods=['POST'])
 def prayer_request():
     """Handle prayer request submissions"""
     try:
         data = request.get_json()
-        
-        # Validate inputs
+
         name = sanitize_input(data.get('name', ''))
         email = sanitize_input(data.get('email', ''))
         topic = sanitize_input(data.get('topic', ''))
         message = sanitize_input(data.get('message', ''))
-        
+
         if not all([name, email, topic, message]):
             return jsonify({'success': False, 'message': 'All fields are required'}), 400
-        
+
         if not validate_email(email):
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
-        
+
         if len(message) < 10:
             return jsonify({'success': False, 'message': 'Message must be at least 10 characters'}), 400
-        
-        # Insert into database
-        cur = db.connection.cursor()
-        cur.execute("""
-            INSERT INTO prayer_requests (name, email, topic, message, created_at)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (name, email, topic, message, datetime.now()))
-        db.connection.commit()
-        cur.close()
-        
+
+        db.session.add(PrayerRequest(name=name, email=email, topic=topic, message=message))
+        db.session.commit()
+
         return jsonify({'success': True, 'message': 'Prayer request submitted successfully'}), 201
-    
+
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        db.session.rollback()
+        current_app.logger.error(f'prayer_request error: {e}')
+        return jsonify({'success': False, 'message': 'Something went wrong. Please try again.'}), 500
+
 
 @api_bp.route('/contact-form', methods=['POST'])
 def contact_form():
     """Handle contact form submissions"""
     try:
         data = request.get_json()
-        
-        # Validate inputs
+
         name = sanitize_input(data.get('name', ''))
         email = sanitize_input(data.get('email', ''))
         subject = sanitize_input(data.get('subject', ''))
         message = sanitize_input(data.get('message', ''))
-        
+
         if not all([name, email, subject, message]):
             return jsonify({'success': False, 'message': 'All fields are required'}), 400
-        
+
         if not validate_email(email):
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
-        
-        # Insert into database
-        cur = db.connection.cursor()
-        cur.execute("""
-            INSERT INTO contact_messages (name, email, subject, message, created_at)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (name, email, subject, message, datetime.now()))
-        db.connection.commit()
-        cur.close()
-        
+
+        db.session.add(ContactMessage(name=name, email=email, subject=subject, message=message))
+        db.session.commit()
+
         return jsonify({'success': True, 'message': 'Message sent successfully'}), 201
-    
+
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        db.session.rollback()
+        current_app.logger.error(f'contact_form error: {e}')
+        return jsonify({'success': False, 'message': 'Something went wrong. Please try again.'}), 500
+
 
 @api_bp.route('/newsletter', methods=['POST'])
 def newsletter():
@@ -236,70 +287,137 @@ def newsletter():
     try:
         data = request.get_json()
         email = sanitize_input(data.get('email', ''))
-        
+
         if not email:
             return jsonify({'success': False, 'message': 'Email is required'}), 400
-        
+
         if not validate_email(email):
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
-        
-        # Check if already subscribed
-        cur = db.connection.cursor()
-        cur.execute("SELECT id FROM newsletter_subscribers WHERE email = %s", (email,))
-        existing = cur.fetchone()
-        
-        if existing:
-            cur.close()
-            return jsonify({'success': False, 'message': 'Email already subscribed'}), 400
-        
-        # Insert new subscriber
-        cur.execute("""
-            INSERT INTO newsletter_subscribers (email, subscribed_at)
-            VALUES (%s, %s)
-        """, (email, datetime.now()))
-        db.connection.commit()
-        cur.close()
-        
-        return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter'}), 201
-    
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
 
-@api_bp.route('/giving', methods=['POST'])
-def giving():
-    """Handle online giving submissions"""
+        if NewsletterSubscriber.query.filter_by(email=email).first():
+            return jsonify({'success': False, 'message': 'Email already subscribed'}), 400
+
+        db.session.add(NewsletterSubscriber(email=email))
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'newsletter error: {e}')
+        return jsonify({'success': False, 'message': 'Something went wrong. Please try again.'}), 500
+
+
+# ============ GIVING / PAYSTACK ============
+
+VALID_GIVING_TYPES = {'tithe', 'offering', 'missions', 'building_fund', 'other'}
+
+
+@api_bp.route('/giving/init', methods=['POST'])
+def giving_init():
+    """
+    Step 1 of the Paystack flow: create a pending Giving row server-side
+    (never trusting a client-supplied 'amount already paid' claim) and hand
+    back a reference for the browser to open the Paystack popup with.
+    """
     try:
         data = request.get_json()
-        
-        # Validate inputs
-        amount = data.get('amount')
+
         giving_type = sanitize_input(data.get('giving_type', ''))
         donor_name = sanitize_input(data.get('donor_name', ''))
         donor_email = sanitize_input(data.get('donor_email', ''))
-        
-        if not all([amount, giving_type, donor_name, donor_email]):
+
+        if giving_type not in VALID_GIVING_TYPES:
+            return jsonify({'success': False, 'message': 'Invalid giving type'}), 400
+
+        if not all([donor_name, donor_email]):
             return jsonify({'success': False, 'message': 'All fields are required'}), 400
-        
-        try:
-            amount = float(amount)
-            if amount <= 0:
-                raise ValueError("Amount must be positive")
-        except ValueError:
-            return jsonify({'success': False, 'message': 'Invalid amount'}), 400
-        
+
         if not validate_email(donor_email):
             return jsonify({'success': False, 'message': 'Invalid email format'}), 400
-        
-        # Insert into database
-        cur = db.connection.cursor()
-        cur.execute("""
-            INSERT INTO giving (amount, giving_type, donor_name, donor_email, created_at)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (amount, giving_type, donor_name, donor_email, datetime.now()))
-        db.connection.commit()
-        cur.close()
-        
-        return jsonify({'success': True, 'message': 'Giving recorded successfully'}), 201
-    
+
+        try:
+            amount = float(data.get('amount'))
+            if amount <= 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            return jsonify({'success': False, 'message': 'Invalid amount'}), 400
+
+        from flask_login import current_user
+        from app.models import Member
+
+        reference = uuid.uuid4().hex
+        donation = Giving(
+            amount=amount,
+            giving_type=giving_type,
+            donor_name=donor_name,
+            donor_email=donor_email,
+            paystack_reference=reference,
+            status='pending',
+            member_id=current_user.id if current_user.is_authenticated and isinstance(current_user, Member) else None
+        )
+        db.session.add(donation)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'reference': reference,
+            'amount': amount,
+            'email': donor_email,
+            'public_key': current_app.config.get('PAYSTACK_PUBLIC_KEY', '')
+        }), 201
+
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        db.session.rollback()
+        current_app.logger.error(f'giving_init error: {e}')
+        return jsonify({'success': False, 'message': 'Something went wrong. Please try again.'}), 500
+
+
+@api_bp.route('/paystack/verify', methods=['POST'])
+def paystack_verify():
+    """
+    Step 2: verify the transaction server-side against Paystack's API before
+    ever marking a donation completed. The browser's callback is never trusted
+    on its own.
+    """
+    import requests
+
+    reference = sanitize_input((request.get_json() or {}).get('reference', ''))
+    if not reference:
+        return jsonify({'success': False, 'message': 'Missing reference'}), 400
+
+    donation = Giving.query.filter_by(paystack_reference=reference).first()
+    if not donation:
+        return jsonify({'success': False, 'message': 'Unknown transaction'}), 404
+
+    if donation.status == 'completed':
+        return jsonify({'success': True, 'message': 'Already verified'}), 200
+
+    secret_key = current_app.config.get('PAYSTACK_SECRET_KEY', '')
+    if not secret_key:
+        current_app.logger.error('PAYSTACK_SECRET_KEY is not configured')
+        return jsonify({'success': False, 'message': 'Payments are not configured'}), 503
+
+    try:
+        resp = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'Bearer {secret_key}'},
+            timeout=10
+        )
+        payload = resp.json()
+    except Exception as e:
+        current_app.logger.error(f'paystack_verify request error: {e}')
+        return jsonify({'success': False, 'message': 'Could not reach Paystack'}), 502
+
+    paystack_data = payload.get('data', {})
+    expected_kobo = round(float(donation.amount) * 100)
+
+    if payload.get('status') and paystack_data.get('status') == 'success' \
+            and paystack_data.get('amount') == expected_kobo:
+        donation.status = 'completed'
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Payment verified'}), 200
+
+    donation.status = 'failed'
+    db.session.commit()
+    return jsonify({'success': False, 'message': 'Payment could not be verified'}), 400

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "public/_devotion_card.html" import devotion_card %}
 
 {% block title %}Blog - Triumphant Assemblies of God (TAG){% endblock %}
 
@@ -23,158 +24,22 @@
                     <div class="section-divider"></div>
                 </div>
 
-                <!-- Featured Post -->
-                <article class="blog-post featured-post mb-5">
-                    <span class="badge bg-success mb-2">NEW</span>
-                    <h3>Jesus is in the Boat</h3>
-                    <div class="post-meta mb-3">
-                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
-                        <span class="category ms-3 text-gold"><i class="fa-solid fa-book-bible"></i><b> Mark 4:39</b></span>
-                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 28, 2024</span>
-                        <span class="category ms-3"><i class="fas fa-tag"></i> Devotional</span>
-                    </div>
-                    <p class="lead">
-                        "He got up, rebuked the wind and said to the waves, ‘Quiet! Be still!’ Then the wind died down and it was completely calm."
-                    </p>
-                    <h4 class="text-gold" style="font-size: 1.1rem;">REFLECTION</h4>
-                    <p>
-                        The storm was raging, but Jesus was sleeping in the boat. His presence changed everything. 
-                        When you face overwhelming circumstances, remember that Jesus is with you. He may seem silent, but He is never absent. 
-                        One word from Him can calm any storm. Do not look at the waves look at the One who is in the boat with you.
-                    </p>
-                    <h4 class="text-gold" style="font-size: 1.1rem;">REFLECTION</h4>
-                    <ul class="text-muted">
-                        <li>Lord, help me to remember that You are with me in every storm.</li>
-                        <li>Speak peace over the chaos in my life right now.</li>
-                        <li>Increase my faith to trust You even when the waves are high.</li>
-                    </ul>
-                    <h4 class="text-gold" style="font-size: 1.1rem;">DECLARATION</h4>
-                    <p>Jesus is in my boat. I will not fear, for He speaks peace over every storm.</p>
-                    <h4 class="text-blue text-center" style="font-size: 0.8rem;">JESUS IS LORD</h4>
-                </article>
+                {% if devotion %}
+                    {{ devotion_card(devotion) }}
+                {% else %}
+                <div class="alert alert-info mb-5">No devotion has been posted yet. Check back soon.</div>
+                {% endif %}
 
-                <!-- Blog Post 1 -->
-                 <div>
-                    <div class="text-start">
-                    <h2>Latest <span class="text-gold">Articles</span></h2>
-                    <div class="section-divider"></div>
+                <div class="text-center mb-5">
+                    <a href="{{ url_for('main.blog_devotionals') }}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-book-open"></i> View All Devotionals
+                    </a>
                 </div>
-                 </div>
-                <article class="blog-post mb-4">
-                    <img src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Article" class="img-fluid rounded-lg mb-3">
-                    <span class="badge bg-gold mb-2">Worship</span>
-                    <h4>Living a Life of Worship</h4>
-                    <div class="post-meta mb-3">
-                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
-                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 21, 2026</span>
-                    </div>
-                    <p>
-                        Worship is more than singing songs on Sunday morning. It's a lifestyle of honoring God with our thoughts, 
-                        words, and actions. Learn how to cultivate a spirit of worship in every area of your life.
-                    </p>
-                    <a href="#" class="btn btn-primary btn-sm">Read More</a>
-                </article>
-
-                <!-- Blog Post 2 -->
-                <article class="blog-post mb-4">
-                    <img src="https://images.unsplash.com/photo-1773332589460-5a5d43c80f5b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Article" class="img-fluid rounded-lg mb-3">
-                    <span class="badge bg-gold mb-2">Family</span>
-                    <h4>Strengthening Your Family Through Faith</h4>
-                    <div class="post-meta mb-3">
-                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
-                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 14, 2026</span>
-                    </div>
-                    <p>
-                        In today's fast-paced world, families need a strong spiritual foundation. Discover practical ways to 
-                        integrate faith into your family life and build lasting spiritual bonds with your loved ones.
-                    </p>
-                    <a href="#" class="btn btn-primary btn-sm">Read More</a>
-                </article>
-
-                <!-- Blog Post 3 -->
-                <article class="blog-post mb-4">
-                    <img src="https://images.unsplash.com/photo-1591197172062-c718f82aba20?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Article" class="img-fluid rounded-lg mb-3">
-                    <span class="badge bg-gold mb-2">Community</span>
-                    <h4>Serving Others With Love and Purpose</h4>
-                    <div class="post-meta mb-3">
-                        <span class="author"><i class="fas fa-user"></i> Rev. Rexford Peprah</span>
-                        <span class="date ms-3"><i class="fas fa-calendar"></i> April 7, 2026</span>
-                    </div>
-                    <p>
-                        Jesus taught us that serving others is a reflection of our love for God. Explore how you can make a 
-                        meaningful difference in your community through compassionate service and genuine care.
-                    </p>
-                    <a href="#" class="btn btn-primary btn-sm">Read More</a>
-                </article>
-
-                <!-- Pagination -->
-                <nav aria-label="Page navigation" class="mt-5">
-                    <ul class="pagination">
-                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                    </ul>
-                </nav>
             </div>
 
             <!-- Sidebar -->
             <div class="col-lg-4">
-                <!-- Search -->
-                <div class="sidebar-widget mb-4">
-                    <h5 class="widget-title">Search Articles</h5>
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search...">
-                        <button class="btn btn-gold" type="button">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Categories -->
-                <div class="sidebar-widget mb-4">
-                    <h5 class="widget-title">Categories</h5>
-                    <ul class="category-list">
-                        <li><a href="#">Devotional <span class="count">(12)</span></a></li>
-                        <li><a href="#">Worship <span class="count">(8)</span></a></li>
-                        <li><a href="#">Family <span class="count">(6)</span></a></li>
-                        <li><a href="#">Community <span class="count">(9)</span></a></li>
-                        <li><a href="#">Leadership <span class="count">(5)</span></a></li>
-                        <li><a href="#">Testimonies <span class="count">(14)</span></a></li>
-                    </ul>
-                </div>
-
-                <!-- Recent Posts -->
-                <div class="sidebar-widget mb-4">
-                    <h5 class="widget-title">Recent Posts</h5>
-                    <ul class="recent-posts">
-                        <li>
-                            <a href="#">The Power of Persistent Prayer</a>
-                            <small class="text-muted">April 28, 2024</small>
-                        </li>
-                        <li>
-                            <a href="#">Living a Life of Worship</a>
-                            <small class="text-muted">April 21, 2024</small>
-                        </li>
-                        <li>
-                            <a href="#">Strengthening Your Family Through Faith</a>
-                            <small class="text-muted">April 14, 2024</small>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Newsletter -->
-                <div class="sidebar-widget bg-blue text-white p-3 rounded-lg">
-                    <h5 class="widget-title text-white">Subscribe to Our Newsletter</h5>
-                    <p class="small mb-3">Get inspiring articles and devotionals delivered to your inbox.</p>
-                    <form id="newsletterForm">
-                        <div class="mb-2">
-                            <input type="email" id="newsletterEmail" class="form-control" placeholder="Your email" required>
-                        </div>
-                        <button type="submit" class="btn btn-gold w-100">Subscribe</button>
-                    </form>
-                </div>
+                {% include "public/_blog_sidebar.html" %}
             </div>
         </div>
     </div>
@@ -188,97 +53,48 @@
             <p class="section-subtitle">Stories of faith, transformation, and God's faithfulness</p>
         </div>
 
+        {% if recent_testimonies %}
         <div id="testimoniesCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
-                <!-- Testimony 1 -->
-                <div class="carousel-item active">
+                {% for t in recent_testimonies %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
                     <div class="testimony-card">
                         <div class="row align-items-center">
                             <div class="col-md-4 text-center">
-                                <img src="https://source.unsplash.com/300x300/?african+woman+1" alt="Testimony" class="img-fluid rounded-circle mb-3" style="max-width: 250px;">
-                                <h5>Ama Mensah</h5>
+                                {% if t.image_url %}
+                                    <img src="{{ t.image_url }}" alt="{{ t.name }}" class="img-fluid rounded-circle mb-3" style="max-width: 200px;">
+                                {% else %}
+                                    <div class="testimony-avatar-placeholder mx-auto mb-3"><i class="fa-solid fa-user"></i></div>
+                                {% endif %}
+                                <h5>{{ t.name }}</h5>
                                 <p class="text-muted">Church Member</p>
                             </div>
                             <div class="col-md-8">
-                                <p class="testimony-text">
-                                    "My life changed completely when I gave my life to Christ at TAG. The love, support, and spiritual guidance 
-                                    I've received from this church family has been transformational. I went from a life of despair to a life 
-                                    filled with purpose, joy, and hope. I'm forever grateful to God and to this wonderful church."
-                                </p>
-                                <div class="rating">
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                </div>
+                                <p class="testimony-text">&ldquo;{{ t.testimony }}&rdquo;</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Testimony 2 -->
-                <div class="carousel-item">
-                    <div class="testimony-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 text-center">
-                                <img src="https://source.unsplash.com/300x300/?african+man+1" alt="Testimony" class="img-fluid rounded-circle mb-3" style="max-width: 250px;">
-                                <h5>Kwame Asante</h5>
-                                <p class="text-muted">Church Member</p>
-                            </div>
-                            <div class="col-md-8">
-                                <p class="testimony-text">
-                                    "TAG has been instrumental in my spiritual journey. The powerful sermons, caring community, and active 
-                                    ministries have helped me grow in my faith and discover my purpose. I've made lifelong friendships and 
-                                    found a true church family. I highly recommend TAG to anyone seeking a genuine spiritual home."
-                                </p>
-                                <div class="rating">
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Testimony 3 -->
-                <div class="carousel-item">
-                    <div class="testimony-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 text-center">
-                                <img src="https://source.unsplash.com/300x300/?african+woman+2" alt="Testimony" class="img-fluid rounded-circle mb-3" style="max-width: 250px;">
-                                <h5>Abena Owusu</h5>
-                                <p class="text-muted">Church Member</p>
-                            </div>
-                            <div class="col-md-8">
-                                <p class="testimony-text">
-                                    "Joining TAG was the best decision I ever made. The pastoral care, Bible-based teaching, and loving community 
-                                    have strengthened my faith immensely. I've witnessed God's faithfulness in my life and seen Him work miracles. 
-                                    This church is truly a place of triumph, love, and purpose!"
-                                </p>
-                                <div class="rating">
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                    <i class="fas fa-star text-gold"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
 
-            <!-- Carousel Controls -->
+            {% if recent_testimonies|length > 1 %}
             <button class="carousel-control-prev" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon"></span>
             </button>
             <button class="carousel-control-next" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="next">
                 <span class="carousel-control-next-icon"></span>
             </button>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-center text-muted">No testimonies have been shared yet.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.blog_testimonies') }}" class="btn btn-gold">
+                <i class="fa-solid fa-comment-dots"></i> View All Testimonies
+            </a>
         </div>
     </div>
 </section>

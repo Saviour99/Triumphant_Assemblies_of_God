@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% block title %}Contact Messages - Admin{% endblock %}
+{% block page_title %}Contact Messages{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-admin align-middle">
+            <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Subject</th><th>Message</th></tr></thead>
+            <tbody>
+                {% for m in messages %}
+                <tr>
+                    <td class="text-nowrap">{{ m.created_at.strftime('%d %b %Y') }}</td>
+                    <td>{{ m.name }}</td>
+                    <td>{{ m.email }}</td>
+                    <td>{{ m.subject }}</td>
+                    <td style="max-width:400px;">{{ m.message }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No messages yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

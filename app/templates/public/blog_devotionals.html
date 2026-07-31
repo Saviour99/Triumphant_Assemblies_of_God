@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "public/_devotion_card.html" import devotion_card %}
+
+{% block title %}All Devotionals - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Daily Devotionals</h1>
+        <p class="lead">Every devotion we've shared, in one place</p>
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                {% for devotion in devotions %}
+                    {{ devotion_card(devotion, show_badge=(pagination.page == 1 and loop.first)) }}
+                {% else %}
+                <div class="alert alert-info">No devotions have been posted yet.</div>
+                {% endfor %}
+
+                {% if pagination.pages > 1 %}
+                <nav aria-label="Devotionals pagination" class="mt-4">
+                    <ul class="pagination">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('main.blog_devotionals', page=pagination.prev_num) if pagination.has_prev else '#' }}">Previous</a>
+                        </li>
+                        {% for p in pagination.iter_pages() %}
+                            {% if p %}
+                                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('main.blog_devotionals', page=p) }}">{{ p }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('main.blog_devotionals', page=pagination.next_num) if pagination.has_next else '#' }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+                {% include "public/_blog_sidebar.html" %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

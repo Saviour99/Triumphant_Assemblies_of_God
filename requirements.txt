@@ -1,12 +1,18 @@
 # Core Flask
 Flask==2.3.3
-Flask-MySQLdb==1.0.1
 python-dotenv==1.0.0
 Werkzeug==2.3.7
 Jinja2==3.1.2
 
-# Database
-MySQLdb==1.2.5
+# Auth
+Flask-Login==0.6.3
+itsdangerous==2.1.2
+
+# Database (PyMySQL is installed as a drop-in MySQLdb replacement — see
+# pymysql.install_as_MySQLdb() in app/__init__.py and init_db.py — so no
+# mysqlclient/C-extension dependency is needed)
+Flask-SQLAlchemy==3.1.1
+PyMySQL==1.1.0
 
 # Performance & Caching
 Flask-Caching==2.0.2

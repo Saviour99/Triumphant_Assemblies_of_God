@@ -289,6 +289,7 @@
 <!-- =============================================
      LIVE STREAM
 ============================================= -->
+{% if live_stream and live_stream.is_live and live_stream.youtube_url %}
 <section id="livestream">
     <div class="container">
         <div class="row align-items-center g-5">
@@ -296,18 +297,12 @@
                 <span class="live-badge"><span class="dot"></span> Watch Live</span>
                 <h2 class="" style="color:white">Worship With Us <span style="color:var(--gold)"><br />From Anywhere</span></h2>
                 <div class="section-divider"></div>
-                <p>Can't make it in person? Join our live stream every Sunday and Wednesday. Thousands across Ghana and the world worship with us online.</p>
-                <div class="mt-4">
-                    <div class="stream" style="background:rgba(255,255,255,0.08); text-align:left; display:inline-block; min-width:auto; padding:16px 24px;">
-                        <div class="day" style="color:var(--gold-light);">Live Every</div>
-                        <div class="time" style="color:white; font-size:1.1rem">Sun 7AM - 10:30AM · Wed 7PM</div>
-                    </div>
-                </div>
+                <p>We're live right now! Join our service from wherever you are.</p>
             </div>
             <div class="col-lg-7">
                 <div class="live-embed-wrap">
                     <iframe
-                        src="https://www.youtube.com/embed/pYD5LagqTbM?si=AcbicsSRPVdzNp8g"
+                        src="{{ youtube_embed_url(live_stream.youtube_url) }}"
                         title="Triumphant Assemblies of God Live Stream"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowfullscreen
@@ -318,6 +313,7 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- Call to Action Banner -->
 <section class="cta-banner">

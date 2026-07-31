@@ -268,6 +268,11 @@ window.addEventListener('load', initializeSermonSearch);
 
 // ============ FORM HANDLING ============
 
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+}
+
 // Prayer Request Form
 function initializePrayerForm() {
     const prayerForm = document.getElementById('prayerForm');
@@ -286,7 +291,8 @@ function initializePrayerForm() {
                 const response = await fetch('/api/prayer-request', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
                     },
                     body: JSON.stringify(formData)
                 });
@@ -324,7 +330,8 @@ function initializeContactForm() {
                 const response = await fetch('/api/contact-form', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
                     },
                     body: JSON.stringify(formData)
                 });
@@ -344,26 +351,27 @@ function initializeContactForm() {
     }
 }
 
-// Newsletter Form
-function initializeNewsletterForm() {
-    const newsletterForm = document.getElementById('newsletterForm');
+// Newsletter Forms (blog sidebar + footer both post to the same JSON API)
+function initializeNewsletterForm(formId, emailFieldId) {
+    const newsletterForm = document.getElementById(formId);
     if (newsletterForm) {
         newsletterForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const email = document.getElementById('newsletterEmail').value;
-            
+
+            const email = document.getElementById(emailFieldId).value;
+
             try {
                 const response = await fetch('/api/newsletter', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
                     },
                     body: JSON.stringify({ email })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     showNotification('Successfully subscribed to newsletter!', 'success');
                     newsletterForm.reset();
@@ -377,57 +385,31 @@ function initializeNewsletterForm() {
     }
 }
 
-// Giving Form
-function initializeGivingForm() {
-    const givingForm = document.getElementById('givingForm');
-    if (givingForm) {
-        givingForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                amount: document.getElementById('givingAmount').value,
-                giving_type: document.getElementById('givingType').value,
-                donor_name: document.getElementById('donorName').value,
-                donor_email: document.getElementById('donorEmail').value
-            };
-            
-            try {
-                const response = await fetch('/api/giving', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showNotification('Thank you for your generous giving!', 'success');
-                    givingForm.reset();
-                } else {
-                    showNotification(data.message || 'Error processing giving', 'error');
-                }
-            } catch (error) {
-                showNotification('Error: ' + error.message, 'error');
-            }
-        });
-    }
-}
+// Note: the online giving form (#givingForm on the Giving page) is handled
+// by its own inline script in offering.html, which drives the Paystack
+// popup flow — it is intentionally not wired up here.
 
-// Initialize all forms on DOM ready and page load
+// Initialize all forms once on DOM ready. (Not also on window 'load' —
+// each init attaches a 'submit' listener, so registering twice would
+// submit every form twice.)
 document.addEventListener('DOMContentLoaded', function() {
     initializePrayerForm();
     initializeContactForm();
-    initializeNewsletterForm();
-    initializeGivingForm();
+    initializeNewsletterForm('newsletterForm', 'newsletterEmail');
+    initializeNewsletterForm('footerNewsletterForm', 'footerNewsletterEmail');
 });
 
-window.addEventListener('load', function() {
-    initializePrayerForm();
-    initializeContactForm();
-    initializeNewsletterForm();
-    initializeGivingForm();
+// ============ SINGLE-TRACK AUDIO PLAYBACK ============
+// Only one <audio> element (e.g. on the sermons audio archive) plays at a
+// time — starting a new track pauses every other one on the page.
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('audio').forEach(audio => {
+        audio.addEventListener('play', () => {
+            document.querySelectorAll('audio').forEach(other => {
+                if (other !== audio) other.pause();
+            });
+        });
+    });
 });
 
 // ============ NOTIFICATION SYSTEM ============

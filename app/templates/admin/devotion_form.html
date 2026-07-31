@@ -1,0 +1,55 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit Devotion' if devotion else 'Post Devotion' }} - Admin{% endblock %}
+{% block page_title %}{{ 'Edit Devotion' if devotion else "Post Today's Devotion" }}{% endblock %}
+
+{% block content %}
+<div class="admin-card" style="max-width:680px;">
+    <p class="text-muted">Date: <strong>{{ (devotion.devotion_date if devotion else today).strftime('%d %B %Y') }}</strong> (not editable)</p>
+
+    {% if not devotion and already_posted %}
+        <div class="alert alert-warning">A devotion has already been posted today: "<strong>{{ already_posted.title }}</strong>". Only one devotion per day is allowed.</div>
+    {% else %}
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            {{ form.title(class="form-control") }}
+            {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Quote</label>
+            {{ form.quote(class="form-control") }}
+            {% for error in form.quote.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Theme</label>
+            {{ form.quote_theme(class="form-control") }}
+            {% for error in form.quote_theme.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Writer's Name</label>
+            {{ form.writer_name(class="form-control") }}
+            {% for error in form.writer_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Reflection</label>
+            {{ form.reflection(class="form-control", rows=5) }}
+            {% for error in form.reflection.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Prayer Points</label>
+            {{ form.prayer_points(class="form-control", rows=4, placeholder="One prayer point per line...") }}
+            <div class="form-text">One point per line — each line will be shown as its own bullet. Leave blank if there are none today.</div>
+            {% for error in form.prayer_points.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Declaration</label>
+            {{ form.declaration(class="form-control", rows=3) }}
+            {% for error in form.declaration.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save Changes' if devotion else 'Post Devotion' }}</button>
+        <a href="{{ url_for('admin.devotions_list') }}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

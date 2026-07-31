@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% block title %}Members - Admin{% endblock %}
+{% block page_title %}Members{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('admin.member_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus"></i> Add Member</a>
+</div>
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-admin align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in members %}
+                <tr>
+                    <td><a href="{{ url_for('admin.member_profile', member_id=m.id) }}">{{ m.full_name }}</a></td>
+                    <td>{{ m.email }}</td>
+                    <td>{{ m.phone or '—' }}</td>
+                    <td>
+                        {% if m.is_active_member %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Deactivated</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ m.created_at.strftime('%d %b %Y') }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.member_edit', member_id=m.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        {% if m.is_active_member %}
+                        <form action="{{ url_for('admin.member_delete', member_id=m.id) }}" method="POST" class="d-inline confirm-delete" data-confirm-message="Deactivate this member?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Deactivate</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No members yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

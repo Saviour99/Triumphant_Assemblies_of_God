@@ -22,12 +22,20 @@ class Config:
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+    ADMIN_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    
+
     # Security
     FORCE_HTTPS = False
+
+    # Paystack
+    PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
+    PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
+
+    # Devotions
+    MAX_DEVOTIONS = 60
     
     # Compression
     COMPRESS_LEVEL = 6

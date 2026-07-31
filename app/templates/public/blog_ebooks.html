@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category|title }} E-Books - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>{{ category|title }}</h1>
+        <p class="lead">A short reading list on Christian {{ category }}</p>
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                {% for e in ebooks %}
+                <article class="blog-post mb-4">
+                    <span class="badge bg-gold mb-2">{{ e.category|title }}</span>
+                    <h4>{{ e.title }}</h4>
+                    <p class="post-meta mb-2"><span class="author"><i class="fas fa-user-pen"></i> {{ e.author }}</span></p>
+                    {% if e.summary %}<p>{{ e.summary }}</p>{% endif %}
+                    {% if e.file_path %}
+                        <a href="{{ url_for('static', filename=e.file_path) }}" class="btn btn-primary btn-sm" download>
+                            <i class="fa-solid fa-download"></i> Download
+                        </a>
+                    {% else %}
+                        <span class="text-muted small"><i class="fa-solid fa-clock"></i> Download coming soon</span>
+                    {% endif %}
+                </article>
+                {% else %}
+                <div class="alert alert-info">No {{ category }} e-books have been added yet.</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-lg-4">
+                {% include "public/_blog_sidebar.html" %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

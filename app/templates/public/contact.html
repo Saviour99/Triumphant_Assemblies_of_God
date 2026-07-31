@@ -31,7 +31,10 @@
             <div class="contact-item-icon"><i class="fa-solid fa-location-dot"></i></div>
             <div class="contact-item-text">
               <h6>Address</h6>
-              <p>Post Office Box AN 6130 <br /> Accra North, Ghana, West Africa</p>
+              <p>{{ church_info.address }}</p>
+              <button type="button" id="planVisitBtn" class="btn-gold-sm mt-2">
+                <i class="fa-solid fa-map-location-dot"></i> Plan Your Visit
+              </button>
             </div>
           </div>
           <div class="contact-item">
@@ -81,7 +84,7 @@
         <div class="contact-form-card">
           <h4 style="font-family:var(--font-display); color:var(--royal-blue); margin-bottom:24px">Send Us a Message</h4>
           <form id="contactForm" action="/contact" method="POST" novalidate>
-            <input type="hidden" name="csrf_token" value="" />
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="row g-3">
               <div class="col-md-6">
                 <label for="contactName" class="form-label-custom">Full Name</label>
@@ -160,7 +163,7 @@
       <div class="col-lg-7 reveal-right">
         <div class="prayer-card">
           <form id="prayerForm" action="/prayer-request" method="POST" novalidate>
-            <input type="hidden" name="csrf_token" value="" />
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="row g-3">
               <div class="col-md-6">
                 <label for="prayerName" class="form-label">Your Name</label>
@@ -206,11 +209,16 @@
 </section>
 
 <!-- Map Section -->
-<section class="map-section">
+<section class="map-section" id="map-section">
     <div class="container-fluid p-0">
         <h2 class="section-title text-center mb-4">Find Us On <span class="text-gold">The Map</span></h2>
         <div class="map-container">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.5234567890!2d-0.2!3d5.6!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sTriumphant%20Assemblies%20of%20God!5e0!3m2!1sen!2sgh!4v1234567890" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src="https://maps.google.com/maps?q={{ 'Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana' | urlencode }}&output=embed" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="text-center mt-4">
+            <button type="button" id="getDirectionsBtn" class="btn-primary-gold" style="border:none; cursor:pointer;">
+                <i class="fa-solid fa-diamond-turn-right"></i> Get Directions From My Location
+            </button>
         </div>
     </div>
 </section>
@@ -266,5 +274,33 @@
         </div>
     </div>
 </section>
+
+<script>
+document.getElementById('planVisitBtn')?.addEventListener('click', () => {
+    document.getElementById('contactSubject').value = 'visit';
+    document.getElementById('map-section')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('getDirectionsBtn')?.addEventListener('click', () => {
+    const destination = encodeURIComponent('Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana');
+    const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+
+    if (!navigator.geolocation) {
+        window.open(fallbackUrl, '_blank');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const origin = `${position.coords.latitude},${position.coords.longitude}`;
+            window.open(
+                `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`,
+                '_blank'
+            );
+        },
+        () => window.open(fallbackUrl, '_blank')
+    );
+});
+</script>
 
 {% endblock %}

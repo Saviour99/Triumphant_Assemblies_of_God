@@ -15,6 +15,7 @@
         <div class="row">
             <div class="col-lg-8 mx-auto">
                 <div class="giving-card">
+                    <div id="givingAlert"></div>
                     <form id="givingForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -75,6 +76,7 @@
     </div>
 </section>
 
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
 // Quick amount buttons
 document.querySelectorAll('.quick-amount-btn').forEach(btn => {
@@ -82,6 +84,72 @@ document.querySelectorAll('.quick-amount-btn').forEach(btn => {
         document.getElementById('givingAmount').value = this.dataset.amount;
         document.getElementById('givingAmount').focus();
     });
+});
+
+const PAYSTACK_PUBLIC_KEY = "{{ paystack_public_key }}";
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+function showGivingAlert(message, type) {
+    document.getElementById('givingAlert').innerHTML =
+        `<div class="alert alert-${type}" role="alert">${message}</div>`;
+}
+
+document.getElementById('givingForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    if (!PAYSTACK_PUBLIC_KEY) {
+        showGivingAlert('Online giving is temporarily unavailable. Please try again later.', 'danger');
+        return;
+    }
+
+    const payload = {
+        amount: document.getElementById('givingAmount').value,
+        giving_type: document.getElementById('givingType').value,
+        donor_name: document.getElementById('donorName').value,
+        donor_email: document.getElementById('donorEmail').value
+    };
+
+    fetch('/api/giving/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify(payload)
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showGivingAlert(data.message || 'Something went wrong.', 'danger');
+                return;
+            }
+
+            const handler = PaystackPop.setup({
+                key: data.public_key,
+                email: data.email,
+                amount: Math.round(data.amount * 100),
+                currency: 'GHS',
+                ref: data.reference,
+                callback: function (response) {
+                    fetch('/api/paystack/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                        body: JSON.stringify({ reference: response.reference })
+                    })
+                        .then(res => res.json())
+                        .then(result => {
+                            if (result.success) {
+                                showGivingAlert('Thank you! Your giving was received successfully.', 'success');
+                                document.getElementById('givingForm').reset();
+                            } else {
+                                showGivingAlert('We could not verify your payment. Please contact the church office.', 'warning');
+                            }
+                        });
+                },
+                onClose: function () {
+                    showGivingAlert('Payment window closed.', 'info');
+                }
+            });
+            handler.openIframe();
+        })
+        .catch(() => showGivingAlert('Something went wrong. Please try again.', 'danger'));
 });
 </script>
 
