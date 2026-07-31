@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ category|title }} E-Books - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}{% if category == 'worship' %}A curated reading list of Christian worship e-books — title, author, and summary — recommended by Triumphant Assemblies of God.{% else %}A curated reading list of Christian leadership e-books — title, author, and summary — recommended by Triumphant Assemblies of God.{% endif %}{% endblock %}
 
 {% block content %}
 

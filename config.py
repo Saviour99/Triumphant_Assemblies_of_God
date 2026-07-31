@@ -71,6 +71,7 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = f"mysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
     SESSION_COOKIE_SECURE = True
     FORCE_HTTPS = True
+    SEND_FILE_MAX_AGE_DEFAULT = timedelta(days=30)
     CACHE_TYPE = 'redis'
     CACHE_REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     CACHE_DEFAULT_TIMEOUT = 3600  # 1 hour

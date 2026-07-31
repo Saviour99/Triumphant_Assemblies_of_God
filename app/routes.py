@@ -1,6 +1,6 @@
 import uuid
 
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, Response
 from app import db
 from app.models import (
     PrayerRequest, ContactMessage, NewsletterSubscriber, Giving,
@@ -217,6 +217,60 @@ def contact():
 def giving():
     """Offering page"""
     return render_template('public/offering.html', church_info=CHURCH_INFO)
+
+
+@main_bp.route('/robots.txt')
+def robots_txt():
+    """Allow public pages, keep auth/dashboard areas out of the crawl."""
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /members/",
+        f"Sitemap: {request.url_root}sitemap.xml",
+    ]
+    return Response("\n".join(lines) + "\n", mimetype='text/plain')
+
+
+@main_bp.route('/sitemap.xml')
+def sitemap_xml():
+    """Dynamically generated — built from request.url_root so it's correct
+    on localhost today and on whatever domain the site is deployed to."""
+    base = request.url_root.rstrip('/')
+    latest_devotion = Devotion.query.order_by(Devotion.devotion_date.desc()).first()
+    devotion_lastmod = latest_devotion.devotion_date.isoformat() if latest_devotion else None
+
+    pages = [
+        {'loc': url_for('main.index'), 'changefreq': 'weekly', 'priority': '1.0'},
+        {'loc': url_for('main.about'), 'changefreq': 'monthly', 'priority': '0.6'},
+        {'loc': url_for('main.ministries'), 'changefreq': 'monthly', 'priority': '0.6'},
+        {'loc': url_for('main.sermons'), 'changefreq': 'weekly', 'priority': '0.8'},
+        {'loc': url_for('main.events'), 'changefreq': 'weekly', 'priority': '0.6'},
+        {'loc': url_for('main.blog'), 'changefreq': 'daily', 'priority': '0.9', 'lastmod': devotion_lastmod},
+        {'loc': url_for('main.blog_devotionals'), 'changefreq': 'daily', 'priority': '0.7', 'lastmod': devotion_lastmod},
+        {'loc': url_for('main.blog_worship'), 'changefreq': 'monthly', 'priority': '0.5'},
+        {'loc': url_for('main.blog_leadership'), 'changefreq': 'monthly', 'priority': '0.5'},
+        {'loc': url_for('main.blog_testimonies'), 'changefreq': 'monthly', 'priority': '0.5'},
+        {'loc': url_for('main.contact'), 'changefreq': 'yearly', 'priority': '0.5'},
+        {'loc': url_for('main.giving'), 'changefreq': 'monthly', 'priority': '0.7'},
+    ]
+
+    xml_parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for page in pages:
+        xml_parts.append('<url>')
+        xml_parts.append(f"<loc>{base}{page['loc']}</loc>")
+        if page.get('lastmod'):
+            xml_parts.append(f"<lastmod>{page['lastmod']}</lastmod>")
+        xml_parts.append(f"<changefreq>{page['changefreq']}</changefreq>")
+        xml_parts.append(f"<priority>{page['priority']}</priority>")
+        xml_parts.append('</url>')
+    xml_parts.append('</urlset>')
+
+    return Response('\n'.join(xml_parts), mimetype='application/xml')
+
 
 # ============ API ROUTES ============
 
