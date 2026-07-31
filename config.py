@@ -19,6 +19,9 @@ class Config:
     # Caching
     CACHE_TYPE = 'simple'
     CACHE_DEFAULT_TIMEOUT = 300
+
+    # Rate limiting
+    RATELIMIT_STORAGE_URI = 'memory://'
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
@@ -75,6 +78,7 @@ class ProductionConfig(Config):
     CACHE_TYPE = 'redis'
     CACHE_REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     CACHE_DEFAULT_TIMEOUT = 3600  # 1 hour
+    RATELIMIT_STORAGE_URI = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
 class TestingConfig(Config):
     """Testing configuration"""

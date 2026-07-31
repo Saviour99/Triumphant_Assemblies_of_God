@@ -1,7 +1,7 @@
 # Triumphant Assemblies of God — Church Management System
 
 Public church website + admin dashboard for Triumphant Assemblies of God
-Ghana (Accra, Zuman area, between Atomic and Glefe).
+Ghana (Accra, Dansoman, between Atomic and Glefe).
 
 ## Tech stack (authoritative — not Django)
 
@@ -23,6 +23,16 @@ repo is, and stays, **Flask**:
 If you're asked to implement something from the original spec and it says
 "Django," translate it into the Flask equivalent instead of introducing a
 second framework.
+
+## Non-negotiable: dependency tracking
+
+**Any package installed (via `pip install`, etc.) must be added to
+`requirements.txt` in the same change — never leave an install untracked.**
+`requirements.txt` is the single source of truth for what this project
+needs; a dependency that works locally but is missing from it will fail
+the moment someone else (or a fresh deploy) runs `pip install -r
+requirements.txt`. Pin the version actually installed, and note what it's
+for with a short comment if it's not obvious from context.
 
 ## Non-negotiable: data safety
 
@@ -62,9 +72,22 @@ Member are structurally different (separate login pages, separate
 password-reset flows, near-zero field overlap) — don't collapse them into
 a single `User(role)` table.
 
+`Admin.role` is one of `'admin' | 'developer' | 'pastor'` (plain
+`VARCHAR(20)`, no DB-level enum). Admin and Pastor have identical
+dashboard access — `@admin_required` only checks `isinstance(current_user,
+Admin)`, it doesn't branch on role — the role exists purely to label which
+of the three intended people is logged in (shown as a colored badge:
+gold/admin, blue/developer, green/pastor). Developer is the only role with
+elevated, exclusive routes (see below). There's no UI to create accounts or
+change roles — all three are seeded once by `init_db.py` from `.env`
+(`ADMIN_DEFAULT_*` / `DEVELOPER_DEFAULT_*` / `PASTOR_DEFAULT_*`), each with
+a hardcoded fallback default if the env vars are absent.
+
 - `app/decorators.py`: `@admin_required` / `@member_required`, layered on
   top of Flask-Login's session handling, so a logged-in Member can't hit
-  `/admin/*` and vice versa.
+  `/admin/*` and vice versa. `@developer_required` is stricter still —
+  only `role == 'developer'` passes, used for account management and the
+  login-audit log.
 - Admin sessions get a shorter idle timeout (`ADMIN_SESSION_LIFETIME` in
   `config.py`, enforced in `app/__init__.py`'s `before_request` hook) than
   the general 7-day member session.
@@ -109,7 +132,7 @@ a single `User(role)` table.
 
 ## Location
 
-"Triumphant Assemblies of God Ghana" — Zuman, between Atomic and Glefe,
+"Triumphant Assemblies of God Ghana" — Dansoman, between Atomic and Glefe,
 Accra, Ghana. Used as the literal address string for the contact-page map
 and directions link (`app/templates/public/contact.html`) — don't invent
 lat/lng coordinates for it.

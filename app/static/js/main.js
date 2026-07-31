@@ -482,13 +482,24 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // ============ ACTIVE NAV LINK ============
+// A link is active on an exact path match, or when the current page is a
+// sub-page of it (e.g. "/blog" stays active on "/blog/worship",
+// "/blog/testimonies", etc.) — except "/" (Home), which only matches itself,
+// since every path technically "starts with" it.
 function setActiveNavLink() {
     const currentLocation = location.pathname;
     const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-    
+
     navLinks.forEach(link => {
         link.classList.remove('active');
-        if (link.getAttribute('href') === currentLocation) {
+        const href = link.getAttribute('href');
+        if (!href) return;
+
+        const isActive = href === '/'
+            ? currentLocation === '/'
+            : currentLocation === href || currentLocation.startsWith(href + '/');
+
+        if (isActive) {
             link.classList.add('active');
         }
     });

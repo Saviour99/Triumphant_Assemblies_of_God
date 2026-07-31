@@ -1,12 +1,14 @@
 <!-- Search -->
 <div class="sidebar-widget mb-4">
     <h5 class="widget-title">Search Articles</h5>
-    <div class="input-group">
-        <input type="text" class="form-control" placeholder="Search...">
-        <button class="btn btn-gold" type="button">
-            <i class="fas fa-search"></i>
-        </button>
-    </div>
+    <form action="{{ url_for('main.blog_search') }}" method="GET">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search..." value="{{ request.args.get('q', '') }}" aria-label="Search the blog">
+            <button class="btn btn-gold" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
 </div>
 
 <!-- Categories -->

@@ -1,12 +1,14 @@
 import uuid
 
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, Response
-from app import db
+from app import db, cache, limiter
 from app.models import (
     PrayerRequest, ContactMessage, NewsletterSubscriber, Giving,
     VideoSermon, AudioSermon, Devotion, Ebook, Testimony
 )
+from app.utils import get_ebooks_by_category, get_testimonies, validate_email, sanitize_text as sanitize_input
 from datetime import datetime, date
+from sqlalchemy import or_
 import re
 
 main_bp = Blueprint('main', __name__)
@@ -161,7 +163,7 @@ def blog():
         devotion = Devotion.query.order_by(Devotion.devotion_date.desc()).first()
 
     past_devotions = Devotion.query.order_by(Devotion.devotion_date.desc()).limit(10).all()
-    recent_testimonies = Testimony.query.order_by(Testimony.created_at.desc()).limit(3).all()
+    recent_testimonies = get_testimonies(limit=3)
 
     return render_template(
         'public/blog.html',
@@ -190,22 +192,91 @@ def blog_devotionals():
 @main_bp.route('/blog/worship')
 def blog_worship():
     """Worship reading list."""
-    ebooks = Ebook.query.filter_by(category='worship').order_by(Ebook.title.asc()).all()
+    ebooks = get_ebooks_by_category('worship')
     return render_template('public/blog_ebooks.html', ebooks=ebooks, category='worship', church_info=CHURCH_INFO)
 
 
 @main_bp.route('/blog/leadership')
 def blog_leadership():
     """Leadership reading list."""
-    ebooks = Ebook.query.filter_by(category='leadership').order_by(Ebook.title.asc()).all()
+    ebooks = get_ebooks_by_category('leadership')
     return render_template('public/blog_ebooks.html', ebooks=ebooks, category='leadership', church_info=CHURCH_INFO)
 
 
 @main_bp.route('/blog/testimonies')
 def blog_testimonies():
     """Member testimonies."""
-    testimonies = Testimony.query.order_by(Testimony.created_at.desc()).all()
+    testimonies = get_testimonies()
     return render_template('public/blog_testimonies.html', testimonies=testimonies, church_info=CHURCH_INFO)
+
+
+DEVOTIONAL_SEARCH_KEYWORDS = {'devotional', 'devotionals', 'devotion', 'devotions'}
+WORSHIP_SEARCH_KEYWORDS = {'worship'}
+LEADERSHIP_SEARCH_KEYWORDS = {'leadership'}
+TESTIMONY_SEARCH_KEYWORDS = {'testimonial', 'testimonials', 'testimony', 'testimonies'}
+
+
+@main_bp.route('/blog/search')
+def blog_search():
+    """Unified search across devotions, e-books, and testimonies, used by
+    the blog sidebar's search box. Typing a bare category name (e.g.
+    "worship") lists everything in that category; anything else does a
+    free-text match across each type's title/author/content fields."""
+    query = request.args.get('q', '').strip()
+    normalized = query.lower()
+
+    devotions, ebooks, testimonies, category_label = [], [], [], None
+
+    if not query:
+        pass
+    elif normalized in DEVOTIONAL_SEARCH_KEYWORDS:
+        devotions = Devotion.query.order_by(Devotion.devotion_date.desc()).all()
+        category_label = 'devotional'
+    elif normalized in WORSHIP_SEARCH_KEYWORDS:
+        ebooks = get_ebooks_by_category('worship')
+        category_label = 'worship'
+    elif normalized in LEADERSHIP_SEARCH_KEYWORDS:
+        ebooks = get_ebooks_by_category('leadership')
+        category_label = 'leadership'
+    elif normalized in TESTIMONY_SEARCH_KEYWORDS:
+        testimonies = get_testimonies()
+        category_label = 'testimonies'
+    else:
+        like_pattern = f'%{query}%'
+        devotions = Devotion.query.filter(
+            or_(
+                Devotion.title.ilike(like_pattern),
+                Devotion.quote.ilike(like_pattern),
+                Devotion.quote_theme.ilike(like_pattern),
+                Devotion.reflection.ilike(like_pattern),
+                Devotion.writer_name.ilike(like_pattern),
+            )
+        ).order_by(Devotion.devotion_date.desc()).all()
+
+        ebooks = Ebook.query.filter(
+            or_(
+                Ebook.title.ilike(like_pattern),
+                Ebook.author.ilike(like_pattern),
+                Ebook.summary.ilike(like_pattern),
+            )
+        ).order_by(Ebook.title.asc()).all()
+
+        testimonies = Testimony.query.filter(
+            or_(
+                Testimony.name.ilike(like_pattern),
+                Testimony.testimony.ilike(like_pattern),
+            )
+        ).order_by(Testimony.created_at.desc()).all()
+
+    return render_template(
+        'public/blog_search.html',
+        query=query,
+        category_label=category_label,
+        devotions=devotions,
+        ebooks=ebooks,
+        testimonies=testimonies,
+        church_info=CHURCH_INFO
+    )
 
 
 @main_bp.route('/contact')
@@ -220,6 +291,7 @@ def giving():
 
 
 @main_bp.route('/robots.txt')
+@cache.cached(timeout=3600)
 def robots_txt():
     """Allow public pages, keep auth/dashboard areas out of the crawl."""
     lines = [
@@ -227,12 +299,14 @@ def robots_txt():
         "Allow: /",
         "Disallow: /admin/",
         "Disallow: /members/",
+        "Disallow: /blog/search",
         f"Sitemap: {request.url_root}sitemap.xml",
     ]
     return Response("\n".join(lines) + "\n", mimetype='text/plain')
 
 
 @main_bp.route('/sitemap.xml')
+@cache.cached(timeout=3600)
 def sitemap_xml():
     """Dynamically generated — built from request.url_root so it's correct
     on localhost today and on whatever domain the site is deployed to."""
@@ -273,8 +347,6 @@ def sitemap_xml():
 
 
 # ============ API ROUTES ============
-
-from app.utils import validate_email, sanitize_text as sanitize_input
 
 @api_bp.route('/prayer-request', methods=['POST'])
 def prayer_request():
@@ -368,6 +440,7 @@ VALID_GIVING_TYPES = {'tithe', 'offering', 'missions', 'building_fund', 'other'}
 
 
 @api_bp.route('/giving/init', methods=['POST'])
+@limiter.limit('20 per hour')
 def giving_init():
     """
     Step 1 of the Paystack flow: create a pending Giving row server-side

@@ -17,7 +17,7 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from sqlalchemy import func
 from werkzeug.utils import secure_filename
 
-from app import db
+from app import db, cache, limiter
 from app.decorators import admin_required, developer_required
 from app.email_utils import send_email
 from app.forms import (
@@ -30,7 +30,8 @@ from app.models import (
     PrayerRequest, ContactMessage, NewsletterSubscriber, Ebook
 )
 from app.utils import (
-    sanitize_text, sanitize_multiline_text, is_valid_audio_file, is_valid_image_file, is_valid_pdf_file
+    sanitize_text, sanitize_multiline_text, is_valid_audio_file, is_valid_image_file, is_valid_pdf_file,
+    get_ebooks_by_category
 )
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -45,6 +46,7 @@ def _serializer():
 # ============ AUTH ============
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute')
 def login():
     if current_user.is_authenticated and isinstance(current_user, Admin):
         return redirect(url_for('admin.dashboard'))
@@ -152,6 +154,7 @@ def account_edit(account_id):
 
 
 @admin_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit('5 per hour')
 def forgot_password():
     form = AdminForgotPasswordForm()
     if form.validate_on_submit():
@@ -245,6 +248,7 @@ def login_history():
 
 @admin_bp.route('/api/chart-data')
 @admin_required
+@cache.cached(timeout=60)
 def chart_data():
     donation_trend = db.session.query(
         func.date_format(Giving.created_at, '%Y-%m').label('month'),
@@ -595,6 +599,28 @@ def _save_ebook_file(file_storage):
     return f"uploads/ebooks/{stored_name}"
 
 
+def _save_ebook_thumbnail(file_storage):
+    filename = secure_filename(file_storage.filename)
+    stored_name = f"{uuid.uuid4().hex}_{filename}"
+    dest_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'ebook_thumbnails')
+    os.makedirs(dest_dir, exist_ok=True)
+    file_storage.save(os.path.join(dest_dir, stored_name))
+    return f"uploads/ebook_thumbnails/{stored_name}"
+
+
+def _remove_static_file(relative_path):
+    """Best-effort delete of a file under app/static/, used when replacing
+    or removing an ebook's PDF/thumbnail."""
+    if not relative_path:
+        return
+    absolute_path = os.path.join(current_app.root_path, 'static', relative_path)
+    try:
+        if os.path.exists(absolute_path):
+            os.remove(absolute_path)
+    except OSError:
+        current_app.logger.warning(f'Could not remove file: {absolute_path}')
+
+
 @admin_bp.route('/ebooks/add', methods=['GET', 'POST'])
 @admin_required
 def ebook_add():
@@ -607,15 +633,24 @@ def ebook_add():
                 return render_template('admin/ebook_form.html', form=form)
             file_path = _save_ebook_file(form.file.data)
 
+        thumbnail_filename = None
+        if form.thumbnail.data:
+            if not is_valid_image_file(form.thumbnail.data):
+                flash('That thumbnail does not look like a valid image.', 'danger')
+                return render_template('admin/ebook_form.html', form=form)
+            thumbnail_filename = _save_ebook_thumbnail(form.thumbnail.data)
+
         ebook = Ebook(
             title=sanitize_text(form.title.data),
             author=sanitize_text(form.author.data),
             category=form.category.data,
             summary=sanitize_text(form.summary.data),
-            file_path=file_path
+            file_path=file_path,
+            thumbnail_filename=thumbnail_filename
         )
         db.session.add(ebook)
         db.session.commit()
+        cache.delete_memoized(get_ebooks_by_category, ebook.category)
         flash('E-book added.', 'success')
         return redirect(url_for('admin.ebooks_list'))
     return render_template('admin/ebook_form.html', form=form)
@@ -626,27 +661,32 @@ def ebook_add():
 def ebook_edit(ebook_id):
     ebook = Ebook.query.get_or_404(ebook_id)
     form = EbookForm(obj=ebook)
+    old_category = ebook.category
     if form.validate_on_submit():
         if form.file.data:
             if not is_valid_pdf_file(form.file.data):
                 flash('That file does not look like a valid PDF.', 'danger')
                 return render_template('admin/ebook_form.html', form=form, ebook=ebook)
 
-            if ebook.file_path:
-                old_absolute_path = os.path.join(current_app.root_path, 'static', ebook.file_path)
-                try:
-                    if os.path.exists(old_absolute_path):
-                        os.remove(old_absolute_path)
-                except OSError:
-                    current_app.logger.warning(f'Could not remove old ebook file: {old_absolute_path}')
-
+            _remove_static_file(ebook.file_path)
             ebook.file_path = _save_ebook_file(form.file.data)
+
+        if form.thumbnail.data:
+            if not is_valid_image_file(form.thumbnail.data):
+                flash('That thumbnail does not look like a valid image.', 'danger')
+                return render_template('admin/ebook_form.html', form=form, ebook=ebook)
+
+            _remove_static_file(ebook.thumbnail_filename)
+            ebook.thumbnail_filename = _save_ebook_thumbnail(form.thumbnail.data)
 
         ebook.title = sanitize_text(form.title.data)
         ebook.author = sanitize_text(form.author.data)
         ebook.category = form.category.data
         ebook.summary = sanitize_text(form.summary.data)
         db.session.commit()
+        cache.delete_memoized(get_ebooks_by_category, old_category)
+        if ebook.category != old_category:
+            cache.delete_memoized(get_ebooks_by_category, ebook.category)
         flash('E-book updated.', 'success')
         return redirect(url_for('admin.ebooks_list'))
     return render_template('admin/ebook_form.html', form=form, ebook=ebook)
@@ -656,15 +696,12 @@ def ebook_edit(ebook_id):
 @admin_required
 def ebook_delete(ebook_id):
     ebook = Ebook.query.get_or_404(ebook_id)
-    if ebook.file_path:
-        absolute_path = os.path.join(current_app.root_path, 'static', ebook.file_path)
-        try:
-            if os.path.exists(absolute_path):
-                os.remove(absolute_path)
-        except OSError:
-            current_app.logger.warning(f'Could not remove ebook file: {absolute_path}')
+    category = ebook.category
+    _remove_static_file(ebook.file_path)
+    _remove_static_file(ebook.thumbnail_filename)
     db.session.delete(ebook)
     db.session.commit()
+    cache.delete_memoized(get_ebooks_by_category, category)
     flash('E-book deleted.', 'success')
     return redirect(url_for('admin.ebooks_list'))
 

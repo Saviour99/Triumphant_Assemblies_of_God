@@ -23,7 +23,7 @@
                     </td>
                     <td>{{ a.username }}</td>
                     <td>{{ a.email }}</td>
-                    <td><span class="badge bg-{{ 'info' if a.role == 'developer' else 'secondary' }}">{{ a.display_role }}</span></td>
+                    <td><span class="badge bg-{{ 'info' if a.role == 'developer' else ('warning' if a.role == 'pastor' else 'secondary') }}">{{ a.display_role }}</span></td>
                     <td class="text-muted small">{{ a.last_login_at.strftime('%d %b %Y %H:%M') if a.last_login_at else 'Never' }}</td>
                     <td class="text-end">
                         <a href="{{ url_for('admin.account_edit', account_id=a.id) }}" class="btn btn-sm btn-outline-secondary">Edit / Reset Password</a>

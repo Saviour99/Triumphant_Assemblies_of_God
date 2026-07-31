@@ -15,10 +15,13 @@
     <div class="d-flex">
         <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
         <nav id="adminSidebar" class="admin-sidebar d-flex flex-column" style="width:260px; flex-shrink:0;">
-            <div class="brand d-flex align-items-center justify-content-between">
+            <div class="brand d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center gap-2">
                     <img src="{{ url_for('static', filename='img/logo3.jpg') }}" alt="Church Logo" class="brand-logo">
-                    <div>Triumphant<br><small style="font-size:0.9rem; opacity:0.8;">Admin Dashboard</small></div>
+                    <div class="brand-text">
+                        <strong style="color: #ffc107; font-size:1.4rem;">Triumphant</strong>
+                        <small style="font-size:0.7rem; opacity:0.8;">Admin Dashboard</small>
+                    </div>
                 </div>
                 <button type="button" id="sidebarClose" class="sidebar-close-btn d-lg-none" aria-label="Close menu">
                     <i class="fa-solid fa-xmark"></i>
@@ -29,10 +32,12 @@
                 <ul class="nav flex-column">
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint and request.endpoint.startswith('admin.members') or request.endpoint == 'admin.member_add' or request.endpoint == 'admin.member_edit' or request.endpoint == 'admin.member_profile' %}active{% endif %}" href="{{ url_for('admin.members_list') }}"><i class="fa-solid fa-users"></i> Members</a></li>
+                    {% if current_user.is_authenticated and current_user.role == 'pastor' or current_user.role == 'developer' %}
                     <li class="nav-item"><a class="nav-link {% if 'video_sermon' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.video_sermons_list') }}"><i class="fa-solid fa-video"></i> Video Sermons</a></li>
                     <li class="nav-item"><a class="nav-link {% if 'audio_sermon' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.audio_sermons_list') }}"><i class="fa-solid fa-headphones"></i> Audio Sermons</a></li>
                     <li class="nav-item"><a class="nav-link {% if 'devotion' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.devotions_list') }}"><i class="fa-solid fa-book-open"></i> Devotions</a></li>
                     <li class="nav-item"><a class="nav-link {% if 'ebook' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.ebooks_list') }}"><i class="fa-solid fa-book"></i> E-Books</a></li>
+                    {% endif %}
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.giving_list' %}active{% endif %}" href="{{ url_for('admin.giving_list') }}"><i class="fa-solid fa-hand-holding-dollar"></i> Giving</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.live_stream' %}active{% endif %}" href="{{ url_for('admin.live_stream') }}"><i class="fa-solid fa-tower-broadcast"></i> Live Stream</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.prayer_requests_list' %}active{% endif %}" href="{{ url_for('admin.prayer_requests_list') }}"><i class="fa-solid fa-hands-praying"></i> Prayer Requests</a></li>
@@ -59,7 +64,7 @@
                         </div>
                     {% endif %}
                     <div class="admin-name">{{ current_user.username }}</div>
-                    <span class="admin-role-badge {% if current_user.role == 'developer' %}role-developer{% endif %}">{{ current_user.display_role }}</span>
+                    <span class="admin-role-badge {% if current_user.role == 'developer' %}role-developer{% elif current_user.role == 'pastor' %}role-pastor{% endif %}">{{ current_user.display_role }}</span>
                 </div>
             </a>
             {% endif %}

@@ -13,6 +13,8 @@ from flask_compress import Compress
 from flask_talisman import Talisman
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import os
 import logging
 from logging.handlers import RotatingFileHandler
@@ -23,6 +25,7 @@ cache = Cache()
 compress = Compress()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'])
 
 def create_app(config_name='development'):
     """
@@ -46,6 +49,7 @@ def create_app(config_name='development'):
     cache.init_app(app)
     compress.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     login_manager.init_app(app)
     login_manager.session_protection = 'strong'
@@ -141,6 +145,11 @@ def create_app(config_name='development'):
     def file_too_large_error(error):
         """Handle uploads exceeding MAX_CONTENT_LENGTH"""
         return {'error': 'File is too large'}, 413
+
+    @app.errorhandler(429)
+    def rate_limit_error(error):
+        """Handle requests exceeding a Flask-Limiter rate limit"""
+        return {'error': 'Too many requests. Please try again later.'}, 429
 
     # Context processors
     @app.context_processor

@@ -17,7 +17,7 @@ class Admin(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='admin')  # 'admin' | 'developer'
+    role = db.Column(db.String(20), nullable=False, default='admin')  # 'admin' | 'developer' | 'pastor'
     avatar_filename = db.Column(db.String(255), nullable=True)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires_at = db.Column(db.DateTime, nullable=True)
@@ -28,7 +28,11 @@ class Admin(db.Model):
 
     @property
     def display_role(self):
-        return 'Developer' if self.role == 'developer' else 'Admin'
+        if self.role == 'developer':
+            return 'Developer'
+        if self.role == 'pastor':
+            return 'Pastor'
+        return 'Admin'
 
     # Flask-Login integration
     @property
@@ -161,6 +165,7 @@ class Ebook(db.Model):
     category = db.Column(db.String(20), nullable=False)  # 'worship' | 'leadership'
     summary = db.Column(db.Text, nullable=True)
     file_path = db.Column(db.String(500), nullable=True)
+    thumbnail_filename = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 

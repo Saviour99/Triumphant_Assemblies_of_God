@@ -1,0 +1,17 @@
+{% macro testimony_card(t, featured=False) %}
+<div class="testimony-card-v2 h-100{% if featured %} testimony-card-v2-featured mx-auto{% endif %}">
+    <i class="fa-solid fa-quote-left testimony-quote-icon" aria-hidden="true"></i>
+    <p class="testimony-text-v2">{{ t.testimony }}</p>
+    <div class="testimony-footer">
+        {% if t.image_url %}
+            <img src="{{ t.image_url }}" alt="{{ t.name }}" class="testimony-avatar-sm">
+        {% else %}
+            <div class="testimony-avatar-sm testimony-avatar-placeholder-sm"><i class="fa-solid fa-user"></i></div>
+        {% endif %}
+        <div>
+            <h6 class="testimony-name mb-0">{{ t.name }}</h6>
+            <span class="testimony-role">Church Member</span>
+        </div>
+    </div>
+</div>
+{% endmacro %}

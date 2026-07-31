@@ -1769,6 +1769,100 @@ section { padding: 100px 0; }
     margin-bottom: 2rem;
 }
 
+/* E-book reading list cards — a small cover thumbnail (or a themed
+   placeholder when the admin hasn't uploaded one) sits beside the title/
+   author/summary/download, so the list reads like a bookshelf rather than
+   a plain text list. */
+.ebook-card {
+    display: flex;
+    gap: 1.5rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.ebook-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.ebook-thumbnail {
+    flex-shrink: 0;
+    width: 90px;
+    height: 130px;
+}
+
+.ebook-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: var(--shadow-sm);
+}
+
+.ebook-thumbnail-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(160deg, var(--blue) 0%, var(--blue-dark) 100%);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-light);
+    overflow: hidden;
+    padding: 0.65rem 0.5rem;
+    text-align: center;
+}
+
+.ebook-thumbnail-placeholder::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.ebook-thumbnail-placeholder i {
+    font-size: 1.3rem;
+    opacity: 0.55;
+    margin-bottom: 0.4rem;
+    flex-shrink: 0;
+}
+
+.ebook-thumbnail-placeholder span {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ebook-details {
+    min-width: 0;
+    flex: 1;
+}
+
+@media (max-width: 576px) {
+    .ebook-card {
+        flex-direction: column;
+    }
+
+    .ebook-thumbnail {
+        width: 90px;
+        height: 130px;
+    }
+}
+
 .post-meta {
     display: flex;
     gap: 1rem;
@@ -1859,23 +1953,88 @@ section { padding: 100px 0; }
     margin-top: 0.3rem;
 }
 
-.testimony-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
+/* Testimonial cards — quote-forward layout: large decorative quote mark,
+   serif italic quote text, attribution (avatar + name) anchored at the
+   bottom. Used on both the /blog preview carousel and /blog/testimonies
+   grid so the two pages read as one consistent design. */
+.testimony-card-v2 {
+    position: relative;
+    background: #fff;
+    border-top: 3px solid var(--gold);
+    border-radius: 14px;
+    padding: 2.75rem 1.75rem 1.75rem;
     box-shadow: var(--shadow-md);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-.testimony-avatar-placeholder {
-    width: 100px;
-    height: 100px;
+.testimony-card-v2:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-gold);
+}
+
+.testimony-card-v2-featured {
+    max-width: 720px;
+    padding: 3rem 2.5rem 2rem;
+}
+
+.testimony-quote-icon {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.5rem;
+    font-size: 2.75rem;
+    color: var(--gold);
+    opacity: 0.16;
+}
+
+.testimony-text-v2 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+    flex-grow: 1;
+}
+
+.testimony-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.testimony-avatar-sm {
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.testimony-avatar-placeholder-sm {
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--gold) 0%, var(--blue) 100%);
     color: #fff;
-    font-size: 2.4rem;
+    font-size: 1.2rem;
+}
+
+.testimony-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--blue);
+}
+
+.testimony-role {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
 }
 
 .member-avatar {
@@ -1926,14 +2085,6 @@ section { padding: 100px 0; }
     border: 2px solid #fff;
 }
 
-.testimony-text {
-    font-size: 1rem;
-    line-height: 1.8;
-    color: var(--text-secondary);
-    font-style: italic;
-    margin-bottom: 1rem;
-}
-
 .rating {
     font-size: 1.2rem;
 }
@@ -1955,12 +2106,9 @@ section { padding: 100px 0; }
 }
 
 @media (max-width: 768px) {
-    .testimony-card {
-        padding: 1rem;
-    }
-
-    .testimony-card .row {
-        flex-direction: column;
+    .testimony-card-v2,
+    .testimony-card-v2-featured {
+        padding: 2.25rem 1.25rem 1.25rem;
     }
 
     .post-meta {

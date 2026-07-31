@@ -228,6 +228,7 @@ def init_database():
                 INDEX idx_category (category)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
+        add_column_if_missing(cursor, 'ebooks', 'thumbnail_filename', 'thumbnail_filename VARCHAR(500) NULL')
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS live_stream_settings (
@@ -238,7 +239,7 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
 
-        # Extend 'admins' additively: role distinguishes 'admin' vs 'developer'
+        # Extend 'admins' additively: role distinguishes 'admin' vs 'developer' vs 'pastor'
         # accounts (same dashboard access, different identity), avatar_filename
         # is an optional profile photo.
         add_column_if_missing(cursor, 'admins', 'role',
@@ -402,6 +403,10 @@ def init_database():
         seed_account_if_missing(
             'developer', 'DEVELOPER_DEFAULT_USERNAME', 'DEVELOPER_DEFAULT_EMAIL',
             'DEVELOPER_DEFAULT_PASSWORD', 'developer', 'developer@triumphantag.com', 'ChangeDev123!'
+        )
+        seed_account_if_missing(
+            'pastor', 'PASTOR_DEFAULT_USERNAME', 'PASTOR_DEFAULT_EMAIL',
+            'PASTOR_DEFAULT_PASSWORD', 'pastor', 'pastor@triumphantag.com', 'ChangePastor123!'
         )
 
         conn.commit()

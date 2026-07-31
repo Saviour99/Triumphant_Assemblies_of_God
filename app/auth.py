@@ -12,7 +12,7 @@ from flask_login import login_user, logout_user, current_user
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from werkzeug.utils import secure_filename
 
-from app import db
+from app import db, limiter
 from app.decorators import member_required
 from app.email_utils import send_email
 from app.forms import (
@@ -33,6 +33,7 @@ def _serializer():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit('5 per hour')
 def register():
     # Only redirect if they're already logged in as a Member — an
     # authenticated Admin/Developer browsing the public site should still
@@ -60,6 +61,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute')
 def login():
     if current_user.is_authenticated and isinstance(current_user, Member):
         return redirect(url_for('auth.profile'))
@@ -117,6 +119,7 @@ def profile():
 
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit('5 per hour')
 def forgot_password():
     form = MemberForgotPasswordForm()
     if form.validate_on_submit():

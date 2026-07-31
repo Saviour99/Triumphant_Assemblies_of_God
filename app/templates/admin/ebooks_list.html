@@ -11,10 +11,17 @@
     <p class="text-muted small">Only upload a PDF you actually have the rights to distribute. Entries without a file still show on the public site, just without a download button.</p>
     <div class="table-responsive">
         <table class="table table-admin align-middle">
-            <thead><tr><th>Title</th><th>Author</th><th>Category</th><th>File</th><th class="text-end">Actions</th></tr></thead>
+            <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Category</th><th>File</th><th class="text-end">Actions</th></tr></thead>
             <tbody>
                 {% for e in ebooks %}
                 <tr>
+                    <td>
+                        {% if e.thumbnail_filename %}
+                            <img src="{{ url_for('static', filename=e.thumbnail_filename) }}" alt="{{ e.title }}" style="width:36px; height:48px; object-fit:cover; border-radius:4px;">
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
                     <td>{{ e.title }}</td>
                     <td>{{ e.author }}</td>
                     <td><span class="badge bg-secondary">{{ e.category|title }}</span></td>
@@ -34,7 +41,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-4">No e-books yet.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">No e-books yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

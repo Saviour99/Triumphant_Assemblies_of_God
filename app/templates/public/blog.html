@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "public/_devotion_card.html" import devotion_card %}
+{% from "public/_testimony_card.html" import testimony_card %}
 
 {% block title %}Blog - Triumphant Assemblies of God (TAG){% endblock %}
 {% block meta_description %}Read today's daily devotion, browse recent testimonies, and stay encouraged with fresh content from Triumphant Assemblies of God.{% endblock %}
@@ -59,22 +60,7 @@
             <div class="carousel-inner">
                 {% for t in recent_testimonies %}
                 <div class="carousel-item {% if loop.first %}active{% endif %}">
-                    <div class="testimony-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-4 text-center">
-                                {% if t.image_url %}
-                                    <img src="{{ t.image_url }}" alt="{{ t.name }}" class="img-fluid rounded-circle mb-3" style="max-width: 200px;">
-                                {% else %}
-                                    <div class="testimony-avatar-placeholder mx-auto mb-3"><i class="fa-solid fa-user"></i></div>
-                                {% endif %}
-                                <h5>{{ t.name }}</h5>
-                                <p class="text-muted">Church Member</p>
-                            </div>
-                            <div class="col-md-8">
-                                <p class="testimony-text">&ldquo;{{ t.testimony }}&rdquo;</p>
-                            </div>
-                        </div>
-                    </div>
+                    {{ testimony_card(t, featured=True) }}
                 </div>
                 {% endfor %}
             </div>

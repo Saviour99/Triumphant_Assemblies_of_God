@@ -135,7 +135,7 @@
                         {% for log in recent_logins %}
                         <tr>
                             <td>{{ log.admin.username }}</td>
-                            <td><span class="badge bg-{{ 'info' if log.admin.role == 'developer' else 'secondary' }}">{{ log.admin.display_role }}</span></td>
+                            <td><span class="badge bg-{{ 'info' if log.admin.role == 'developer' else ('warning' if log.admin.role == 'pastor' else 'secondary') }}">{{ log.admin.display_role }}</span></td>
                             <td>{{ log.login_at.strftime('%d %b %Y') }}</td>
                             <td>{{ log.login_at.strftime('%H:%M:%S') }}</td>
                             <td class="text-muted small">{{ log.ip_address or '—' }}</td>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "public/_devotion_card.html" import devotion_card %}
+{% from "public/_ebook_card.html" import ebook_card %}
+{% from "public/_testimony_card.html" import testimony_card %}
+
+{% block title %}Search {{ 'for "' + query + '" - ' if query }}Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Search devotionals, e-books, and testimonies on the Triumphant Assemblies of God blog.{% endblock %}
+
+{% block content %}
+
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Search</h1>
+        {% if query %}
+            <p class="lead">Results for &ldquo;{{ query }}&rdquo;</p>
+        {% else %}
+            <p class="lead">Type something in the sidebar to search the blog</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                {% if not query %}
+                    <div class="alert alert-info">Enter a search term to get started — try a devotion's title or quote, an e-book's title, a member's name, or a category like "worship" or "testimonials".</div>
+                {% elif not devotions and not ebooks and not testimonies %}
+                    <div class="alert alert-info">No results found for &ldquo;{{ query }}&rdquo;. Try a different word, or search "devotional", "worship", "leadership", or "testimonials" to browse a whole category.</div>
+                {% else %}
+                    {% if category_label %}
+                        <p class="text-muted mb-4">Showing all {{ category_label }} content.</p>
+                    {% endif %}
+
+                    {% if devotions %}
+                    <div class="text-start mb-3">
+                        <h2>Devotionals</h2>
+                        <div class="section-divider"></div>
+                    </div>
+                    {% for devotion in devotions %}
+                        {{ devotion_card(devotion, show_badge=False) }}
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if ebooks %}
+                    <div class="text-start mb-3">
+                        <h2>E-Books</h2>
+                        <div class="section-divider"></div>
+                    </div>
+                    {% for e in ebooks %}
+                        {{ ebook_card(e) }}
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if testimonies %}
+                    <div class="text-start mb-3">
+                        <h2>Testimonies</h2>
+                        <div class="section-divider"></div>
+                    </div>
+                    <div class="row g-4 mb-4">
+                        {% for t in testimonies %}
+                        <div class="col-md-6">
+                            {{ testimony_card(t) }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+                {% include "public/_blog_sidebar.html" %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

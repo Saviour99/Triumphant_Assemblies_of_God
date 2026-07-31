@@ -6,6 +6,8 @@ public API endpoints (app/routes.py) and the admin dashboard (app/admin.py).
 import re
 from urllib.parse import urlparse
 
+from app import cache
+
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 HTML_TAG_PATTERN = re.compile(r'<[^>]*>')
 DANGEROUS_CHARS_PATTERN = re.compile(r'[<>"\'%;()&+]')
@@ -121,3 +123,23 @@ def is_valid_pdf_file(file_storage):
     if not header:
         return False
     return header.startswith(b'%PDF-')
+
+
+@cache.memoize(timeout=300)
+def get_ebooks_by_category(category):
+    """Cached e-book reading-list query for the public /blog/worship and
+    /blog/leadership pages. Only the DB fetch is cached (not the rendered
+    page), so the live per-request CSRF token in the page is never stale.
+    Invalidated from app/admin.py's ebook add/edit/delete routes."""
+    from app.models import Ebook
+    return Ebook.query.filter_by(category=category).order_by(Ebook.title.asc()).all()
+
+
+@cache.memoize(timeout=300)
+def get_testimonies(limit=None):
+    """Cached testimonies query for /blog and /blog/testimonies. Seed-only
+    data (no admin CRUD), so a plain timeout is enough — no invalidation
+    hook needed."""
+    from app.models import Testimony
+    query = Testimony.query.order_by(Testimony.created_at.desc())
+    return query.limit(limit).all() if limit else query.all()

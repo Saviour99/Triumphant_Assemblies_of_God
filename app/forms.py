@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileField, FileAllowed, FileRequired, FileSize
 from wtforms import (
     StringField, PasswordField, TextAreaField, DecimalField,
     DateField, BooleanField, SelectField, HiddenField
@@ -36,7 +36,8 @@ class AdminResetPasswordForm(FlaskForm):
 class AdminProfileForm(FlaskForm):
     avatar = FileField('Profile Photo', validators=[
         Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only (jpg, png, gif).')
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only (jpg, png, gif).'),
+        FileSize(max_size=2 * 1024 * 1024, message='Image must be 2MB or smaller.')
     ])
     new_password = PasswordField(
         'New Password', validators=[Optional(), Length(min=8)],
@@ -55,7 +56,8 @@ class AdminAccountManageForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     avatar = FileField('Profile Photo', validators=[
         Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only (jpg, png, gif).')
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only (jpg, png, gif).'),
+        FileSize(max_size=2 * 1024 * 1024, message='Image must be 2MB or smaller.')
     ])
     new_password = PasswordField(
         'New Password', validators=[Optional(), Length(min=8)],
@@ -172,8 +174,20 @@ class EbookForm(FlaskForm):
                             validators=[DataRequired()])
     summary = TextAreaField('Summary', validators=[Optional()])
     file = FileField(
-        'PDF File', validators=[Optional(), FileAllowed(['pdf'], 'PDF files only.')],
+        'PDF File', validators=[
+            Optional(),
+            FileAllowed(['pdf'], 'PDF files only.'),
+            FileSize(max_size=10 * 1024 * 1024, message='PDF must be 10MB or smaller.')
+        ],
         description='Only upload a file you have the rights to distribute. Leave blank to keep listing this title without a download.'
+    )
+    thumbnail = FileField(
+        'Cover Thumbnail', validators=[
+            Optional(),
+            FileAllowed(['jpg', 'jpeg', 'png'], 'Images only (jpg, png).'),
+            FileSize(max_size=2 * 1024 * 1024, message='Image must be 2MB or smaller.')
+        ],
+        description='A small cover image shown on the public reading list. Leave blank to show a plain placeholder.'
     )
 
 

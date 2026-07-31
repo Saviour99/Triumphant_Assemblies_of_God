@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "public/_testimony_card.html" import testimony_card %}
 
 {% block title %}Testimonies - Triumphant Assemblies of God (TAG){% endblock %}
 {% block meta_description %}Read testimonies from members of Triumphant Assemblies of God about how faith and community have made a difference in their lives.{% endblock %}
@@ -19,16 +20,7 @@
                 <div class="row g-4">
                     {% for t in testimonies %}
                     <div class="col-md-6">
-                        <div class="testimony-card h-100 text-center">
-                            {% if t.image_url %}
-                                <img src="{{ t.image_url }}" alt="{{ t.name }}" class="img-fluid rounded-circle mb-3" style="width:100px; height:100px; object-fit:cover;">
-                            {% else %}
-                                <div class="testimony-avatar-placeholder mx-auto mb-3"><i class="fa-solid fa-user"></i></div>
-                            {% endif %}
-                            <h5 class="mb-1">{{ t.name }}</h5>
-                            <p class="text-muted small mb-3">Church Member</p>
-                            <p class="testimony-text">&ldquo;{{ t.testimony }}&rdquo;</p>
-                        </div>
+                        {{ testimony_card(t) }}
                     </div>
                     {% else %}
                     <div class="col-12"><div class="alert alert-info">No testimonies have been shared yet.</div></div>

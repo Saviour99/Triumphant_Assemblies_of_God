@@ -259,6 +259,12 @@ body.admin-body {
     border-color: rgba(191,212,255,0.4);
 }
 
+.admin-identity .admin-role-badge.role-pastor {
+    background: rgba(154,230,180,0.16);
+    color: #9AE6B4;
+    border-color: rgba(154,230,180,0.4);
+}
+
 /* ============ TOPBAR / CONTENT ============ */
 /* min-width:0 overrides the flexbox default (min-width:auto), which lets
    this column shrink to fit the screen instead of stretching wide enough

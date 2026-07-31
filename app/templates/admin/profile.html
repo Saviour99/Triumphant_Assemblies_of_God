@@ -13,7 +13,7 @@
             </div>
         {% endif %}
         <h5 class="mt-3 mb-0">{{ current_user.username }}</h5>
-        <span class="badge bg-{{ 'info' if current_user.role == 'developer' else 'secondary' }}">{{ current_user.display_role }}</span>
+        <span class="badge bg-{{ 'info' if current_user.role == 'developer' else ('warning' if current_user.role == 'pastor' else 'secondary') }}">{{ current_user.display_role }}</span>
         <p class="text-muted small mt-1">{{ current_user.email }}</p>
     </div>
 

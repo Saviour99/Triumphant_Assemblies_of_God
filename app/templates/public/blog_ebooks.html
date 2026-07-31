@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "public/_ebook_card.html" import ebook_card %}
 
 {% block title %}{{ category|title }} E-Books - Triumphant Assemblies of God (TAG){% endblock %}
 {% block meta_description %}{% if category == 'worship' %}A curated reading list of Christian worship e-books — title, author, and summary — recommended by Triumphant Assemblies of God.{% else %}A curated reading list of Christian leadership e-books — title, author, and summary — recommended by Triumphant Assemblies of God.{% endif %}{% endblock %}
@@ -17,19 +18,7 @@
         <div class="row">
             <div class="col-lg-8">
                 {% for e in ebooks %}
-                <article class="blog-post mb-4">
-                    <span class="badge bg-gold mb-2">{{ e.category|title }}</span>
-                    <h4>{{ e.title }}</h4>
-                    <p class="post-meta mb-2"><span class="author"><i class="fas fa-user-pen"></i> {{ e.author }}</span></p>
-                    {% if e.summary %}<p>{{ e.summary }}</p>{% endif %}
-                    {% if e.file_path %}
-                        <a href="{{ url_for('static', filename=e.file_path) }}" class="btn btn-primary btn-sm" download>
-                            <i class="fa-solid fa-download"></i> Download
-                        </a>
-                    {% else %}
-                        <span class="text-muted small"><i class="fa-solid fa-clock"></i> Download coming soon</span>
-                    {% endif %}
-                </article>
+                    {{ ebook_card(e) }}
                 {% else %}
                 <div class="alert alert-info">No {{ category }} e-books have been added yet.</div>
                 {% endfor %}
