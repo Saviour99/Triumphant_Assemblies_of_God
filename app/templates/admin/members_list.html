@@ -23,7 +23,7 @@
             <tbody>
                 {% for m in members %}
                 <tr>
-                    <td><a href="{{ url_for('admin.member_profile', member_id=m.id) }}">{{ m.full_name }}</a></td>
+                    <td><a href="{{ url_for('admin.member_profile', member_id=m.id) }}">{{ m.full_name | title }}</a></td>
                     <td>{{ m.email }}</td>
                     <td>{{ m.phone or '—' }}</td>
                     <td>

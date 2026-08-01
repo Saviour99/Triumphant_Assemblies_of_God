@@ -91,12 +91,35 @@ if ((donationChartEl || memberChartEl) && window.Chart) {
                             label: 'Donations (GHS)',
                             data: data.donation_trend.values,
                             borderColor: '#C8973A',
-                            backgroundColor: 'rgba(200,151,58,0.15)',
-                            tension: 0.3,
+                            backgroundColor: 'rgba(200,151,58,0.10)',
+                            borderWidth: 2,
+                            borderCapStyle: 'round',
+                            borderJoinStyle: 'round',
+                            // 'monotone' — not raw bezier tension — is what gives a
+                            // genuinely smooth, flowing curve without the overshoot
+                            // dips/wobbles plain tension can introduce between points.
+                            cubicInterpolationMode: 'monotone',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#C8973A',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
                             fill: true
                         }]
                     },
-                    options: { responsive: true, plugins: { legend: { display: false } } }
+                    options: {
+                        responsive: true,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.06)' },
+                                ticks: { callback: v => '₵' + v.toLocaleString() }
+                            }
+                        }
+                    }
                 });
             }
 
@@ -108,12 +131,120 @@ if ((donationChartEl || memberChartEl) && window.Chart) {
                         datasets: [{
                             label: 'New Members',
                             data: data.member_growth.values,
-                            backgroundColor: '#0D2B6B'
+                            backgroundColor: '#0D2B6B',
+                            borderRadius: 4,
+                            maxBarThickness: 24
                         }]
                     },
-                    options: { responsive: true, plugins: { legend: { display: false } } }
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { precision: 0 } }
+                        }
+                    }
                 });
             }
         })
         .catch(err => console.error('Failed to load chart data:', err));
 }
+
+// ============ LIVE DASHBOARD ACTIVITY ============
+// Polls for new donations/registrations every few seconds so an admin
+// watching the dashboard sees them without a manual refresh — works no
+// matter which path completed the donation (client-side verify or the
+// Paystack webhook), since it just reflects current DB state.
+(function initLiveDashboardActivity() {
+    const registrationsList = document.getElementById('recentRegistrationsList');
+    const donationsList = document.getElementById('recentDonationsList');
+    if (!registrationsList && !donationsList) return; // not on the dashboard page
+
+    function idsOf(listEl, attr) {
+        if (!listEl) return new Set();
+        return new Set(Array.from(listEl.querySelectorAll(`[${attr}]`)).map(el => el.getAttribute(attr)));
+    }
+
+    let knownMemberIds = idsOf(registrationsList, 'data-member-id');
+    let knownDonationIds = idsOf(donationsList, 'data-donation-id');
+
+    function titleCase(str) {
+        return (str || '').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    }
+
+    function updateStat(key, value, decimals, prefix) {
+        const el = document.querySelector(`[data-stat="${key}"]`);
+        if (el) el.textContent = (prefix || '') + Number(value).toFixed(decimals || 0);
+    }
+
+    function renderList(listEl, items, idAttr, knownIds, emptyText, buildRow, latestBadgeText) {
+        if (!listEl) return;
+        if (!items.length) {
+            listEl.innerHTML = '';
+            const li = document.createElement('li');
+            li.className = 'list-group-item text-muted';
+            li.textContent = emptyText;
+            listEl.appendChild(li);
+            return;
+        }
+        listEl.innerHTML = '';
+        items.forEach((item, index) => {
+            const li = buildRow(item);
+            li.className = 'list-group-item d-flex justify-content-between';
+            li.setAttribute(idAttr, item.id);
+            if (!knownIds.has(String(item.id))) {
+                li.classList.add('newly-added');
+            }
+            // The newest row (index 0) always carries the "Latest"/"Newest"
+            // tag — not just rows that are new since the last poll — same
+            // as the server-rendered first-load state.
+            if (index === 0 && latestBadgeText) {
+                const badge = document.createElement('span');
+                badge.className = 'badge-latest ms-2';
+                badge.textContent = latestBadgeText;
+                li.firstElementChild.appendChild(badge);
+            }
+            listEl.appendChild(li);
+        });
+    }
+
+    function pollRecentActivity() {
+        fetch('/admin/api/recent-activity')
+            .then(res => res.json())
+            .then(data => {
+                updateStat('total_members', data.total_members);
+                updateStat('total_donations', data.total_donations, 2, '₵');
+                updateStat('total_prayer_requests', data.total_prayer_requests);
+                updateStat('total_messages', data.total_messages);
+                updateStat('total_newsletter_subscribers', data.total_newsletter_subscribers);
+                updateStat('total_devotions', data.total_devotions);
+
+                renderList(registrationsList, data.recent_registrations, 'data-member-id', knownMemberIds, 'No members yet.', m => {
+                    const li = document.createElement('li');
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = titleCase(m.full_name);
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'text-muted small';
+                    dateSpan.textContent = m.created_at;
+                    li.append(nameSpan, dateSpan);
+                    return li;
+                }, 'Newest');
+                knownMemberIds = new Set(data.recent_registrations.map(m => String(m.id)));
+
+                renderList(donationsList, data.recent_donations, 'data-donation-id', knownDonationIds, 'No donations yet.', d => {
+                    const li = document.createElement('li');
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = `${titleCase(d.donor_name)} (${titleCase(d.giving_type)})`;
+                    const amountSpan = document.createElement('span');
+                    amountSpan.className = 'text-muted small';
+                    amountSpan.textContent = `₵${Number(d.amount).toFixed(2)}`;
+                    li.append(nameSpan, amountSpan);
+                    return li;
+                }, 'Latest');
+                knownDonationIds = new Set(data.recent_donations.map(d => String(d.id)));
+            })
+            .catch(err => console.error('Failed to poll recent activity:', err));
+    }
+
+    setInterval(pollRecentActivity, 15000);
+})();

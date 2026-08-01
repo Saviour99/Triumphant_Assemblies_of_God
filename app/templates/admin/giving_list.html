@@ -44,7 +44,7 @@
 <div class="admin-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0">
-            {{ donations|length }} donation{{ 's' if donations|length != 1 }}
+            {{ donations|length }} Donation{{ 's' if donations|length != 1 }}
             {% if type_filter %} &middot; {{ type_filter|replace('_', ' ')|title }}{% endif %}
             {% if status_filter %} &middot; {{ status_filter|title }}{% endif %}
         </h6>
@@ -57,7 +57,7 @@
                 {% for d in donations %}
                 <tr>
                     <td>{{ d.created_at.strftime('%d %b %Y %H:%M') }}</td>
-                    <td>{{ d.donor_name }}<br><span class="text-muted small">{{ d.donor_email }}</span></td>
+                    <td>{{ d.donor_name | title }}<br><span class="text-muted small">{{ d.donor_email }}</span></td>
                     <td>{{ d.giving_type|replace('_', ' ')|title }}</td>
                     <td>₵{{ '%.2f'|format(d.amount) }}</td>
                     <td><span class="badge badge-status-{{ d.status }}">{{ d.status|title }}</span></td>

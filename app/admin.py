@@ -15,6 +15,7 @@ from flask import (
 from flask_login import login_user, logout_user, current_user
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 
 from app import db, cache, limiter
@@ -197,17 +198,25 @@ def reset_password(token):
 
 # ============ DASHBOARD ============
 
+def _dashboard_stats():
+    """Shared by the initial dashboard render and the /api/recent-activity
+    polling endpoint, so the two can never drift out of sync."""
+    return {
+        'total_members': Member.query.filter_by(is_active_member=True).count(),
+        'total_donations': float(db.session.query(func.sum(Giving.amount)).filter(
+            Giving.status == 'completed'
+        ).scalar() or 0),
+        'total_prayer_requests': PrayerRequest.query.count(),
+        'total_messages': ContactMessage.query.count(),
+        'total_newsletter_subscribers': NewsletterSubscriber.query.count(),
+        'total_devotions': Devotion.query.count(),
+    }
+
+
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
-    total_members = Member.query.filter_by(is_active_member=True).count()
-    total_donations = db.session.query(func.sum(Giving.amount)).filter(
-        Giving.status == 'completed'
-    ).scalar() or 0
-    total_prayer_requests = PrayerRequest.query.count()
-    total_messages = ContactMessage.query.count()
-    total_newsletter_subscribers = NewsletterSubscriber.query.count()
-    total_devotions = Devotion.query.count()
+    stats = _dashboard_stats()
     is_live = LiveStreamSetting.query.get(1)
     is_live = bool(is_live and is_live.is_live)
 
@@ -224,17 +233,53 @@ def dashboard():
 
     return render_template(
         'admin/dashboard.html',
-        total_members=total_members,
-        total_donations=total_donations,
-        total_prayer_requests=total_prayer_requests,
-        total_messages=total_messages,
-        total_newsletter_subscribers=total_newsletter_subscribers,
-        total_devotions=total_devotions,
         is_live=is_live,
         recent_registrations=recent_registrations,
         recent_donations=recent_donations,
-        recent_logins=recent_logins
+        recent_logins=recent_logins,
+        **stats
     )
+
+
+@admin_bp.route('/api/recent-activity')
+@admin_required
+@limiter.exempt
+def recent_activity():
+    """Polled by the dashboard every few seconds (see admin.js) so new
+    donations/registrations show up without a manual refresh — regardless
+    of whether a donation was completed via the client-side verify call or
+    the Paystack webhook. Deliberately NOT cached (unlike /api/chart-data):
+    the entire point of this endpoint is to reflect brand-new rows
+    immediately, so a cache would defeat it. Exempt from the global rate
+    limit since it's an authenticated admin polling loop, not public
+    traffic."""
+    stats = _dashboard_stats()
+
+    recent_registrations = Member.query.order_by(Member.created_at.desc()).limit(5).all()
+    recent_donations = Giving.query.filter_by(status='completed').order_by(
+        Giving.created_at.desc()
+    ).limit(5).all()
+
+    return jsonify({
+        **stats,
+        'recent_registrations': [
+            {
+                'id': m.id,
+                'full_name': m.full_name,
+                'created_at': m.created_at.strftime('%d %b %Y'),
+            }
+            for m in recent_registrations
+        ],
+        'recent_donations': [
+            {
+                'id': d.id,
+                'donor_name': d.donor_name,
+                'giving_type': d.giving_type,
+                'amount': float(d.amount),
+            }
+            for d in recent_donations
+        ],
+    })
 
 
 @admin_bp.route('/login-history')
@@ -536,7 +581,20 @@ def devotion_add():
             devotion_date=today
         )
         db.session.add(devotion)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # devotion_date is DB-level UNIQUE — this only fires if another
+            # admin's request won the race between our "already posted?"
+            # check above and this commit (e.g. two admins submitting the
+            # form for today within moments of each other).
+            db.session.rollback()
+            flash(
+                "Today's devotion was just posted by someone else. "
+                "Please refresh the page before trying again.",
+                'danger'
+            )
+            return redirect(url_for('admin.devotions_list'))
 
         # Keep only the latest MAX_DEVOTIONS rows — single bounded DELETE,
         # never a TRUNCATE, per the data-safety rule.

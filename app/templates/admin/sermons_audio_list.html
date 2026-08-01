@@ -14,8 +14,8 @@
             <tbody>
                 {% for s in sermons %}
                 <tr>
-                    <td>{{ s.title }}</td>
-                    <td>{{ s.preacher }}</td>
+                    <td>{{ s.title | capitalize }}</td>
+                    <td>{{ s.preacher | title }}</td>
                     <td>{{ s.sermon_date.strftime('%d %b %Y') }}</td>
                     <td><audio controls src="{{ url_for('static', filename=s.audio_path) }}" style="max-width:220px;"></audio></td>
                     <td class="text-end">

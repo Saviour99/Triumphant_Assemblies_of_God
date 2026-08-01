@@ -14,8 +14,8 @@
             <tbody>
                 {% for s in sermons %}
                 <tr>
-                    <td>{{ s.title }}</td>
-                    <td>{{ s.preacher }}</td>
+                    <td>{{ s.title | capitalize }}</td>
+                    <td>{{ s.preacher | title }}</td>
                     <td>{{ s.sermon_date.strftime('%d %b %Y') }}</td>
                     <td><a href="{{ s.youtube_url }}" target="_blank" rel="noopener noreferrer">Watch <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
                     <td class="text-end">

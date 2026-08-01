@@ -122,10 +122,31 @@ a hardcoded fallback default if the env vars are absent.
       charts, recent registrations/donations
 - [x] Daily devotion management: one per day (app-level pre-check + DB
       `UNIQUE` constraint on `devotion_date`), auto-set date, latest-60
-      pruning (`app/admin.py::devotion_add`)
-- [x] Paystack giving: `Giving` extended in place (`paystack_reference`,
-      `status`, `member_id`), `/api/giving/init` + `/api/paystack/verify`
-      (server-side verification only — browser callback is never trusted)
+      pruning (`app/admin.py::devotion_add`). The pre-check is TOCTOU-racy
+      by nature (two admins could both pass it before either commits) —
+      the DB `UNIQUE` constraint is the real guardrail; the commit is
+      wrapped in `try/except IntegrityError` so a genuine race ends in a
+      clean flash message, not a 500.
+- [x] Paystack giving: `Giving` extended in place (`paystack_reference`
+      has a DB `UNIQUE` constraint, `status`, `member_id`).
+      `/api/giving/init` creates the pending row. Two independent paths
+      can mark it `completed`, and both go through
+      `app/routes.py::_set_donation_status_once` (a single conditional
+      `UPDATE ... WHERE status IN (...)`, never a Python read-then-write)
+      so they can't double-process or race each other:
+      - `/api/paystack/verify` — client-triggered after the Inline JS
+        popup closes; calls Paystack's verify-transaction API before
+        trusting anything. Best-effort — the browser might never call it.
+      - `/api/paystack/webhook` — server-to-server, authoritative
+        fallback for when the browser doesn't call verify (closed tab,
+        dropped network). Trusts the payload only after checking the
+        `X-Paystack-Signature` header (HMAC-SHA512 over the raw body with
+        `PAYSTACK_SECRET_KEY`); exempted from CSRF (no session on a
+        server-to-server call — the signature is the auth) and from
+        rate-limiting (exempted via `@limiter.exempt`, since it's Paystack
+        calling in, not a public user). To use this in production, add
+        `https://<your-domain>/api/paystack/webhook` as the webhook URL
+        in the Paystack dashboard.
 - [x] Contact page map (keyless Google Maps embed, real address — no
       invented coordinates) + "Get Directions" via `navigator.geolocation`
 - [x] CSRF on every POST route/form; parameterized queries via the ORM

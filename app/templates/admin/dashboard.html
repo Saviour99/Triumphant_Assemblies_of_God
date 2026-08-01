@@ -9,7 +9,7 @@
             <div class="stat-card">
                 <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
                 <div>
-                    <div class="stat-value" data-count-target="{{ total_members }}">0</div>
+                    <div class="stat-value" data-stat="total_members" data-count-target="{{ total_members }}">0</div>
                     <div class="stat-label">Members</div>
                 </div>
             </div>
@@ -20,7 +20,7 @@
             <div class="stat-card">
                 <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
                 <div>
-                    <div class="stat-value" data-count-target="{{ total_donations }}" data-count-prefix="₵" data-count-decimals="2">₵0.00</div>
+                    <div class="stat-value" data-stat="total_donations" data-count-target="{{ total_donations }}" data-count-prefix="₵" data-count-decimals="2">₵0.00</div>
                     <div class="stat-label">Total Donations</div>
                 </div>
             </div>
@@ -31,7 +31,7 @@
             <div class="stat-card">
                 <div class="stat-icon rose"><i class="fa-solid fa-hands-praying"></i></div>
                 <div>
-                    <div class="stat-value" data-count-target="{{ total_prayer_requests }}">0</div>
+                    <div class="stat-value" data-stat="total_prayer_requests" data-count-target="{{ total_prayer_requests }}">0</div>
                     <div class="stat-label">Prayer Requests</div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
             <div class="stat-card">
                 <div class="stat-icon teal"><i class="fa-solid fa-envelope"></i></div>
                 <div>
-                    <div class="stat-value" data-count-target="{{ total_messages }}">0</div>
+                    <div class="stat-value" data-stat="total_messages" data-count-target="{{ total_messages }}">0</div>
                     <div class="stat-label">Contact Messages</div>
                 </div>
             </div>
@@ -53,7 +53,7 @@
             <div class="stat-card">
                 <div class="stat-icon blue"><i class="fa-solid fa-paper-plane"></i></div>
                 <div>
-                    <div class="stat-value" data-count-target="{{ total_newsletter_subscribers }}">0</div>
+                    <div class="stat-value" data-stat="total_newsletter_subscribers" data-count-target="{{ total_newsletter_subscribers }}">0</div>
                     <div class="stat-label">Newsletter Subscribers</div>
                 </div>
             </div>
@@ -64,7 +64,7 @@
             <div class="stat-card">
                 <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
                 <div>
-                    <div class="stat-value" data-count-target="{{ total_devotions }}">0</div>
+                    <div class="stat-value" data-stat="total_devotions" data-count-target="{{ total_devotions }}">0</div>
                     <div class="stat-label">Devotions Posted</div>
                 </div>
             </div>
@@ -90,11 +90,14 @@
 <div class="row g-3">
     <div class="col-lg-6">
         <div class="admin-card">
-            <h6 class="mb-3">Recent Registrations</h6>
-            <ul class="list-group list-group-flush">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Recent Registrations</h6>
+                <a href="{{ url_for('admin.members_list') }}" class="small">View All &rarr;</a>
+            </div>
+            <ul class="list-group list-group-flush" id="recentRegistrationsList">
                 {% for m in recent_registrations %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>{{ m.full_name }}</span>
+                <li class="list-group-item d-flex justify-content-between" data-member-id="{{ m.id }}">
+                    <span>{{ m.full_name | title }}{% if loop.first %}<span class="badge-latest ms-2">Newest</span>{% endif %}</span>
                     <span class="text-muted small">{{ m.created_at.strftime('%d %b %Y') }}</span>
                 </li>
                 {% else %}
@@ -105,11 +108,14 @@
     </div>
     <div class="col-lg-6">
         <div class="admin-card">
-            <h6 class="mb-3">Recent Donations</h6>
-            <ul class="list-group list-group-flush">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Recent Donations</h6>
+                <a href="{{ url_for('admin.giving_list') }}" class="small">View All &rarr;</a>
+            </div>
+            <ul class="list-group list-group-flush" id="recentDonationsList">
                 {% for d in recent_donations %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>{{ d.donor_name }} ({{ d.giving_type }})</span>
+                <li class="list-group-item d-flex justify-content-between" data-donation-id="{{ d.id }}">
+                    <span>{{ d.donor_name | title }} ({{ d.giving_type | title }}){% if loop.first %}<span class="badge-latest ms-2">Latest</span>{% endif %}</span>
                     <span class="text-muted small">₵{{ '%.2f'|format(d.amount) }}</span>
                 </li>
                 {% else %}
@@ -134,7 +140,7 @@
                     <tbody>
                         {% for log in recent_logins %}
                         <tr>
-                            <td>{{ log.admin.username }}</td>
+                            <td>{{ log.admin.username | title }}</td>
                             <td><span class="badge bg-{{ 'info' if log.admin.role == 'developer' else ('warning' if log.admin.role == 'pastor' else 'secondary') }}">{{ log.admin.display_role }}</span></td>
                             <td>{{ log.login_at.strftime('%d %b %Y') }}</td>
                             <td>{{ log.login_at.strftime('%H:%M:%S') }}</td>

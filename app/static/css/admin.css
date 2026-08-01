@@ -557,3 +557,41 @@ html.sidebar-open-lock body {
 .badge-status-pending { background: #FFC107; }
 .badge-status-completed { background: #198754; }
 .badge-status-failed { background: #DC3545; }
+
+/* Dashboard "Recent Registrations"/"Recent Donations" — brief gold flash
+   when a row is new since the last poll (see admin.js), so a live update
+   actually reads as "something just happened" rather than the list
+   silently changing underneath you. */
+@keyframes newlyAddedFlash {
+    from { background: rgba(200,151,58,0.35); }
+    to { background: transparent; }
+}
+
+.newly-added {
+    animation: newlyAddedFlash 2.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .newly-added {
+        animation: none;
+        background: rgba(200,151,58,0.2);
+    }
+}
+
+/* Persistent tag on the single newest row in "Recent Registrations"/
+   "Recent Donations" — unlike .newly-added (a transient flash on rows that
+   just appeared from a poll), this always marks whichever row is currently
+   first, on first page load included. */
+.badge-latest {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(200,151,58,0.15);
+    color: var(--gold-dark);
+    border: 1px solid rgba(200,151,58,0.35);
+    vertical-align: middle;
+}

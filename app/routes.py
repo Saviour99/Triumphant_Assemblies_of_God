@@ -1,7 +1,9 @@
+import hashlib
+import hmac
 import uuid
 
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, Response
-from app import db, cache, limiter
+from app import db, cache, csrf, limiter
 from app.models import (
     PrayerRequest, ContactMessage, NewsletterSubscriber, Giving,
     VideoSermon, AudioSermon, Devotion, Ebook, Testimony
@@ -500,15 +502,55 @@ def giving_init():
         return jsonify({'success': False, 'message': 'Something went wrong. Please try again.'}), 500
 
 
+def _set_donation_status_once(donation_id, new_status, from_statuses=('pending',)):
+    """Atomically flip a donation's status with a single conditional UPDATE,
+    instead of a Python-level read-then-write. This is what makes it safe
+    for the client-triggered /paystack/verify call and the /paystack/webhook
+    call to race each other (or either to be retried/duplicated) without
+    ever double-processing or clobbering an already-completed donation back
+    to 'failed'. Returns True only if this call performed the transition."""
+    updated_rows = Giving.query.filter(
+        Giving.id == donation_id, Giving.status.in_(from_statuses)
+    ).update({'status': new_status}, synchronize_session=False)
+    db.session.commit()
+    return updated_rows > 0
+
+
+def _verify_with_paystack(reference):
+    """Calls Paystack's own verify-transaction API and returns (ok, payload)
+    where ok is True only if Paystack confirms a successful charge. Shared
+    by the client-triggered verify endpoint; the webhook doesn't need this
+    round trip since the webhook signature is itself the trust mechanism."""
+    import requests
+
+    secret_key = current_app.config.get('PAYSTACK_SECRET_KEY', '')
+    if not secret_key:
+        current_app.logger.error('PAYSTACK_SECRET_KEY is not configured')
+        return None, None
+
+    try:
+        resp = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'Bearer {secret_key}'},
+            timeout=10
+        )
+        payload = resp.json()
+    except Exception as e:
+        current_app.logger.error(f'paystack verify request error: {e}')
+        return None, None
+
+    return payload, payload.get('data', {})
+
+
 @api_bp.route('/paystack/verify', methods=['POST'])
 def paystack_verify():
     """
-    Step 2: verify the transaction server-side against Paystack's API before
-    ever marking a donation completed. The browser's callback is never trusted
-    on its own.
+    Step 2 of the client-side flow: verify the transaction server-side
+    against Paystack's API before ever marking a donation completed. The
+    browser's callback is never trusted on its own. This is a best-effort
+    path — if the browser never calls this (closed tab, dropped network),
+    /api/paystack/webhook is the authoritative fallback that reconciles it.
     """
-    import requests
-
     reference = sanitize_input((request.get_json() or {}).get('reference', ''))
     if not reference:
         return jsonify({'success': False, 'message': 'Missing reference'}), 400
@@ -520,31 +562,76 @@ def paystack_verify():
     if donation.status == 'completed':
         return jsonify({'success': True, 'message': 'Already verified'}), 200
 
-    secret_key = current_app.config.get('PAYSTACK_SECRET_KEY', '')
-    if not secret_key:
-        current_app.logger.error('PAYSTACK_SECRET_KEY is not configured')
-        return jsonify({'success': False, 'message': 'Payments are not configured'}), 503
+    payload, paystack_data = _verify_with_paystack(reference)
+    if payload is None:
+        return jsonify({'success': False, 'message': 'Payments are not configured or unreachable'}), 502
 
-    try:
-        resp = requests.get(
-            f'https://api.paystack.co/transaction/verify/{reference}',
-            headers={'Authorization': f'Bearer {secret_key}'},
-            timeout=10
-        )
-        payload = resp.json()
-    except Exception as e:
-        current_app.logger.error(f'paystack_verify request error: {e}')
-        return jsonify({'success': False, 'message': 'Could not reach Paystack'}), 502
-
-    paystack_data = payload.get('data', {})
     expected_kobo = round(float(donation.amount) * 100)
 
     if payload.get('status') and paystack_data.get('status') == 'success' \
             and paystack_data.get('amount') == expected_kobo:
-        donation.status = 'completed'
-        db.session.commit()
+        _set_donation_status_once(donation.id, 'completed')
         return jsonify({'success': True, 'message': 'Payment verified'}), 200
 
-    donation.status = 'failed'
-    db.session.commit()
+    # Only downgrade to 'failed' from 'pending' — never stomp a 'completed'
+    # status that a concurrent webhook call may have just set.
+    _set_donation_status_once(donation.id, 'failed')
     return jsonify({'success': False, 'message': 'Payment could not be verified'}), 400
+
+
+@api_bp.route('/paystack/webhook', methods=['POST'])
+@csrf.exempt
+@limiter.exempt
+def paystack_webhook():
+    """
+    Server-to-server webhook — the authoritative source of truth for
+    payment status, independent of whether the donor's browser ever calls
+    /api/paystack/verify. Paystack requires a fast 200 response and retries
+    on failure/timeout, so this stays deliberately lightweight.
+
+    Trust model: there's no session/CSRF token on a server-to-server call,
+    so the X-Paystack-Signature header (HMAC-SHA512 of the raw body, keyed
+    with the secret key) is what proves this request actually came from
+    Paystack — verified before any of the payload is trusted.
+    """
+    secret_key = current_app.config.get('PAYSTACK_SECRET_KEY', '')
+    signature = request.headers.get('X-Paystack-Signature', '')
+    raw_body = request.get_data()
+
+    if not secret_key or not signature:
+        current_app.logger.warning('paystack_webhook: missing secret key or signature header')
+        return jsonify({'success': False}), 401
+
+    expected_signature = hmac.new(secret_key.encode('utf-8'), raw_body, hashlib.sha512).hexdigest()
+    if not hmac.compare_digest(expected_signature, signature):
+        current_app.logger.warning('paystack_webhook: signature mismatch, rejecting')
+        return jsonify({'success': False}), 401
+
+    event = request.get_json(silent=True) or {}
+    event_type = event.get('event')
+    data = event.get('data', {})
+    reference = data.get('reference')
+
+    current_app.logger.info(f'paystack_webhook: received {event_type!r} for reference={reference!r}')
+
+    if event_type != 'charge.success' or not reference:
+        # Not an event this app acts on (or malformed) — 200 so Paystack
+        # doesn't keep retrying something we're intentionally ignoring.
+        return jsonify({'success': True}), 200
+
+    donation = Giving.query.filter_by(paystack_reference=reference).first()
+    if not donation:
+        current_app.logger.warning(f'paystack_webhook: no donation found for reference={reference!r}')
+        return jsonify({'success': True}), 200
+
+    expected_kobo = round(float(donation.amount) * 100)
+    if data.get('status') == 'success' and data.get('amount') == expected_kobo:
+        changed = _set_donation_status_once(donation.id, 'completed')
+        if changed:
+            current_app.logger.info(f'paystack_webhook: donation {donation.id} marked completed')
+    else:
+        current_app.logger.warning(
+            f'paystack_webhook: reference={reference!r} status/amount mismatch, not completing'
+        )
+
+    return jsonify({'success': True}), 200
