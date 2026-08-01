@@ -20,6 +20,7 @@ A full-featured church website and management platform for **Triumphant Assembli
 - [Architecture Notes](#architecture-notes)
 - [Security](#security)
 - [Performance](#performance)
+- [Testing](#testing)
 - [Deployment](#deployment)
 - [Contributing / Conventions](#contributing--conventions)
 
@@ -46,6 +47,7 @@ This isn't just a marketing site — it's a small CMS purpose-built for one chur
 
 ### Admin dashboard
 - Stats overview (members, donations, prayer requests, messages, newsletter subscribers, devotions) with Chart.js trend/growth charts
+- **Live-updating dashboard**: new donations and member registrations appear in "Recent Donations"/"Recent Registrations" automatically (polled every 15s, no page refresh needed), with the newest item always tagged and a brief highlight on anything that just arrived
 - CRUD for video sermons, audio sermons, devotions, e-books (with cover thumbnail upload), members (soft delete)
 - Giving overview with type/status filtering and per-type totals
 - Live-stream on/off toggle (drives a homepage banner)
@@ -101,6 +103,7 @@ Triumphant_Assemblies_of_God/
 ├── config.py                # Config classes: Development / Production / Testing
 ├── init_db.py                # Canonical schema bootstrap (additive only, idempotent)
 ├── run.py                     # Dev entrypoint (`python run.py`)
+├── tests/                      # pytest suite — runs against an isolated tag_church_test DB
 ├── requirements.txt            # Python dependencies — kept in sync with every install
 ├── .env.example                 # Template for local .env
 ├── CLAUDE.md                     # AI-assistant-facing architecture & ground rules
@@ -194,14 +197,14 @@ All three admin-side roles are seeded once by `init_db.py`; there's no in-app UI
 ### Public (`main_bp`)
 `/`, `/about`, `/ministries`, `/sermons`, `/events`, `/blog`, `/blog/devotionals`, `/blog/worship`, `/blog/leadership`, `/blog/testimonies`, `/blog/search?q=`, `/contact`, `/giving`, `/robots.txt`, `/sitemap.xml`
 
-### Public JSON API (`api_bp`, prefix `/api`) — all rate-limited
-`POST /prayer-request`, `POST /contact-form`, `POST /newsletter`, `POST /giving/init`, `POST /paystack/verify`
+### Public JSON API (`api_bp`, prefix `/api`)
+`POST /prayer-request`, `POST /contact-form`, `POST /newsletter`, `POST /giving/init`, `POST /paystack/verify` — all rate-limited. `POST /paystack/webhook` is separate: exempt from rate limiting and CSRF (it's a server-to-server call from Paystack, authenticated by HMAC signature instead — see Architecture Notes).
 
 ### Member auth (`auth_bp`, prefix `/members`)
 `/register`, `/login`, `/logout`, `/profile`, `/forgot-password`, `/reset-password/<token>`
 
 ### Admin dashboard (`admin_bp`, prefix `/admin`)
-`/login`, `/logout`, `/profile`*, `/accounts`*, `/accounts/<id>/edit`*, `/forgot-password`, `/reset-password/<token>`, `/dashboard`, `/login-history`*, `/api/chart-data`, `/live-stream`, `/members`, `/members/add`, `/members/<id>/edit`, `/members/<id>/delete`, `/members/<id>`, `/sermons/video`, `/sermons/video/add`, `/sermons/video/<id>/edit`, `/sermons/video/<id>/delete`, `/sermons/audio` (+ add/edit/delete), `/devotions` (+ add/edit), `/ebooks` (+ add/edit/delete), `/giving`, `/prayer-requests`, `/messages`, `/newsletter-subscribers`
+`/login`, `/logout`, `/profile`*, `/accounts`*, `/accounts/<id>/edit`*, `/forgot-password`, `/reset-password/<token>`, `/dashboard`, `/login-history`*, `/api/chart-data`, `/api/recent-activity`, `/live-stream`, `/members`, `/members/add`, `/members/<id>/edit`, `/members/<id>/delete`, `/members/<id>`, `/sermons/video`, `/sermons/video/add`, `/sermons/video/<id>/edit`, `/sermons/video/<id>/delete`, `/sermons/audio` (+ add/edit/delete), `/devotions` (+ add/edit), `/ebooks` (+ add/edit/delete), `/giving`, `/prayer-requests`, `/messages`, `/newsletter-subscribers`
 
 \* Developer-only.
 
@@ -209,13 +212,17 @@ All three admin-side roles are seeded once by `init_db.py`; there's no in-app UI
 
 - **Dual auth, one login manager**: `Admin` and `Member` are separate model classes sharing one `flask_login.LoginManager` via a compound session ID (`"admin:<id>"` / `"member:<id>"`). See `CLAUDE.md` for why they aren't merged into one `User(role)` table.
 - **Schema bootstrap, not migrations**: `init_db.py` is a standalone, idempotent script — `CREATE TABLE IF NOT EXISTS` plus an `add_column_if_missing()` helper for additive `ALTER TABLE`s. No Alembic/Flask-Migrate. Run it again any time you pull schema changes.
-- **Paystack flow**: `/api/giving/init` creates a `pending` record server-side (never trusting a client-supplied "already paid" claim); Paystack's Inline JS collects payment client-side; `/api/paystack/verify` confirms with Paystack's REST API before ever marking a donation `completed`.
-- **Caching**: Flask-Caching is wired to cache *data fetches* (e.g. e-book/testimony queries, the admin chart-data endpoint, `robots.txt`/`sitemap.xml`) rather than full pages — every page has a CSRF-bearing form in the footer, so whole-page caching would leak one visitor's CSRF token to everyone else served that cached copy. E-book cache is invalidated immediately on add/edit/delete.
+- **Paystack flow, two independent completion paths**: `/api/giving/init` creates a `pending` record server-side (never trusting a client-supplied "already paid" claim). Two things can then mark it `completed`, and both go through `app/routes.py::_set_donation_status_once` — a single conditional `UPDATE ... WHERE status IN (...)`, never a Python read-then-write — so they can't double-process or race each other:
+  - `/api/paystack/verify` — client-triggered after Paystack's Inline JS popup closes; calls Paystack's verify-transaction REST API before trusting anything. Best-effort — the donor's browser might never call it (closed tab, dropped connection).
+  - `/api/paystack/webhook` — the authoritative fallback. Server-to-server, so there's no session for CSRF; instead it verifies the `X-Paystack-Signature` header (HMAC-SHA512 of the raw body, keyed with `PAYSTACK_SECRET_KEY`) before trusting the payload. To receive events, add `https://<your-domain>/api/paystack/webhook` in the Paystack dashboard once deployed.
+- **Concurrency**: `app/admin.py::devotion_add`'s "already posted today?" check is a separate query from its commit — a genuine race (two admins, or a double-submit) is caught by the DB's `UNIQUE` constraint on `devotion_date` and turned into a clean flash message (`IntegrityError` → rollback → redirect), not a 500. Elsewhere, admin edits don't use optimistic locking (version columns) — deliberately: a handful of known admins doing occasional CRUD doesn't carry the collision risk that would justify it.
+- **Live dashboard updates**: `/admin/api/recent-activity` is polled by `admin.js` every 15s while the dashboard is open, refreshing the stat cards and the two "Recent" lists in place. Polling was chosen over WebSockets/SSE deliberately — it needs no new infrastructure, and a few seconds of latency is more than fine for "an admin notices a new donation," while also uniformly covering new member registrations, which have nothing to do with Paystack at all.
+- **Caching**: Flask-Caching is wired to cache *data fetches* (e.g. e-book/testimony queries, the admin chart-data endpoint, `robots.txt`/`sitemap.xml`) rather than full pages — every page has a CSRF-bearing form in the footer, so whole-page caching would leak one visitor's CSRF token to everyone else served that cached copy. `/api/recent-activity` is deliberately *not* cached, unlike chart-data — its entire purpose is reflecting brand-new rows immediately. E-book cache is invalidated immediately on add/edit/delete.
 - **SEO**: per-page meta description/canonical/Open Graph/Twitter Card tags, JSON-LD `Church` structured data, and a dynamically generated `sitemap.xml`/`robots.txt` — all built from `request.url_root` so they're correct on any domain without code changes.
 
 ## Security
 
-- CSRF protection (Flask-WTF) on every POST route/form
+- CSRF protection (Flask-WTF) on every POST route/form except the Paystack webhook, which uses HMAC-SHA512 signature verification instead (see Architecture Notes) — there's no session on a server-to-server call for CSRF to protect anyway
 - Rate limiting (Flask-Limiter) on login, registration, password reset, and public form endpoints
 - File uploads validated by magic bytes (not just extension) and capped per type (2MB avatars/e-book covers, 10MB PDFs, plus a 16MB global request ceiling)
 - Security headers via Flask-Talisman (CSP, HSTS in production)
@@ -228,6 +235,17 @@ All three admin-side roles are seeded once by `init_db.py`; there's no in-app UI
 - Flask-Compress for response compression
 - Static assets cached for 30 days in production (`SEND_FILE_MAX_AGE_DEFAULT`)
 - Cached, invalidation-aware data-layer queries for e-books/testimonies/chart-data (see Architecture Notes)
+
+## Testing
+
+```bash
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS tag_church_test;"
+python3 -m pytest tests/ -v
+```
+
+Tests run against an isolated `tag_church_test` database (`config.py::TestingConfig`) — never the real one — created and torn down per test via `db.create_all()`/`db.drop_all()`. That's the one place in this codebase that pattern is used; everywhere else follows the additive-only rule in `CLAUDE.md`, since a throwaway schema on a dedicated test database doesn't touch real data.
+
+Current coverage focuses on the two areas most worth guarding with tests rather than just review: the Paystack webhook (signature rejection/acceptance, duplicate-delivery idempotency, and the "never downgrade a completed donation back to failed" guarantee) and the devotion double-post race condition.
 
 ## Deployment
 
