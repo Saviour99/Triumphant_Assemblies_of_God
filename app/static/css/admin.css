@@ -1,0 +1,597 @@
+/* Admin Dashboard — soft, elevated cards on the church's gold/navy brand.
+   Rounded surfaces, layered shadows, icon-badge stat cards, gentle motion
+   on load and hover. Respects prefers-reduced-motion throughout. */
+
+/* Defensive reset: don't depend on the Bootstrap CDN having finished
+   loading (or loading at all — slow networks, ad/CDN blockers) for basic
+   box sizing to be correct. Without this, any element combining width:100%
+   with padding renders wider than its container and overflows on narrow
+   screens. */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+:root {
+    --gold: #C8973A;
+    --gold-light: #E8B84B;
+    --gold-dark: #9A6F25;
+    --royal-blue: #0D2B6B;
+    --royal-blue-light: #1A3F8F;
+    --royal-blue-dark: #081A45;
+    --off-white: #F8F6F0;
+    --text-dark: #1a1a2e;
+    --text-muted: #6c757d;
+    --border-color: #ECE7DA;
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Nunito', sans-serif;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    --shadow-sm: 0 1px 2px rgba(13,43,107,0.06), 0 2px 8px rgba(13,43,107,0.05);
+    --shadow-md: 0 4px 12px rgba(13,43,107,0.07), 0 12px 32px rgba(13,43,107,0.09);
+    --shadow-lg: 0 12px 32px rgba(13,43,107,0.12), 0 28px 64px rgba(13,43,107,0.16);
+
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.admin-body {
+    background: var(--off-white);
+    font-family: var(--font-body);
+    color: var(--text-dark);
+}
+
+/* ============ ENTRANCE MOTION ============ */
+@keyframes admin-fade-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-content > * {
+    animation: admin-fade-in-up 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.admin-content > *:nth-child(2) { animation-delay: 50ms; }
+.admin-content > *:nth-child(3) { animation-delay: 100ms; }
+.admin-content > *:nth-child(4) { animation-delay: 150ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
+
+/* ============ SIDEBAR ============ */
+/* One scroll container at every screen size: .admin-sidebar itself. The
+   identity block (avatar/name/role) is a position:sticky; bottom:0 child
+   inside it — sticky-to-bottom is the one technique that reliably keeps
+   an element pinned as the last thing visible in a scrolling panel no
+   matter how tall the nav list above it grows (developer has 3 more menu
+   items than admin: My Profile / Manage Admins / Login History), and no
+   matter the screen size — desktop, laptop, or mobile. Simpler and more
+   robust than the earlier attempt at splitting scroll across two nested
+   flex containers, which could leave the identity block adrift. */
+.admin-sidebar {
+    background: linear-gradient(165deg, var(--royal-blue) 0%, var(--royal-blue-dark) 65%);
+    color: #fff;
+    padding: var(--space-4) 0 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    align-self: flex-start;
+    overflow-y: auto;
+    /* Stops reaching the end of the sidebar's own scroll from "chaining"
+       into scrolling the page behind it. */
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+
+    /* Thin gold scrollbar instead of the browser's default bar — Firefox.
+       (Touch devices hide scrollbars by OS design regardless of CSS, but
+       the panel still scrolls there via touch either way.) */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(200,151,58,0.6) rgba(255,255,255,0.06);
+}
+
+.admin-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.06);
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(200,151,58,0.6);
+    border-radius: 999px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--gold);
+}
+
+.admin-sidebar .brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0 var(--space-4) var(--space-3);
+    margin-bottom: var(--space-1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.admin-sidebar .brand small {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-top: 3px;
+}
+
+.admin-sidebar .nav-link {
+    color: rgba(255,255,255,0.72);
+    padding: 8px var(--space-5);
+    margin: 1px var(--space-3);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.admin-sidebar .nav-link i {
+    width: 18px;
+    text-align: center;
+}
+
+.admin-sidebar .nav-link:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+    transform: translateX(2px);
+}
+
+.admin-sidebar .nav-link.active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-sidebar .nav-link:focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: -2px;
+}
+
+/* Identity block — pinned to the bottom of the sidebar, below Logout */
+.admin-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-3) var(--space-5) var(--space-3);
+    margin-top: var(--space-2);
+    border-top: 1px solid rgba(255,255,255,0.1);
+
+    /* Always the last thing visible at the bottom of the sidebar, no
+       matter how long the nav list above it is or what size screen this
+       is on — sticky-to-bottom pins it there even while the nav list
+       above scrolls past underneath. The solid background stops scrolled
+       nav items from showing through behind it. */
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--royal-blue-dark);
+}
+
+.admin-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), border-color var(--transition-base);
+}
+
+.admin-identity a:hover .admin-avatar {
+    transform: scale(1.06);
+    border-color: var(--gold-light);
+}
+
+.admin-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.85);
+    font-size: 1.1rem;
+}
+
+.admin-avatar-lg {
+    width: 96px;
+    height: 96px;
+    font-size: 2.2rem;
+    border-width: 3px;
+}
+
+.admin-identity .admin-name {
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: var(--space-2);
+}
+
+.admin-identity .admin-role-badge {
+    margin-top: 2px;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 12px;
+    border-radius: 999px;
+    background: rgba(200,151,58,0.22);
+    color: var(--gold-light);
+    border: 1px solid rgba(200,151,58,0.4);
+    font-weight: 700;
+}
+
+.admin-identity .admin-role-badge.role-developer {
+    background: rgba(255,255,255,0.14);
+    color: #BFD4FF;
+    border-color: rgba(191,212,255,0.4);
+}
+
+.admin-identity .admin-role-badge.role-pastor {
+    background: rgba(154,230,180,0.16);
+    color: #9AE6B4;
+    border-color: rgba(154,230,180,0.4);
+}
+
+/* ============ TOPBAR / CONTENT ============ */
+/* min-width:0 overrides the flexbox default (min-width:auto), which lets
+   this column shrink to fit the screen instead of stretching wide enough
+   to fit its widest un-shrinkable descendant (e.g. a long username, a wide
+   table) — without this, that descendant can force the whole page wider
+   than the viewport on narrow screens, which is what caused the stat cards'
+   uneven right margin and the clipped username text on mobile. Scoped to
+   this column only (not html/body), so it can't affect the sidebar's
+   position:sticky the way a document-level overflow rule did. */
+.admin-main {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.admin-topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-4) var(--space-5);
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+    min-width: 0;
+}
+
+.admin-topbar span,
+.admin-topbar h5 {
+    overflow-wrap: anywhere;
+}
+
+.admin-content {
+    padding: var(--space-5);
+}
+
+/* ============ RESPONSIVE: MOBILE / TABLET OFF-CANVAS SIDEBAR ============
+   Desktop (>=992px): sidebar is sticky in-flow, as above.
+   Below that: sidebar becomes a fixed off-canvas panel, hidden by default
+   and slid in with the hamburger button — it no longer reserves layout
+   width, so the main content always has the full screen to itself and
+   nothing gets squeezed or forced into horizontal scroll. */
+/* NOTE: deliberately NOT setting overflow-x:hidden on html/body here.
+   Doing that on both elements makes body become an explicit nested
+   scroll container (a CSS quirk: once html's overflow-x is set to
+   anything other than visible, its overflow no longer propagates to the
+   viewport, so body's own overflow-x:hidden then applies literally to
+   body itself) — which breaks position:sticky on .admin-sidebar, since
+   sticky then computes against the wrong scrolling ancestor. That's what
+   made the desktop sidebar scroll along with the page. The real fix for
+   any mobile horizontal overflow is at the source (see .admin-main
+   min-width:0 below), not masking it here.
+*/
+
+/* While the off-canvas menu is open, the page behind it can't scroll —
+   without this, scrolling the background content while the fixed sidebar
+   is on-screen makes the sidebar look like it's "not fixed" (mobile
+   browsers reflow position:fixed elements oddly during a background
+   scroll gesture). */
+html.sidebar-open-lock,
+html.sidebar-open-lock body {
+    overflow: hidden;
+    height: 100%;
+}
+
+.sidebar-toggle-btn,
+.sidebar-close-btn {
+    background: none;
+    border: none;
+    color: var(--royal-blue);
+    font-size: 1.3rem;
+    padding: 4px 8px;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+}
+
+.sidebar-close-btn {
+    color: rgba(255,255,255,0.8);
+}
+
+.sidebar-toggle-btn:hover {
+    background: var(--off-white);
+}
+
+.sidebar-close-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,26,69,0.5);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+@media (max-width: 991.98px) {
+    .admin-sidebar {
+        position: fixed;
+        /* top+bottom (not height:100vh) so the sidebar always matches the
+           CURRENT visible viewport, even as mobile browsers show/hide their
+           address bar while scrolling — height:100vh is fixed to the
+           largest possible viewport and leaves a gap once the browser
+           chrome collapses and the real viewport shrinks. */
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: auto;
+        z-index: 1050;
+        width: 280px;
+        max-width: 82vw;
+        transform: translateX(-100%);
+        transition: transform var(--transition-base);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .admin-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-backdrop.show {
+        display: block;
+        opacity: 1;
+    }
+
+    .admin-content {
+        padding: var(--space-4);
+    }
+
+    .admin-topbar {
+        padding: var(--space-3) var(--space-4);
+    }
+}
+
+@media (min-width: 992px) {
+    .sidebar-toggle-btn,
+    .sidebar-backdrop {
+        display: none !important;
+    }
+}
+
+/* ============ STAT CARDS ============ */
+.stat-card {
+    background: #fff;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-5);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+}
+
+.stat-icon.blue { background: linear-gradient(135deg, var(--royal-blue-light) 0%, var(--royal-blue) 100%); }
+.stat-icon.teal { background: linear-gradient(135deg, #2AA198 0%, #1B7A73 100%); }
+.stat-icon.rose { background: linear-gradient(135deg, #C85A54 0%, #A3413C 100%); }
+
+.stat-card .stat-value {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--royal-blue);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+}
+
+.stat-card .stat-label {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+
+/* ============ CARDS ============ */
+.admin-card {
+    background: #fff;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+    transition: box-shadow var(--transition-base);
+}
+
+.admin-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.admin-card h6 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--royal-blue);
+}
+
+/* ============ BUTTONS ============ */
+.btn-admin-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-admin-gold:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+.btn-admin-gold:active {
+    transform: translateY(0);
+}
+
+.btn-admin-gold:focus-visible,
+.btn:focus-visible {
+    outline: 2px solid var(--royal-blue-light);
+    outline-offset: 2px;
+}
+
+/* ============ LOGIN SCREEN ============ */
+.admin-login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    background:
+        radial-gradient(circle at 20% 20%, rgba(200,151,58,0.18), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(26,63,143,0.35), transparent 50%),
+        linear-gradient(165deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%);
+}
+
+.admin-login-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+    animation: admin-fade-in-up 450ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.admin-login-card h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+/* ============ TABLES ============ */
+.table-admin thead {
+    background: var(--off-white);
+}
+
+.table-admin thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom-width: 2px;
+}
+
+.table-admin tbody tr {
+    transition: background var(--transition-fast);
+}
+
+.table-admin tbody tr:hover {
+    background: rgba(200,151,58,0.07);
+}
+
+.badge-status-pending { background: #FFC107; }
+.badge-status-completed { background: #198754; }
+.badge-status-failed { background: #DC3545; }
+
+/* Dashboard "Recent Registrations"/"Recent Donations" — brief gold flash
+   when a row is new since the last poll (see admin.js), so a live update
+   actually reads as "something just happened" rather than the list
+   silently changing underneath you. */
+@keyframes newlyAddedFlash {
+    from { background: rgba(200,151,58,0.35); }
+    to { background: transparent; }
+}
+
+.newly-added {
+    animation: newlyAddedFlash 2.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .newly-added {
+        animation: none;
+        background: rgba(200,151,58,0.2);
+    }
+}
+
+/* Persistent tag on the single newest row in "Recent Registrations"/
+   "Recent Donations" — unlike .newly-added (a transient flash on rows that
+   just appeared from a poll), this always marks whichever row is currently
+   first, on first page load included. */
+.badge-latest {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(200,151,58,0.15);
+    color: var(--gold-dark);
+    border: 1px solid rgba(200,151,58,0.35);
+    vertical-align: middle;
+}

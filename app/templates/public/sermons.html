@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Sermons - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Watch video sermons and listen to audio messages from Triumphant Assemblies of God's Sunday services and teaching ministry in Accra, Ghana.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Sermons & Messages</h1>
+        <p class="lead">Listen to inspiring messages from our pastoral team</p>
+    </div>
+</section>
+
+<!-- Sermons Section -->
+<section class="sermons-section">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="text-start">
+                    <h2>Latest <span class="text-gold">Sermons</span></h2>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="sermon-search">
+                    <input type="text" id="sermonSearch" class="form-control" placeholder="Search sermons...">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% for sermon in video_sermons %}
+            <div class="col-lg-6 mb-4">
+                <div class="sermon-card">
+                    <div class="sermon-media">
+                        <iframe width="100%" height="315" src="{{ youtube_embed_url(sermon.youtube_url) }}" title="{{ sermon.title }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="sermon-info">
+                        <h5 class="sermon-title">{{ sermon.title }}</h5>
+                        <p class="sermon-speaker">{{ sermon.preacher }}</p>
+                        <p class="sermon-date"><i class="fas fa-calendar"></i> {{ sermon.sermon_date.strftime('%B %d, %Y') }}</p>
+                        {% if sermon.message %}<p class="sermon-description">{{ sermon.message }}</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center text-muted py-5">No video sermons have been posted yet. Check back soon.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Audio Sermons Archive -->
+<section class="audio-archive bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Audio Sermons <span class="text-gold">Archive</span></h2>
+            <p class="section-subtitle">Listen to sermons on your device</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="audio-list">
+                    {% for sermon in audio_sermons %}
+                    <div class="audio-item">
+                        <div class="audio-player">
+                            <audio controls>
+                                <source src="{{ url_for('static', filename=sermon.audio_path) }}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                        <div class="audio-info">
+                            <h6>{{ sermon.title }}</h6>
+                            <p class="text-muted">{{ sermon.preacher }} <span style="color: var(--gold);">•</span> {{ sermon.sermon_date.strftime('%B %d, %Y') }}</p>
+                            {% if sermon.message %}<p class="text-muted small mb-0">{{ sermon.message }}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-4">No audio sermons have been uploaded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Subscribe CTA -->
+<section class="sermon-cta" style="background: linear-gradient(135deg, #C8973A 0%, #0D2B6B 100%); padding: 3rem 0; color: white; text-align: center;">
+    <div class="container">
+        <h3>Never Miss a Sermon</h3>
+        <p class="lead mb-4" style="color: whitesmoke;">Subscribe to our channel and get notified of new messages</p>
+        <a href="https://youtube.com" class="btn btn-light btn-lg" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-youtube"></i> Subscribe on YouTube
+        </a>
+    </div>
+</section>
+
+{% endblock %}

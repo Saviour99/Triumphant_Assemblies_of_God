@@ -1,0 +1,26 @@
+{% macro devotion_card(devotion, show_badge=True) %}
+<article class="blog-post featured-post mb-5">
+    {% if show_badge %}<span class="badge bg-success mb-2">NEW</span>{% endif %}
+    <h3>{{ devotion.title }}</h3>
+    <div class="post-meta mb-3">
+        <span class="author text-primary"><i class="fas fa-user"></i> {{ devotion.writer_name }}</span>
+        <span class="date ms-3"><i class="fas fa-calendar"></i> {{ devotion.devotion_date.strftime('%B %d, %Y') }}</span>
+        {% if devotion.quote %}<span class="quote ms-3"><i class="fa-solid fa-quote-left"></i> {{ devotion.quote }}</span>{% endif %}
+        <span class="badge bg-gold"><i class="fas fa-hands-praying"></i> Devotion</span>
+    </div>
+    <p class="lead fst-italic">"{{ devotion.quote_theme }}"</p>
+    <h4 class="text-gold" style="font-size: 1.1rem;">REFLECTION</h4>
+    <p>{{ devotion.reflection }}</p>
+    {% if devotion.prayer_points %}
+    <h4 class="text-gold" style="font-size: 1.1rem;">PRAYER POINTS</h4>
+    <ul>
+        {% for point in devotion.prayer_points.split('\n') %}
+            {% if point.strip() %}<li>{{ point.strip() }}</li>{% endif %}
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <h4 class="text-gold" style="font-size: 1.1rem;">DECLARATION</h4>
+    <p>{{ devotion.declaration }}</p>
+    <h3 class="text-gold text-center" style="font-size: 0.8rem;">JESUS IS LORD</h3>
+</article>
+{% endmacro %}

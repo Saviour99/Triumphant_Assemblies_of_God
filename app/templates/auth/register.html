@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Member Registration - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Become a Member</h1>
+        <p class="lead">Join the TAG family — register to access member-only content and track your giving.</p>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="contact-form-card">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label class="form-label-custom">Full Name</label>
+                            {{ form.full_name(class="form-control form-control-custom") }}
+                            {% for error in form.full_name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Email Address</label>
+                            {{ form.email(class="form-control form-control-custom") }}
+                            {% for error in form.email.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Phone Number</label>
+                            {{ form.phone(class="form-control form-control-custom") }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Password</label>
+                            {{ form.password(class="form-control form-control-custom") }}
+                            {% for error in form.password.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Confirm Password</label>
+                            {{ form.confirm_password(class="form-control form-control-custom") }}
+                            {% for error in form.confirm_password.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                        </div>
+                        <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer;">Register</button>
+                    </form>
+                    <p class="mt-3 text-center small">Already a member? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

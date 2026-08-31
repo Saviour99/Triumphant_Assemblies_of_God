@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+{% block title %}E-Books - Admin{% endblock %}
+{% block page_title %}E-Books (Worship / Leadership){% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('admin.ebook_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus"></i> Add E-Book</a>
+</div>
+
+<div class="admin-card">
+    <p class="text-muted small">Only upload a PDF you actually have the rights to distribute. Entries without a file still show on the public site, just without a download button.</p>
+    <div class="table-responsive">
+        <table class="table table-admin align-middle">
+            <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Category</th><th>File</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+                {% for e in ebooks %}
+                <tr>
+                    <td>
+                        {% if e.thumbnail_filename %}
+                            <img src="{{ url_for('static', filename=e.thumbnail_filename) }}" alt="{{ e.title }}" style="width:36px; height:48px; object-fit:cover; border-radius:4px;">
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ e.title }}</td>
+                    <td>{{ e.author }}</td>
+                    <td><span class="badge bg-secondary">{{ e.category|title }}</span></td>
+                    <td>
+                        {% if e.file_path %}
+                            <a href="{{ url_for('static', filename=e.file_path) }}" target="_blank">View <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        {% else %}
+                            <span class="text-muted">No file yet</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.ebook_edit', ebook_id=e.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <form action="{{ url_for('admin.ebook_delete', ebook_id=e.id) }}" method="POST" class="d-inline confirm-delete" data-confirm-message="Delete this e-book?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No e-books yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

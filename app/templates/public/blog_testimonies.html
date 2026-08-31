@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "public/_testimony_card.html" import testimony_card %}
+
+{% block title %}Testimonies - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Read testimonies from members of Triumphant Assemblies of God about how faith and community have made a difference in their lives.{% endblock %}
+
+{% block content %}
+
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Member Testimonies</h1>
+        <p class="lead">Stories of faith, transformation, and God's faithfulness</p>
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="row g-4">
+                    {% for t in testimonies %}
+                    <div class="col-md-6">
+                        {{ testimony_card(t) }}
+                    </div>
+                    {% else %}
+                    <div class="col-12"><div class="alert alert-info">No testimonies have been shared yet.</div></div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                {% include "public/_blog_sidebar.html" %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

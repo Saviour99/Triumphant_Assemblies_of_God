@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}My Profile - Triumphant Assemblies of God (TAG){% endblock %}
+
+{% block content %}
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>My Profile</h1>
+        <p class="lead">Welcome, {{ member.full_name }}.</p>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="contact-info-card text-center">
+                    <button type="button" id="avatarToggle" class="btn-avatar-trigger mb-3" aria-expanded="false" aria-controls="avatarUploadForm" title="Click to update your photo">
+                        {% if member.avatar_filename %}
+                            <img src="{{ url_for('static', filename=member.avatar_filename) }}" alt="{{ member.full_name }}" class="member-avatar">
+                        {% else %}
+                            <div class="member-avatar member-avatar-placeholder mx-auto"><i class="fa-solid fa-user"></i></div>
+                        {% endif %}
+                        <span class="avatar-edit-badge"><i class="fa-solid fa-camera"></i></span>
+                    </button>
+
+                    <form method="POST" enctype="multipart/form-data" novalidate class="mb-3 d-none" id="avatarUploadForm">
+                        {{ form.hidden_tag() }}
+                        {{ form.avatar(class="form-control form-control-sm mb-2") }}
+                        {% for error in form.avatar.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        <button type="submit" class="btn-gold-sm w-100">Update Photo</button>
+                    </form>
+                    <script>
+                        document.getElementById('avatarToggle').addEventListener('click', function () {
+                            const form = document.getElementById('avatarUploadForm');
+                            const isHidden = form.classList.toggle('d-none');
+                            this.setAttribute('aria-expanded', String(!isHidden));
+                        });
+                    </script>
+
+                    <h4 style="font-family:var(--font-display); color:white;">Account Details</h4>
+                    <p class="mb-1 text-start"><i class="fa-solid fa-user"></i> {{ member.full_name }}</p>
+                    <p class="mb-1 text-start"><i class="fa-solid fa-envelope"></i> {{ member.email }}</p>
+                    <p class="mb-1 text-start"><i class="fa-solid fa-phone"></i> {{ member.phone or 'Not provided' }}</p>
+                    <p class="mb-3 text-start"><i class="fa-solid fa-calendar"></i> Member since {{ member.created_at.strftime('%d %B %Y') }}</p>
+                    <a href="{{ url_for('auth.logout') }}" class="btn-primary-gold" style="border:none;">Logout</a>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <h4 style="font-family:var(--font-display); color:var(--royal-blue);">Donation History</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for d in donations %}
+                            <tr>
+                                <td>{{ d.created_at.strftime('%d %b %Y') }}</td>
+                                <td>{{ d.giving_type|title }}</td>
+                                <td>₵{{ '%.2f'|format(d.amount) }}</td>
+                                <td>{{ d.status|title }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">No donations yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if pagination and pagination.pages > 1 %}
+                <nav aria-label="Donation history pagination">
+                    <ul class="pagination">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('auth.profile', page=pagination.prev_num) if pagination.has_prev else '#' }}">Previous</a>
+                        </li>
+                        {% for p in pagination.iter_pages() %}
+                            {% if p %}
+                                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('auth.profile', page=p) }}">{{ p }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('auth.profile', page=pagination.next_num) if pagination.has_next else '#' }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit' if member else 'Add' }} Member - Admin{% endblock %}
+{% block page_title %}{{ 'Edit' if member else 'Add' }} Member{% endblock %}
+
+{% block content %}
+<div class="admin-card" style="max-width:560px;">
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            {{ form.full_name(class="form-control") }}
+            {% for error in form.full_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            {{ form.email(class="form-control") }}
+            {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phone</label>
+            {{ form.phone(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Password {% if member %}<span class="text-muted small">(leave blank to keep current)</span>{% endif %}</label>
+            {{ form.password(class="form-control") }}
+            {% for error in form.password.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-check mb-3">
+            {{ form.is_active_member(class="form-check-input") }}
+            <label class="form-check-label" for="{{ form.is_active_member.id }}">Active</label>
+        </div>
+        <button type="submit" class="btn btn-admin-gold">Save</button>
+        <a href="{{ url_for('admin.members_list') }}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

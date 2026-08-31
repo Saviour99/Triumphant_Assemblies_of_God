@@ -1,0 +1,77 @@
+{% extends "admin/base.html" %}
+{% block title %}Giving - Admin{% endblock %}
+{% block page_title %}Giving Overview{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    {% for t in giving_types %}
+    <div class="col-6 col-md-4 col-lg" style="min-width:150px;">
+        <a href="{{ url_for('admin.giving_list', status=status_filter, type=t) }}" class="text-decoration-none">
+            <div class="stat-card {% if type_filter == t %}border border-2{% endif %}" style="border-color: var(--gold) !important;">
+                <div>
+                    <div class="stat-value" style="font-size:1.4rem;">₵{{ '%.2f'|format(type_totals.get(t, 0)) }}</div>
+                    <div class="stat-label">{{ t|replace('_', ' ')|title }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="admin-card mb-3">
+    <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+        <div>
+            <div class="small text-muted mb-1">Status</div>
+            <div class="btn-group">
+                <a href="{{ url_for('admin.giving_list', type=type_filter) }}" class="btn btn-sm btn-outline-secondary {% if not status_filter %}active{% endif %}">All</a>
+                <a href="{{ url_for('admin.giving_list', status='completed', type=type_filter) }}" class="btn btn-sm btn-outline-secondary {% if status_filter == 'completed' %}active{% endif %}">Completed</a>
+                <a href="{{ url_for('admin.giving_list', status='pending', type=type_filter) }}" class="btn btn-sm btn-outline-secondary {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+                <a href="{{ url_for('admin.giving_list', status='failed', type=type_filter) }}" class="btn btn-sm btn-outline-secondary {% if status_filter == 'failed' %}active{% endif %}">Failed</a>
+            </div>
+        </div>
+        <div>
+            <div class="small text-muted mb-1">Type</div>
+            <div class="btn-group flex-wrap">
+                <a href="{{ url_for('admin.giving_list', status=status_filter) }}" class="btn btn-sm btn-outline-secondary {% if not type_filter %}active{% endif %}">All</a>
+                {% for t in giving_types %}
+                <a href="{{ url_for('admin.giving_list', status=status_filter, type=t) }}" class="btn btn-sm btn-outline-secondary {% if type_filter == t %}active{% endif %}">{{ t|replace('_', ' ')|title }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">
+            {{ donations|length }} Donation{{ 's' if donations|length != 1 }}
+            {% if type_filter %} &middot; {{ type_filter|replace('_', ' ')|title }}{% endif %}
+            {% if status_filter %} &middot; {{ status_filter|title }}{% endif %}
+        </h6>
+        <span class="fw-bold" style="color: var(--royal-blue);">Total: ₵{{ '%.2f'|format(filtered_total) }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-admin align-middle">
+            <thead><tr><th>Date</th><th>Donor</th><th>Type</th><th>Amount</th><th>Status</th><th>Member</th></tr></thead>
+            <tbody>
+                {% for d in donations %}
+                <tr>
+                    <td>{{ d.created_at.strftime('%d %b %Y %H:%M') }}</td>
+                    <td>{{ d.donor_name | title }}<br><span class="text-muted small">{{ d.donor_email }}</span></td>
+                    <td>{{ d.giving_type|replace('_', ' ')|title }}</td>
+                    <td>₵{{ '%.2f'|format(d.amount) }}</td>
+                    <td><span class="badge badge-status-{{ d.status }}">{{ d.status|title }}</span></td>
+                    <td>
+                        {% if d.member_id %}
+                            <a href="{{ url_for('admin.member_profile', member_id=d.member_id) }}">View</a>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No donations match this filter.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

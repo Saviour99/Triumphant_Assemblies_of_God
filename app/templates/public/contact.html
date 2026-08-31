@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Contact Triumphant Assemblies of God at {{ church_info.address }}. Get directions, service times, or send us a message.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p class="lead">We'd love to hear from you. Get in touch with us today!</p>
+    </div>
+</section>
+
+
+<!-- =============================================
+     CONTACT
+============================================= -->
+<section id="contact">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <h2 class="section-title">Get in <span class="gold">Touch</span></h2>
+      <p class="text-muted mx-auto" style="max-width:500px">We'd love to hear from you. Reach out for enquiries, counselling requests, or to plan your visit.</p>
+    </div>
+    <div class="row g-4">
+      <!-- Contact Info -->
+      <div class="col-lg-5 reveal-left">
+        <div class="contact-info-card">
+          <h4 style="font-family:var(--font-display); color:white; margin-bottom:28px">Contact Information</h4>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="contact-item-text">
+              <h6>Address</h6>
+              <p>{{ church_info.address }}</p>
+              <button type="button" id="planVisitBtn" class="btn-gold-sm mt-2">
+                <i class="fa-solid fa-map-location-dot"></i> Plan Your Visit
+              </button>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="contact-item-text">
+              <h6>Phone</h6>
+              <p>+233 50 111 6130<br /></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="contact-item-text">
+              <h6>Email</h6>
+              <p>triumphantag@gmail.com<br /></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="contact-item-text">
+              <h6>Office Hours</h6>
+              <p>Monday – Friday: 10:00 AM – 5:00 PM<br />Saturday: 10:00 AM – 2:00 PM</p>
+            </div>
+          </div>
+          <hr style="border-color:rgba(255,255,255,0.15);" />
+          <h6 style="color:var(--gold-light); font-size:0.8rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px">Follow Us</h6>
+          <div class="social-row">
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+            </a>
+            <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="YouTube">
+                <i class="fa-brands fa-youtube"></i>
+            </a>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter/X">
+                <i class="fa-brands fa-x-twitter"></i>
+            </a>
+            <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="TikTok">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Contact Form -->
+      <div class="col-lg-7 reveal-right">
+        <div class="contact-form-card">
+          <h4 style="font-family:var(--font-display); color:var(--royal-blue); margin-bottom:24px">Send Us a Message</h4>
+          <form id="contactForm" action="/contact" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="contactName" class="form-label-custom">Full Name</label>
+                <input type="text" class="form-control form-control-custom" id="contactName" name="name" placeholder="Kofi Mensah" required aria-required="true" autocomplete="name" />
+                <span class="field-error" id="contactNameError"></span>
+              </div>
+              <div class="col-md-6">
+                <label for="contactEmail" class="form-label-custom">Email Address</label>
+                <input type="email" class="form-control form-control-custom" id="contactEmail" name="email" placeholder="kofi@example.com" required aria-required="true" autocomplete="email" />
+                <span class="field-error" id="contactEmailError"></span>
+              </div>
+              <div class="col-md-6">
+                <label for="contactPhone" class="form-label-custom">Phone Number</label>
+                <input type="tel" class="form-control form-control-custom" id="contactPhone" name="phone" placeholder="+233 20 000 0000" autocomplete="tel" />
+              </div>
+              <div class="col-md-6">
+                <label for="contactSubject" class="form-label-custom">Subject</label>
+                <select class="form-control form-control-custom" id="contactSubject" name="subject" required aria-required="true">
+                  <option value="" disabled selected>Select subject...</option>
+                  <option value="general">General Enquiry</option>
+                  <option value="counselling">Counselling Request</option>
+                  <option value="visit">Plan a Visit</option>
+                  <option value="membership">Church Membership</option>
+                  <option value="partnership">Partnership / Collaboration</option>
+                  <option value="media">Media &amp; Press</option>
+                </select>
+                <span class="field-error" id="contactSubjectError"></span>
+              </div>
+              <div class="col-12">
+                <label for="contactMessage" class="form-label-custom">Message</label>
+                <textarea class="form-control form-control-custom" id="contactMessage" name="message" rows="5" placeholder="Write your message here..." required aria-required="true" maxlength="2000"></textarea>
+                <span class="field-error" id="contactMessageError"></span>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer; font-size:0.95rem">
+                  <i class="fa-solid fa-paper-plane"></i> Send Message
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================
+     PRAYER REQUEST
+============================================= -->
+<section id="prayer">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5 reveal-left">
+        <h3 style="font-size: 2.6rem;">Submit a <span class="text-gold">Prayer Request</span></h3>
+        <div class="section-divider"></div>
+        <p class="text-muted mb-4">Our prayer team intercedes faithfully for every need shared with us. Nothing is too big or too small for God. Share your heart we stand with you.</p>
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="ministry-icon" style="width:48px;height:48px;min-width:48px;font-size:1.2rem">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <h6 class="fw-700 text-royal mb-1">Intercession Team</h6>
+            <p class="text-muted small mb-0">Our dedicated prayer warriors pray over every request submitted.</p>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3">
+          <div class="ministry-icon" style="width:48px;height:48px;min-width:48px;font-size:1.2rem">
+            <i class="fa-solid fa-envelope-open-text"></i>
+          </div>
+          <div>
+            <h6 class="fw-700 text-royal mb-1">Confidential &amp; Caring</h6>
+            <p class="text-muted small mb-0">All prayer requests are kept private and treated with utmost care.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7 reveal-right">
+        <div class="prayer-card">
+          <form id="prayerForm" action="/prayer-request" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="prayerName" class="form-label">Your Name</label>
+                <input type="text" class="form-control prayer-form-control" id="prayerName" name="name" placeholder="Ama Ofori" required aria-required="true" autocomplete="name" />
+                <span class="field-error" id="prayerNameError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-md-6">
+                <label for="prayerEmail" class="form-label">Email Address</label>
+                <input type="email" class="form-control prayer-form-control" id="prayerEmail" name="email" placeholder="ama@example.com" required aria-required="true" autocomplete="email" />
+                <span class="field-error" id="prayerEmailError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-12">
+                <label for="prayerTopic" class="form-label">Prayer Topic</label>
+                <select class="form-control prayer-form-control" id="prayerTopic" name="topic" required aria-required="true">
+                  <option value="" disabled selected>Select a topic...</option>
+                  <option value="healing">Healing &amp; Health</option>
+                  <option value="family">Family &amp; Relationships</option>
+                  <option value="finances">Financial Breakthrough</option>
+                  <option value="salvation">Salvation of Loved One</option>
+                  <option value="guidance">Divine Direction &amp; Guidance</option>
+                  <option value="protection">Protection &amp; Safety</option>
+                  <option value="career">Career &amp; Business</option>
+                  <option value="other">Other</option>
+                </select>
+                <span class="field-error" id="prayerTopicError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-12">
+                <label for="prayerMessage" class="form-label">Your Prayer Request</label>
+                <textarea class="form-control prayer-form-control" id="prayerMessage" name="message" rows="4" placeholder="Share your prayer need here. Our team will lift you up in prayer..." required aria-required="true" maxlength="1000"></textarea>
+                <span class="field-error" id="prayerMessageError" style="color:#ff9f9f"></span>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer; font-size:1rem">
+                  <i class="fa-solid fa-paper-plane"></i> Submit Prayer Request
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Map Section -->
+<section class="map-section" id="map-section">
+    <div class="container-fluid p-0">
+        <h2 class="section-title text-center mb-4">Find Us On <span class="text-gold">The Map</span></h2>
+        <div class="map-container">
+            <iframe src="https://maps.google.com/maps?q={{ 'Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana' | urlencode }}&output=embed" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="text-center mt-4">
+            <button type="button" id="getDirectionsBtn" class="btn-primary-gold" style="border:none; cursor:pointer;">
+                <i class="fa-solid fa-diamond-turn-right"></i> Get Directions From My Location
+            </button>
+        </div>
+    </div>
+</section>
+
+
+<!-- Additional Contact Options -->
+<section class="additional-contact bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Other Ways to Connect</h2>
+            <p class="section-subtitle">Stay connected with TAG through multiple channels</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="contact-option">
+                    <div class="option-icon">
+                        <i class="fab fa-whatsapp fa-3x"></i>
+                    </div>
+                    <h5>WhatsApp</h5>
+                    <p>Chat with us on WhatsApp for quick responses</p>
+                    <a href="https://wa.me/233501116130" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-whatsapp"></i> Message Us
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="contact-option">
+                    <div class="option-icon">
+                        <i class="fab fa-facebook fa-3x"></i>
+                    </div>
+                    <h5>Facebook</h5>
+                    <p>Follow us on Facebook for updates and news</p>
+                    <a href="https://facebook.com" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-facebook"></i> Follow Us
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="contact-option">
+                    <div class="option-icon">
+                        <i class="fab fa-youtube fa-3x"></i>
+                    </div>
+                    <h5>YouTube</h5>
+                    <p>Subscribe to our channel for sermons and videos</p>
+                    <a href="https://youtube.com" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-youtube"></i> Subscribe
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('planVisitBtn')?.addEventListener('click', () => {
+    document.getElementById('contactSubject').value = 'visit';
+    document.getElementById('map-section')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('getDirectionsBtn')?.addEventListener('click', () => {
+    const destination = encodeURIComponent('Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana');
+    const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+
+    if (!navigator.geolocation) {
+        window.open(fallbackUrl, '_blank');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const origin = `${position.coords.latitude},${position.coords.longitude}`;
+            window.open(
+                `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`,
+                '_blank'
+            );
+        },
+        () => window.open(fallbackUrl, '_blank')
+    );
+});
+</script>
+
+{% endblock %}

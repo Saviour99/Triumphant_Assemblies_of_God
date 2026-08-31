@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% block title %}Newsletter Subscribers - Admin{% endblock %}
+{% block page_title %}Newsletter Subscribers{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-admin align-middle">
+            <thead><tr><th>Email</th><th>Subscribed</th></tr></thead>
+            <tbody>
+                {% for s in subscribers %}
+                <tr>
+                    <td>{{ s.email }}</td>
+                    <td class="text-nowrap">{{ s.subscribed_at.strftime('%d %b %Y') }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="2" class="text-center text-muted py-4">No subscribers yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

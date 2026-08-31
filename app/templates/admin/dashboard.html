@@ -1,0 +1,163 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard - Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('admin.members_list') }}" class="text-decoration-none">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="stat-value" data-stat="total_members" data-count-target="{{ total_members }}">0</div>
+                    <div class="stat-label">Members</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('admin.giving_list') }}" class="text-decoration-none">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                <div>
+                    <div class="stat-value" data-stat="total_donations" data-count-target="{{ total_donations }}" data-count-prefix="₵" data-count-decimals="2">₵0.00</div>
+                    <div class="stat-label">Total Donations</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('admin.prayer_requests_list') }}" class="text-decoration-none">
+            <div class="stat-card">
+                <div class="stat-icon rose"><i class="fa-solid fa-hands-praying"></i></div>
+                <div>
+                    <div class="stat-value" data-stat="total_prayer_requests" data-count-target="{{ total_prayer_requests }}">0</div>
+                    <div class="stat-label">Prayer Requests</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('admin.messages_list') }}" class="text-decoration-none">
+            <div class="stat-card">
+                <div class="stat-icon teal"><i class="fa-solid fa-envelope"></i></div>
+                <div>
+                    <div class="stat-value" data-stat="total_messages" data-count-target="{{ total_messages }}">0</div>
+                    <div class="stat-label">Contact Messages</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('admin.newsletter_subscribers_list') }}" class="text-decoration-none">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-paper-plane"></i></div>
+                <div>
+                    <div class="stat-value" data-stat="total_newsletter_subscribers" data-count-target="{{ total_newsletter_subscribers }}">0</div>
+                    <div class="stat-label">Newsletter Subscribers</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('admin.devotions_list') }}" class="text-decoration-none">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
+                <div>
+                    <div class="stat-value" data-stat="total_devotions" data-count-target="{{ total_devotions }}">0</div>
+                    <div class="stat-label">Devotions Posted</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <h6 class="mb-3">Donation Trend</h6>
+            <canvas id="donationTrendChart" height="180"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <h6 class="mb-3">Member Growth</h6>
+            <canvas id="memberGrowthChart" height="180"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Recent Registrations</h6>
+                <a href="{{ url_for('admin.members_list') }}" class="small">View All &rarr;</a>
+            </div>
+            <ul class="list-group list-group-flush" id="recentRegistrationsList">
+                {% for m in recent_registrations %}
+                <li class="list-group-item d-flex justify-content-between" data-member-id="{{ m.id }}">
+                    <span>{{ m.full_name | title }}{% if loop.first %}<span class="badge-latest ms-2">Newest</span>{% endif %}</span>
+                    <span class="text-muted small">{{ m.created_at.strftime('%d %b %Y') }}</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">No members yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Recent Donations</h6>
+                <a href="{{ url_for('admin.giving_list') }}" class="small">View All &rarr;</a>
+            </div>
+            <ul class="list-group list-group-flush" id="recentDonationsList">
+                {% for d in recent_donations %}
+                <li class="list-group-item d-flex justify-content-between" data-donation-id="{{ d.id }}">
+                    <span>{{ d.donor_name | title }} ({{ d.giving_type | title }}){% if loop.first %}<span class="badge-latest ms-2">Latest</span>{% endif %}</span>
+                    <span class="text-muted small">₵{{ '%.2f'|format(d.amount) }}</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">No donations yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% if recent_logins is not none %}
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Recent Admin/Developer Logins</h6>
+                <a href="{{ url_for('admin.login_history') }}" class="small">View All &rarr;</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-admin align-middle mb-0">
+                    <thead><tr><th>Name</th><th>Role</th><th>Date</th><th>Time</th><th>IP</th></tr></thead>
+                    <tbody>
+                        {% for log in recent_logins %}
+                        <tr>
+                            <td>{{ log.admin.username | title }}</td>
+                            <td><span class="badge bg-{{ 'info' if log.admin.role == 'developer' else ('warning' if log.admin.role == 'pastor' else 'secondary') }}">{{ log.admin.display_role }}</span></td>
+                            <td>{{ log.login_at.strftime('%d %b %Y') }}</td>
+                            <td>{{ log.login_at.strftime('%H:%M:%S') }}</td>
+                            <td class="text-muted small">{{ log.ip_address or '—' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No login activity yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+{% endblock %}

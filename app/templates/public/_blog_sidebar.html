@@ -1,0 +1,52 @@
+<!-- Search -->
+<div class="sidebar-widget mb-4">
+    <h5 class="widget-title">Search Articles</h5>
+    <form action="{{ url_for('main.blog_search') }}" method="GET">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search..." value="{{ request.args.get('q', '') }}" aria-label="Search the blog">
+            <button class="btn btn-gold" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Categories -->
+<div class="sidebar-widget mb-4">
+    <h5 class="widget-title">Categories</h5>
+    <ul class="category-list">
+        <li><a href="{{ url_for('main.blog_devotionals') }}">Devotional <span class="count">({{ blog_category_counts.devotional }})</span></a></li>
+        <li><a href="{{ url_for('main.blog_worship') }}">Worship <span class="count">({{ blog_category_counts.worship }})</span></a></li>
+        <li><a href="{{ url_for('main.blog_leadership') }}">Leadership <span class="count">({{ blog_category_counts.leadership }})</span></a></li>
+        <li><a href="{{ url_for('main.blog_testimonies') }}">Testimonies <span class="count">({{ blog_category_counts.testimonies }})</span></a></li>
+    </ul>
+</div>
+
+{% if past_devotions is defined %}
+<!-- Past Devotions -->
+<div class="sidebar-widget mb-4">
+    <h5 class="widget-title">Past Devotions</h5>
+    <ul class="recent-posts">
+        {% for d in past_devotions %}
+        <li>
+            <a href="{{ url_for('main.blog', date=d.devotion_date.strftime('%Y-%m-%d')) }}">{{ d.title }}</a>
+            <small class="text-muted">{{ d.devotion_date.strftime('%B %d, %Y') }}</small>
+        </li>
+        {% else %}
+        <li class="text-muted">No devotions yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Newsletter -->
+<div class="sidebar-widget bg-blue text-white p-3 rounded-lg">
+    <h5 class="widget-title text-white">Subscribe to Our Newsletter</h5>
+    <p class="small mb-3">Get inspiring articles and devotionals delivered to your inbox.</p>
+    <form id="newsletterForm">
+        <div class="mb-2">
+            <input type="email" id="newsletterEmail" class="form-control" placeholder="Your email" required>
+        </div>
+        <button type="submit" class="btn btn-gold w-100">Subscribe</button>
+    </form>
+</div>

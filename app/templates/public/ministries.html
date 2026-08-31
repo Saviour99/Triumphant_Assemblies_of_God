@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Ministries - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Explore TAG's ministries in Accra — Children's Ministry, Youth Ministry, Women's and Men's Fellowship — each dedicated to spiritual growth and community service.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Our Ministries</h1>
+        <p class="lead">Discover the various ways we serve and minister to our community</p>
+    </div>
+</section>
+
+<!-- Ministries Grid -->
+<section class="ministries-grid">
+    <div class="container">
+        <div class="row g-4">
+            {% for ministry in ministries %}
+            <div class="col-sm-6 col-lg-4 {{ loop.index }}">
+                <div class="ministry-card">
+                    <div class="ministry-icon">
+                        <i class="fas {{ ministry.icon }}"></i>
+                    </div>
+                    <h5>{{ ministry.name }}</h5>
+                    <p>{{ ministry.description }}</p>
+                    <a href="{{ url_for('main.contact') }}" class="ministry-link">Get Involved <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Volunteer Section -->
+<section class="volunteer-section bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h2>Volunteer With Us</h2>
+                <p class="lead text-gold">Make a meaningful impact in our church and community</p>
+                <div class="section-divider"></div>
+                <p>
+                    Whether you have a specific skill or just a willing heart, there's a place for you in our ministries. 
+                    Volunteering is a wonderful way to grow spiritually, connect with others, and serve God's purpose.
+                </p>
+                <ul class="volunteer-benefits">
+                    <li><i class="fas fa-check-circle text-gold"></i> Spiritual growth and development</li>
+                    <li><i class="fas fa-check-circle text-gold"></i> Build meaningful relationships</li>
+                    <li><i class="fas fa-check-circle text-gold"></i> Use your talents for God's glory</li>
+                    <li><i class="fas fa-check-circle text-gold"></i> Make a real difference</li>
+                </ul>
+                <a href="{{ url_for('main.contact') }}" class="btn btn-primary btn-lg mt-3">Volunteer Today</a>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1571260765714-e2b955496436?q=80&w=798&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Volunteers" class="img-fluid rounded-lg shadow-lg">
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

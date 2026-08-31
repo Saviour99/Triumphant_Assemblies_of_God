@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+{% block title %}Login History - Admin{% endblock %}
+{% block page_title %}Login History{% endblock %}
+
+{% block content %}
+<p class="text-muted">The latest 100 admin/developer logins, newest first. Developer-only.</p>
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-admin align-middle mb-0">
+            <thead><tr><th>Name</th><th>Role</th><th>Date</th><th>Time</th><th>IP</th></tr></thead>
+            <tbody>
+                {% for log in logins %}
+                <tr>
+                    <td>{{ log.admin.username }}</td>
+                    <td><span class="badge bg-{{ 'info' if log.admin.role == 'developer' else ('warning' if log.admin.role == 'pastor' else 'secondary') }}">{{ log.admin.display_role }}</span></td>
+                    <td>{{ log.login_at.strftime('%d %b %Y') }}</td>
+                    <td>{{ log.login_at.strftime('%H:%M:%S') }}</td>
+                    <td class="text-muted small">{{ log.ip_address or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-3">No login activity yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

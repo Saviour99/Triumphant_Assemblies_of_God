@@ -1,0 +1,20 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+*.egg-info/
+
+# Uploads (user-generated content, not source)
+app/static/uploads/
+
+# Logs
+logs/
+*.log
+
+# OS / editor
+.DS_Store

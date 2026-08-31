@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Triumphant Assemblies of God</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-body">
+    <div class="admin-login-wrap">
+        <div class="admin-login-card">
+            <div class="text-center mb-4">
+                <img src="{{ url_for('static', filename='img/logo3.jpg') }}" width="56" alt="Church Logo" class="rounded-circle mb-2">
+                <h4 style="font-family:var(--font-display); color:var(--royal-blue);">Admin Sign In</h4>
+                <p class="text-muted small mb-0">Triumphant Assemblies of God — Dashboard</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    {{ form.email(class="form-control", placeholder="admin@triumphantag.com", autocomplete="username") }}
+                    {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    {{ form.password(class="form-control", placeholder="••••••••", autocomplete="current-password") }}
+                    {% for error in form.password.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <button type="submit" class="btn btn-admin-gold w-100 mb-2">Sign In</button>
+                <div class="text-center">
+                    <a href="{{ url_for('admin.forgot_password') }}" class="small text-muted">Forgot password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

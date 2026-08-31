@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit' if sermon else 'Upload' }} Audio Sermon - Admin{% endblock %}
+{% block page_title %}{{ 'Edit' if sermon else 'Upload' }} Audio Sermon{% endblock %}
+
+{% block content %}
+<div class="admin-card" style="max-width:640px;">
+    <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            {{ form.title(class="form-control") }}
+            {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Preacher / Writer</label>
+            {{ form.preacher(class="form-control") }}
+            {% for error in form.preacher.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Date</label>
+            {{ form.sermon_date(class="form-control", type="date") }}
+            {% for error in form.sermon_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Short Message</label>
+            {{ form.message(class="form-control", rows=4) }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">{{ 'Replace Audio File (optional)' if sermon else 'Audio File (mp3)' }}</label>
+            {% if sermon %}
+                <audio controls src="{{ url_for('static', filename=sermon.audio_path) }}" class="d-block mb-2" style="max-width:100%;"></audio>
+            {% endif %}
+            {{ form.audio_file(class="form-control") }}
+            {% for error in form.audio_file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            {% if sermon %}<div class="form-text">Leave blank to keep the current audio file.</div>{% endif %}
+        </div>
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save Changes' if sermon else 'Upload' }}</button>
+        <a href="{{ url_for('admin.audio_sermons_list') }}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

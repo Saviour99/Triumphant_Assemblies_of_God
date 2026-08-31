@@ -1,0 +1,27 @@
+{% macro ebook_card(e) %}
+<div class="ebook-card mb-4">
+    <div class="ebook-thumbnail">
+        {% if e.thumbnail_filename %}
+            <img src="{{ url_for('static', filename=e.thumbnail_filename) }}" alt="{{ e.title }} book cover">
+        {% else %}
+            <div class="ebook-thumbnail-placeholder">
+                <i class="fa-solid fa-book"></i>
+                <span>{{ e.title }}</span>
+            </div>
+        {% endif %}
+    </div>
+    <div class="ebook-details">
+        <span class="badge bg-gold mb-2">{{ e.category|title }}</span>
+        <h4>{{ e.title }}</h4>
+        <p class="post-meta mb-2"><span class="author"><i class="fas fa-user-pen"></i> {{ e.author }}</span></p>
+        {% if e.summary %}<p>{{ e.summary }}</p>{% endif %}
+        {% if e.file_path %}
+            <a href="{{ url_for('static', filename=e.file_path) }}" class="btn btn-primary btn-sm" download>
+                <i class="fa-solid fa-download"></i> Download
+            </a>
+        {% else %}
+            <span class="text-muted small"><i class="fa-solid fa-clock"></i> Download coming soon</span>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

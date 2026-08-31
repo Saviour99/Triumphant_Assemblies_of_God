@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block title %}Manage Admin Accounts{% endblock %}
+{% block page_title %}Manage Admin Accounts{% endblock %}
+
+{% block content %}
+<p class="text-muted">Developer-only: edit any admin or developer account's photo, username, email, or password. If the admin needs a new password, reset it here and hand it to them directly.</p>
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-admin align-middle">
+            <thead><tr><th></th><th>Username</th><th>Email</th><th>Role</th><th>Last Login</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+                {% for a in accounts %}
+                <tr>
+                    <td>
+                        {% if a.avatar_filename %}
+                            <img src="{{ url_for('static', filename=a.avatar_filename) }}" class="admin-avatar" style="width:36px;height:36px;" alt="{{ a.username }}">
+                        {% else %}
+                            <div class="admin-avatar admin-avatar-placeholder" style="width:36px;height:36px;font-size:0.9rem;">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.username }}</td>
+                    <td>{{ a.email }}</td>
+                    <td><span class="badge bg-{{ 'info' if a.role == 'developer' else ('warning' if a.role == 'pastor' else 'secondary') }}">{{ a.display_role }}</span></td>
+                    <td class="text-muted small">{{ a.last_login_at.strftime('%d %b %Y %H:%M') if a.last_login_at else 'Never' }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.account_edit', account_id=a.id) }}" class="btn btn-sm btn-outline-secondary">Edit / Reset Password</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

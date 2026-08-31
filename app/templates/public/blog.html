@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "public/_devotion_card.html" import devotion_card %}
+{% from "public/_testimony_card.html" import testimony_card %}
+
+{% block title %}Blog - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Read today's daily devotion, browse recent testimonies, and stay encouraged with fresh content from Triumphant Assemblies of God.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header bg-blue-gradient">
+    <div class="container">
+        <h1>Blog & Devotionals</h1>
+        <p class="lead">Inspiration, encouragement, and spiritual growth</p>
+    </div>
+</section>
+
+<!-- Blog Posts -->
+<section class="blog-section">
+    <div class="container">
+        <div class="row">
+            <!-- Main Blog Posts -->
+            <div class="col-lg-8">
+                <div class="text-start">
+                    <h2>Daily <span class="text-gold">Devotion</span></h2>
+                    <div class="section-divider"></div>
+                </div>
+
+                {% if devotion %}
+                    {{ devotion_card(devotion) }}
+                {% else %}
+                <div class="alert alert-info mb-5">No devotion has been posted yet. Check back soon.</div>
+                {% endif %}
+
+                <div class="text-center mb-5">
+                    <a href="{{ url_for('main.blog_devotionals') }}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-book-open"></i> View All Devotionals
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                {% include "public/_blog_sidebar.html" %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonies Section -->
+<section class="testimonies-section bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Member Testimonies</h2>
+            <p class="section-subtitle">Stories of faith, transformation, and God's faithfulness</p>
+        </div>
+
+        {% if recent_testimonies %}
+        <div id="testimoniesCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for t in recent_testimonies %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    {{ testimony_card(t, featured=True) }}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if recent_testimonies|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-center text-muted">No testimonies have been shared yet.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.blog_testimonies') }}" class="btn btn-gold">
+                <i class="fa-solid fa-comment-dots"></i> View All Testimonies
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

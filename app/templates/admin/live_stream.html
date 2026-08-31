@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}Live Stream - Admin{% endblock %}
+{% block page_title %}Live Stream{% endblock %}
+
+{% block content %}
+<div class="admin-card" style="max-width:600px;">
+    <p class="text-muted">Toggle "Go Live" and paste the YouTube Live Stream URL. When on, a Live Stream section appears on the public site.</p>
+    <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="form-check form-switch mb-3">
+            {{ form.is_live(class="form-check-input", role="switch") }}
+            <label class="form-check-label" for="{{ form.is_live.id }}">Go Live</label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">YouTube Live URL</label>
+            {{ form.youtube_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
+            {% for error in form.youtube_url.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <button type="submit" class="btn btn-admin-gold">Save</button>
+    </form>
+
+    {% if setting and setting.is_live and setting.youtube_url %}
+    <hr>
+    <p class="small text-muted mb-2">Currently live with:</p>
+    <div class="ratio ratio-16x9">
+        <iframe src="{{ youtube_embed_url(setting.youtube_url) }}" allowfullscreen></iframe>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
