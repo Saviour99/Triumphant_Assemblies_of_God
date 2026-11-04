@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
+{% from "admin/_permissions.html" import permissions_grid %}
+{% block title %}Add admin - Admin Accounts{% endblock %}
+{% block page_title %}Add admin{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.accounts_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All admin accounts</a>{% endblock %}
+
+{% block content %}
+<form method="POST" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Account</h2>
+            <p class="form-section-text">The name shows in the dashboard header and the sign-in history. They sign in with the email.</p>
+        </div>
+        <div>
+            <div class="form-grid-2">
+                {{ field(form.username, autocomplete="off") }}
+                {{ field(form.email, autocomplete="off") }}
+            </div>
+            {{ field(form.role, cls='form-select', id='roleField', help='Admin: only the sections ticked below. Pastor: every section, but not account management. Developer: everything, including accounts.') }}
+            <div class="form-check mt-3">
+                {{ form.is_active(class="form-check-input") }}
+                <label class="form-check-label" for="{{ form.is_active.id }}">Active (can sign in)</label>
+                <div class="form-text mt-1">Untick to set the account up now and switch it on later.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Temporary password</h2>
+            <p class="form-section-text">Give it to them in person. If they lose it, reset it from their account page or they can use “Forgot password” on the sign-in page.</p>
+        </div>
+        <div>
+            <div class="mb-3">
+                <button type="button" id="generatePasswordBtn" class="btn btn-sm btn-admin-quiet">
+                    <i class="fa-solid fa-key" aria-hidden="true"></i> Generate a strong password
+                </button>
+            </div>
+            <div class="form-grid-2">
+                {{ field(form.password, id="newPasswordField", autocomplete="new-password") }}
+                {{ field(form.confirm_password, id="confirmPasswordField", autocomplete="new-password") }}
+            </div>
+            <p class="form-text mb-0" id="generatedPasswordNote" hidden>Password generated and shown in both fields. Copy it now: it won't be shown again after you save.</p>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Sections</h2>
+            <p class="form-section-text">What this admin can see and use. New admins start with the Dashboard only; tick anything else they need. You can change this later.</p>
+        </div>
+        <div>
+            {{ permissions_grid(admin_section_groups, selected, role_select_id='roleField', role=form.role.data or 'admin') }}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">Create account</button>
+        <a href="{{ url_for('admin.accounts_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
+
+<script>
+document.getElementById('generatePasswordBtn').addEventListener('click', () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    const array = new Uint32Array(14);
+    window.crypto.getRandomValues(array);
+    const password = Array.from(array, n => chars[n % chars.length]).join('');
+
+    const passwordField = document.getElementById('newPasswordField');
+    const confirmField = document.getElementById('confirmPasswordField');
+    passwordField.type = 'text';
+    confirmField.type = 'text';
+    passwordField.value = password;
+    confirmField.value = password;
+    document.getElementById('generatedPasswordNote').hidden = false;
+    passwordField.select();
+});
+</script>
+{% endblock %}

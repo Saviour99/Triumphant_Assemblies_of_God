@@ -1,28 +1,30 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row, role_pill, pager %}
 {% block title %}Login History - Admin{% endblock %}
-{% block page_title %}Login History{% endblock %}
+{% block page_title %}Login history{% endblock %}
+
+{% block page_intro %}Every sign-in to the admin area, newest first.{% endblock %}
 
 {% block content %}
-<p class="text-muted">The latest 100 admin/developer logins, newest first. Developer-only.</p>
-
-<div class="admin-card">
-    <div class="table-responsive">
-        <table class="table table-admin align-middle mb-0">
-            <thead><tr><th>Name</th><th>Role</th><th>Date</th><th>Time</th><th>IP</th></tr></thead>
+<section class="panel panel-table">
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">IP address</th></tr></thead>
             <tbody>
                 {% for log in logins %}
                 <tr>
-                    <td>{{ log.admin.username }}</td>
-                    <td><span class="badge bg-{{ 'info' if log.admin.role == 'developer' else ('warning' if log.admin.role == 'pastor' else 'secondary') }}">{{ log.admin.display_role }}</span></td>
-                    <td>{{ log.login_at.strftime('%d %b %Y') }}</td>
-                    <td>{{ log.login_at.strftime('%H:%M:%S') }}</td>
-                    <td class="text-muted small">{{ log.ip_address or '—' }}</td>
+                    <td class="cell-primary">{{ log.admin.username }}</td>
+                    <td>{{ role_pill(log.admin) }}</td>
+                    <td class="nowrap">{{ log.login_at.strftime('%d %b %Y') }}</td>
+                    <td class="nowrap tabular">{{ log.login_at.strftime('%H:%M:%S') }}</td>
+                    <td class="cell-muted tabular">{{ log.ip_address or '—' }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-3">No login activity yet.</td></tr>
+                {{ empty_row(5, 'fa-clock-rotate-left', 'No sign-ins recorded yet') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+    {{ pager(pagination, url_for, 'admin.login_history', request.args) }}
+</section>
 {% endblock %}

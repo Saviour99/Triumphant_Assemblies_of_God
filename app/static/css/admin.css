@@ -1,597 +1,1338 @@
-/* Admin Dashboard — soft, elevated cards on the church's gold/navy brand.
-   Rounded surfaces, layered shadows, icon-badge stat cards, gentle motion
-   on load and hover. Respects prefers-reduced-motion throughout. */
+/* Admin area — Triumphant Assemblies of God.
 
-/* Defensive reset: don't depend on the Bootstrap CDN having finished
-   loading (or loading at all — slow networks, ad/CDN blockers) for basic
-   box sizing to be correct. Without this, any element combining width:100%
-   with padding renders wider than its container and overflows on narrow
-   screens. */
+   Direction: a working ledger, not a marketing page. Flat royal-blue
+   sidebar, white work surface on a cool paper grey, hairline structure
+   instead of shadows, gold used only where something is "yours" or
+   "now" (active nav item, primary action, live state). One serif
+   (Source Serif 4) for page titles and figures; Public Sans for the UI.
+   The one motion moment is the dashboard figures counting up on load.
+
+   This file is self-contained: admin pages never load style.css. */
+
+/* Defensive reset: don't depend on the Bootstrap CDN having loaded for
+   box sizing to be correct (width:100% + padding overflowing on mobile). */
 *, *::before, *::after {
     box-sizing: border-box;
 }
 
 :root {
+    /* Brand */
     --gold: #C8973A;
-    --gold-light: #E8B84B;
-    --gold-dark: #9A6F25;
+    --gold-hover: #B5852B;
+    --gold-ink: #8A6418;          /* gold readable as text on white */
+    --gold-wash: #F7EFDD;
     --royal-blue: #0D2B6B;
-    --royal-blue-light: #1A3F8F;
-    --royal-blue-dark: #081A45;
-    --off-white: #F8F6F0;
-    --text-dark: #1a1a2e;
-    --text-muted: #6c757d;
-    --border-color: #ECE7DA;
-    --font-display: 'Cormorant Garamond', Georgia, serif;
-    --font-body: 'Nunito', sans-serif;
+    --royal-blue-deep: #0A2257;
+    --royal-blue-wash: #E8EDF7;
 
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 24px;
-    --space-6: 32px;
+    /* Neutrals (cool, so the gold reads warm against them) */
+    --paper: #F3F4F7;
+    --surface: #FFFFFF;
+    --surface-sunk: #F8F9FB;
+    --line: #E2E5EB;
+    --line-strong: #CBD0D9;
+    --ink: #172033;
+    --ink-2: #3E4759;
+    --muted: #667085;
 
-    --radius-sm: 10px;
-    --radius-md: 14px;
-    --radius-lg: 20px;
+    /* State */
+    --ok: #1E7A46;      --ok-wash: #E4F3EA;
+    --warn: #8A5A00;    --warn-wash: #FBF0D6;
+    --bad: #B42318;     --bad-wash: #FCE9E7;
+    --idle: #5B6474;    --idle-wash: #EEF0F3;
 
-    --shadow-sm: 0 1px 2px rgba(13,43,107,0.06), 0 2px 8px rgba(13,43,107,0.05);
-    --shadow-md: 0 4px 12px rgba(13,43,107,0.07), 0 12px 32px rgba(13,43,107,0.09);
-    --shadow-lg: 0 12px 32px rgba(13,43,107,0.12), 0 28px 64px rgba(13,43,107,0.16);
+    /* Roles: gold/admin, blue/developer, green/pastor */
+    --role-admin-bg: #F7EFDD;     --role-admin-fg: #7A5716;
+    --role-dev-bg: #E3EAF8;       --role-dev-fg: #0D2B6B;
+    --role-pastor-bg: #E2F2E8;    --role-pastor-fg: #1E6B3D;
 
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --font-ui: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    /* Legacy aliases — older inline styles may still reference these. */
+    --font-body: var(--font-ui);
+    --text-dark: var(--ink);
+    --text-muted: var(--muted);
+    --border-color: var(--line);
+    --off-white: var(--paper);
+
+    --radius: 8px;
+    --radius-lg: 12px;
+    --sidebar-w: 248px;
+    --topbar-h: 64px;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 body.admin-body {
-    background: var(--off-white);
-    font-family: var(--font-body);
-    color: var(--text-dark);
+    background: var(--paper);
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;          /* 15px */
+    line-height: 1.5;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
 }
 
-/* ============ ENTRANCE MOTION ============ */
-@keyframes admin-fade-in-up {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+.admin-body a {
+    color: var(--royal-blue);
+    text-underline-offset: 2px;
+}
+.admin-body a:hover { color: var(--royal-blue-deep); }
+
+.admin-body :focus-visible {
+    outline: 2px solid var(--royal-blue);
+    outline-offset: 2px;
 }
 
-.admin-content > * {
-    animation: admin-fade-in-up 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-.admin-content > *:nth-child(2) { animation-delay: 50ms; }
-.admin-content > *:nth-child(3) { animation-delay: 100ms; }
-.admin-content > *:nth-child(4) { animation-delay: 150ms; }
+.tabular { font-variant-numeric: tabular-nums; }
 
-@media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; }
+/* ============ SHELL ============ */
+.admin-shell {
+    display: flex;
+    min-height: 100vh;
 }
 
-/* ============ SIDEBAR ============ */
-/* One scroll container at every screen size: .admin-sidebar itself. The
-   identity block (avatar/name/role) is a position:sticky; bottom:0 child
-   inside it — sticky-to-bottom is the one technique that reliably keeps
-   an element pinned as the last thing visible in a scrolling panel no
-   matter how tall the nav list above it grows (developer has 3 more menu
-   items than admin: My Profile / Manage Admins / Login History), and no
-   matter the screen size — desktop, laptop, or mobile. Simpler and more
-   robust than the earlier attempt at splitting scroll across two nested
-   flex containers, which could leave the identity block adrift. */
+/* ============ SIDEBAR ============
+   One scroll container at every size: .admin-sidebar itself. The footer
+   (View site / Sign out) is position:sticky; bottom:0 inside it, which
+   keeps it pinned as the last visible thing however long the nav grows
+   (the developer sees three extra items). Desktop: sticky in-flow.
+   Below 992px: fixed off-canvas panel (see media query further down). */
 .admin-sidebar {
-    background: linear-gradient(165deg, var(--royal-blue) 0%, var(--royal-blue-dark) 65%);
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--royal-blue);
     color: #fff;
-    padding: var(--space-4) 0 0;
     position: sticky;
     top: 0;
     height: 100vh;
     align-self: flex-start;
     overflow-y: auto;
-    /* Stops reaching the end of the sidebar's own scroll from "chaining"
-       into scrolling the page behind it. */
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-
-    /* Thin gold scrollbar instead of the browser's default bar — Firefox.
-       (Touch devices hide scrollbars by OS design regardless of CSS, but
-       the panel still scrolls there via touch either way.) */
     scrollbar-width: thin;
-    scrollbar-color: rgba(200,151,58,0.6) rgba(255,255,255,0.06);
+    scrollbar-color: rgba(255,255,255,0.25) transparent;
 }
-
-.admin-sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.admin-sidebar::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.06);
-}
-
+.admin-sidebar::-webkit-scrollbar { width: 6px; }
 .admin-sidebar::-webkit-scrollbar-thumb {
-    background-color: rgba(200,151,58,0.6);
+    background-color: rgba(255,255,255,0.25);
     border-radius: 999px;
 }
 
-.admin-sidebar::-webkit-scrollbar-thumb:hover {
-    background-color: var(--gold);
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: var(--topbar-h);
+    padding: 0 16px 0 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    flex-shrink: 0;
 }
-
-.admin-sidebar .brand {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding: 0 var(--space-4) var(--space-3);
-    margin-bottom: var(--space-1);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+.sidebar-brand a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    text-decoration: none;
+    min-width: 0;
 }
-
 .brand-logo {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(200,151,58,0.7);
 }
-
-.admin-sidebar .brand small {
+.brand-text { line-height: 1.15; min-width: 0; }
+.brand-name {
     display: block;
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    opacity: 0.6;
-    margin-top: 3px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: #fff;
+}
+.brand-sub {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.62);
 }
 
-.admin-sidebar .nav-link {
-    color: rgba(255,255,255,0.72);
-    padding: 8px var(--space-5);
-    margin: 1px var(--space-3);
-    border-radius: var(--radius-sm);
+.sidebar-nav {
+    padding: 12px 12px 16px;
+    flex: 1 0 auto;
+}
+.nav-group + .nav-group { margin-top: 18px; }
+.nav-group-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    padding: 0 12px 6px;
+    margin: 0;
+}
+.sidebar-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.sidebar-nav .nav-link,
+.sidebar-footer .nav-link {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.78);
+    font-size: 0.875rem;
+    font-weight: 500;
     line-height: 1.3;
-    transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    text-decoration: none;
+    transition: background-color 120ms var(--ease), color 120ms var(--ease);
 }
-
-.admin-sidebar .nav-link i {
-    width: 18px;
+.sidebar-nav .nav-link i,
+.sidebar-footer .nav-link i {
+    width: 16px;
     text-align: center;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.55);
+    transition: color 120ms var(--ease);
 }
-
-.admin-sidebar .nav-link:hover {
+.sidebar-nav .nav-link:hover,
+.sidebar-footer .nav-link:hover {
     color: #fff;
-    background: rgba(255,255,255,0.08);
-    transform: translateX(2px);
+    background: rgba(255,255,255,0.07);
 }
-
-.admin-sidebar .nav-link.active {
+.sidebar-nav .nav-link:hover i { color: rgba(255,255,255,0.85); }
+.sidebar-nav .nav-link.active {
     color: #fff;
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-    box-shadow: var(--shadow-sm);
+    background: rgba(255,255,255,0.10);
+    box-shadow: inset 3px 0 0 var(--gold);
+    font-weight: 600;
 }
-
-.admin-sidebar .nav-link:focus-visible {
-    outline: 2px solid var(--gold-light);
+.sidebar-nav .nav-link.active i { color: var(--gold); }
+.admin-sidebar .nav-link:focus-visible,
+.admin-sidebar button:focus-visible {
+    outline: 2px solid var(--gold);
     outline-offset: -2px;
 }
 
-/* Identity block — pinned to the bottom of the sidebar, below Logout */
-.admin-identity {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: var(--space-3) var(--space-5) var(--space-3);
-    margin-top: var(--space-2);
-    border-top: 1px solid rgba(255,255,255,0.1);
-
-    /* Always the last thing visible at the bottom of the sidebar, no
-       matter how long the nav list above it is or what size screen this
-       is on — sticky-to-bottom pins it there even while the nav list
-       above scrolls past underneath. The solid background stops scrolled
-       nav items from showing through behind it. */
+.sidebar-footer {
     position: sticky;
     bottom: 0;
     z-index: 2;
-    background: var(--royal-blue-dark);
+    background: var(--royal-blue);
+    border-top: 1px solid rgba(255,255,255,0.10);
+    padding: 10px 12px;
 }
+.sidebar-footer ul { list-style: none; margin: 0; padding: 0; }
 
-.admin-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.3);
-    box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-base), border-color var(--transition-base);
-}
-
-.admin-identity a:hover .admin-avatar {
-    transform: scale(1.06);
-    border-color: var(--gold-light);
-}
-
-.admin-avatar-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.85);
+.sidebar-close-btn {
+    background: none;
+    border: 0;
+    color: rgba(255,255,255,0.8);
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
     font-size: 1.1rem;
 }
+.sidebar-close-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
-.admin-avatar-lg {
-    width: 96px;
-    height: 96px;
-    font-size: 2.2rem;
-    border-width: 3px;
-}
-
-.admin-identity .admin-name {
-    color: #fff;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.95rem;
-    margin-top: var(--space-2);
-}
-
-.admin-identity .admin-role-badge {
-    margin-top: 2px;
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 2px 12px;
-    border-radius: 999px;
-    background: rgba(200,151,58,0.22);
-    color: var(--gold-light);
-    border: 1px solid rgba(200,151,58,0.4);
-    font-weight: 700;
-}
-
-.admin-identity .admin-role-badge.role-developer {
-    background: rgba(255,255,255,0.14);
-    color: #BFD4FF;
-    border-color: rgba(191,212,255,0.4);
-}
-
-.admin-identity .admin-role-badge.role-pastor {
-    background: rgba(154,230,180,0.16);
-    color: #9AE6B4;
-    border-color: rgba(154,230,180,0.4);
-}
-
-/* ============ TOPBAR / CONTENT ============ */
-/* min-width:0 overrides the flexbox default (min-width:auto), which lets
-   this column shrink to fit the screen instead of stretching wide enough
-   to fit its widest un-shrinkable descendant (e.g. a long username, a wide
-   table) — without this, that descendant can force the whole page wider
-   than the viewport on narrow screens, which is what caused the stat cards'
-   uneven right margin and the clipped username text on mobile. Scoped to
-   this column only (not html/body), so it can't affect the sidebar's
-   position:sticky the way a document-level overflow rule did. */
+/* ============ MAIN COLUMN ============
+   min-width:0 lets this flex column shrink below its widest descendant
+   (long usernames, wide tables) so nothing forces page-level horizontal
+   scroll on mobile. Not applied to html/body, which would break the
+   sidebar's position:sticky. */
 .admin-main {
+    flex: 1 1 auto;
     min-width: 0;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-topbar {
-    background: #fff;
-    border-bottom: 1px solid var(--border-color);
-    padding: var(--space-4) var(--space-5);
-    flex-wrap: wrap;
-    row-gap: var(--space-2);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    height: var(--topbar-h);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 32px;
+    background: rgba(255,255,255,0.96);
+    border-bottom: 1px solid var(--line);
+}
+.topbar-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.375rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.sidebar-toggle-btn:hover { background: var(--surface-sunk); }
+
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bad-wash);
+    color: var(--bad);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.admin-body .live-indicator:hover { color: var(--bad); background: #F9DAD6; }
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes live-pulse { 50% { opacity: 0.35; } }
+
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px 4px 4px;
+    border-radius: 999px;
+    color: var(--ink);
+    text-decoration: none;
     min-width: 0;
 }
-
-.admin-topbar span,
-.admin-topbar h5 {
-    overflow-wrap: anywhere;
+.admin-body a.user-chip { color: var(--ink); text-decoration: none; }
+.admin-body a.user-chip:hover { background: var(--surface-sunk); color: var(--ink); }
+.user-chip-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+.admin-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+}
+.admin-avatar-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--royal-blue-wash);
+    color: var(--royal-blue);
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+.admin-avatar-sm { width: 32px; height: 32px; font-size: 0.8125rem; }
+.admin-avatar-lg { width: 88px; height: 88px; font-size: 2rem; border-width: 0; }
 
 .admin-content {
-    padding: var(--space-5);
+    width: 100%;
+    max-width: 1320px;
+    padding: 28px 32px 48px;
 }
 
-/* ============ RESPONSIVE: MOBILE / TABLET OFF-CANVAS SIDEBAR ============
-   Desktop (>=992px): sidebar is sticky in-flow, as above.
-   Below that: sidebar becomes a fixed off-canvas panel, hidden by default
-   and slid in with the hamburger button — it no longer reserves layout
-   width, so the main content always has the full screen to itself and
-   nothing gets squeezed or forced into horizontal scroll. */
-/* NOTE: deliberately NOT setting overflow-x:hidden on html/body here.
-   Doing that on both elements makes body become an explicit nested
-   scroll container (a CSS quirk: once html's overflow-x is set to
-   anything other than visible, its overflow no longer propagates to the
-   viewport, so body's own overflow-x:hidden then applies literally to
-   body itself) — which breaks position:sticky on .admin-sidebar, since
-   sticky then computes against the wrong scrolling ancestor. That's what
-   made the desktop sidebar scroll along with the page. The real fix for
-   any mobile horizontal overflow is at the source (see .admin-main
-   min-width:0 below), not masking it here.
-*/
+/* Optional row under the top bar: page intro text + primary actions. */
+.page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin-bottom: 20px;
+}
+.page-intro {
+    color: var(--muted);
+    margin: 0;
+    max-width: 68ch;
+    font-size: 0.9375rem;
+}
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
 
-/* While the off-canvas menu is open, the page behind it can't scroll —
-   without this, scrolling the background content while the fixed sidebar
-   is on-screen makes the sidebar look like it's "not fixed" (mobile
-   browsers reflow position:fixed elements oddly during a background
-   scroll gesture). */
+/* ============ FLASH MESSAGES ============ */
+.flash-stack { margin-bottom: 20px; }
+.admin-body .alert {
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    border-left-width: 4px;
+    font-size: 0.9rem;
+    padding: 12px 44px 12px 14px;
+    margin-bottom: 8px;
+}
+.admin-body .alert:not(.alert-dismissible) { padding-right: 14px; }
+.admin-body .alert .btn-close { padding: 15px 14px; }
+.admin-body .alert-success { background: var(--ok-wash); border-color: #BFE0CC; border-left-color: var(--ok); color: #14532D; }
+.admin-body .alert-danger  { background: var(--bad-wash); border-color: #F4C7C2; border-left-color: var(--bad); color: #7A1B12; }
+.admin-body .alert-warning { background: var(--warn-wash); border-color: #EED9A6; border-left-color: #C08A10; color: #5C3D00; }
+.admin-body .alert-info    { background: var(--royal-blue-wash); border-color: #C9D4EC; border-left-color: var(--royal-blue); color: var(--royal-blue-deep); }
+
+/* ============ PANELS ============ */
+.panel,
+.admin-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    min-width: 0;
+}
+.admin-card { padding: 20px; }
+.panel-body { padding: 20px; }
+.panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+}
+.panel-title {
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0;
+}
+.panel-sub {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 2px;
+}
+.panel-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.panel-link:hover { text-decoration: underline; }
+.panel-note {
+    padding: 12px 20px;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-sunk);
+    margin: 0;
+}
+.panel-narrow { max-width: 760px; }
+.panel-table { overflow: hidden; }
+
+/* ============ BUTTONS ============ */
+.admin-body .btn {
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1.3;
+    transition: background-color 120ms var(--ease), border-color 120ms var(--ease), color 120ms var(--ease);
+}
+.admin-body .btn-sm { padding: 5px 10px; font-size: 0.8125rem; gap: 6px; }
+
+/* Primary: gold with dark ink (white on this gold fails contrast). */
+.admin-body .btn-admin-gold {
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    color: #1F1503;
+}
+.admin-body .btn-admin-gold:hover {
+    background: var(--gold-hover);
+    border-color: var(--gold-hover);
+    color: #1F1503;
+}
+.admin-body .btn-admin-gold:active { background: #A4771F; border-color: #A4771F; color: #1F1503; }
+
+.admin-body .btn-admin-quiet {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+}
+.admin-body .btn-admin-quiet:hover { background: var(--surface-sunk); border-color: #AEB5C2; color: var(--ink); }
+
+.admin-body .btn-admin-danger {
+    background: var(--surface);
+    border: 1px solid #EBC2BD;
+    color: var(--bad);
+}
+.admin-body .btn-admin-danger:hover { background: var(--bad-wash); border-color: var(--bad); color: var(--bad); }
+
+.row-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+.row-actions form { margin: 0; }
+
+/* ============ TABLES ============ */
+/* position:relative matters: Bootstrap's .visually-hidden header labels are
+   position:absolute, and without a positioned ancestor here they escape the
+   scroll container and widen the whole page on phones. */
+.table-wrap {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.table-admin {
+    width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+    color: var(--ink);
+}
+.table-admin thead th {
+    background: var(--surface-sunk);
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    border-top: 0;
+}
+.table-admin tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+}
+.table-admin tbody tr:last-child td { border-bottom: 0; }
+.table-admin tbody tr:not(.empty-row):hover td { background: #FAFAF7; }
+.table-admin th:first-child,
+.table-admin td:first-child { padding-left: 20px; }
+.table-admin th:last-child,
+.table-admin td:last-child { padding-right: 20px; }
+.table-admin .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table-admin .nowrap { white-space: nowrap; }
+.table-admin .text-end { text-align: right; }
+.cell-primary { font-weight: 600; color: var(--ink); }
+.admin-body a.cell-primary { text-decoration: none; color: var(--royal-blue); }
+.admin-body a.cell-primary:hover { text-decoration: underline; }
+.cell-sub { display: block; color: var(--muted); font-size: 0.8125rem; font-weight: 400; }
+.cell-muted { color: var(--muted); }
+.cell-message {
+    min-width: 260px;
+    max-width: 460px;
+    color: var(--ink-2);
+    white-space: pre-line;
+}
+.cell-thumb {
+    width: 36px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    display: block;
+}
+.cell-thumb-empty {
+    width: 36px;
+    height: 48px;
+    border-radius: 4px;
+    border: 1px dashed var(--line-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #A6AEBB;
+    font-size: 0.75rem;
+}
+.table-admin audio { height: 34px; width: 240px; max-width: 240px; display: block; }
+
+/* Empty state inside a table */
+.table-admin .empty-row td { padding: 0; }
+.empty-state {
+    text-align: center;
+    padding: 40px 20px 44px;
+}
+.empty-state > i {
+    font-size: 1.5rem;
+    color: #A6AEBB;
+    margin-bottom: 12px;
+}
+.empty-title {
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 4px;
+}
+.empty-text {
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin: 0 auto 16px;
+    max-width: 46ch;
+}
+
+/* ============ PILLS ============ */
+.status-pill,
+.role-pill,
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+.status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+.status-completed, .status-active { background: var(--ok-wash); color: var(--ok); }
+.status-pending { background: var(--warn-wash); color: var(--warn); }
+.status-failed { background: var(--bad-wash); color: var(--bad); }
+.status-inactive, .status-abandoned { background: var(--idle-wash); color: var(--idle); }
+
+.role-pill { padding: 2px 10px; }
+.role-admin { background: var(--role-admin-bg); color: var(--role-admin-fg); }
+.role-developer { background: var(--role-dev-bg); color: var(--role-dev-fg); }
+.role-pastor { background: var(--role-pastor-bg); color: var(--role-pastor-fg); }
+
+.tag-pill { padding: 2px 10px; background: var(--idle-wash); color: var(--ink-2); font-weight: 500; }
+
+/* ============ FORMS ============ */
+.admin-body .form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+}
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.field-optional {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 0.8125rem;
+}
+.admin-body .form-control,
+.admin-body .form-select {
+    font-size: 0.9375rem;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    min-height: 40px;
+    background-color: var(--surface);
+    transition: border-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.admin-body .form-select { padding-right: 36px; }
+.admin-body textarea.form-control { line-height: 1.55; }
+.admin-body .form-control::placeholder { color: #8E97A6; }
+.admin-body .form-control:focus,
+.admin-body .form-select:focus {
+    border-color: var(--royal-blue);
+    box-shadow: 0 0 0 3px rgba(13,43,107,0.14);
+    outline: 0;
+}
+.admin-body .form-control.is-invalid,
+.admin-body .form-select.is-invalid {
+    border-color: var(--bad);
+    background-image: none;
+    padding-right: 12px;
+}
+.admin-body .form-control.is-invalid:focus { box-shadow: 0 0 0 3px rgba(180,35,24,0.14); }
+.admin-body .invalid-feedback { color: var(--bad); font-size: 0.8125rem; margin-top: 6px; }
+.admin-body .form-text { color: var(--muted); font-size: 0.8125rem; margin-top: 6px; }
+.admin-body input[type="file"].form-control { padding: 6px 8px; }
+.admin-body .form-check-input:checked {
+    background-color: var(--royal-blue);
+    border-color: var(--royal-blue);
+}
+.admin-body .form-check-input:focus {
+    border-color: var(--royal-blue);
+    box-shadow: 0 0 0 3px rgba(13,43,107,0.14);
+}
+
+/* A form is a stack of sections; on wide screens each section's title
+   and explanation sit in a left column beside its fields. */
+.form-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px 32px;
+    padding: 24px;
+    border-bottom: 1px solid var(--line);
+}
+.form-section:last-of-type { border-bottom: 0; }
+.form-section-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--ink);
+}
+.form-section-text {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    margin: 0;
+    max-width: 38ch;
+}
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px 16px;
+    margin-bottom: 18px;
+}
+.form-grid-2:last-child { margin-bottom: 0; }
+.form-grid-2 > .field { margin-bottom: 0; }
+@media (min-width: 640px) {
+    .form-grid-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (min-width: 992px) {
+    .form-section { grid-template-columns: minmax(180px, 240px) minmax(0, 1fr); }
+}
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    background: var(--surface-sunk);
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.form-actions-note {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--muted);
+}
+.form-fixed-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    background: var(--surface-sunk);
+    border: 1px dashed var(--line-strong);
+    color: var(--ink-2);
+    font-weight: 600;
+}
+.file-current {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 0.875rem;
+}
+.file-current img {
+    width: 56px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+}
+.file-current audio { width: 100%; max-width: 420px; height: 36px; }
+
+/* Go Live switch, larger than Bootstrap's default */
+.switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-sunk);
+}
+.admin-body .switch-row .form-check { margin: 0; padding-left: 0; display: flex; align-items: center; gap: 12px; min-height: 0; }
+.admin-body .switch-row .form-check-input {
+    width: 2.75rem;
+    height: 1.5rem;
+    margin: 0;
+    float: none;
+    cursor: pointer;
+}
+.admin-body .switch-row .form-check-input:checked { background-color: var(--bad); border-color: var(--bad); }
+.switch-row .form-check-label { font-weight: 600; cursor: pointer; }
+.switch-state { font-size: 0.8125rem; color: var(--muted); }
+
+/* ============ DASHBOARD ============ */
+/* KPI ledger: one bordered strip of figures, hairlines between cells
+   (the 1px grid gap shows the strip's border colour through). */
+.kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+@media (min-width: 768px) { .kpi-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1500px) { .kpi-strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+
+.kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 20px 20px;
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+    min-width: 0;
+    transition: background-color 120ms var(--ease);
+}
+.admin-body a.kpi { color: var(--ink); text-decoration: none; }
+.admin-body a.kpi:hover { background: #FBFAF6; color: var(--ink); }
+.admin-body a.kpi:focus-visible { outline-offset: -3px; }
+.kpi-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted);
+}
+.kpi-label i { color: #8E97A6; font-size: 0.8125rem; width: 14px; text-align: center; }
+/* Figures never wrap. Each tile is a size container, so the figure scales
+   with its own tile width (12cqi ~ fits "₵1,234,567.89" in any tile);
+   the plain font-size is the fallback where container units are missing. */
+.kpi { container-type: inline-size; }
+.kpi-value {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    font-size: clamp(1rem, 12cqi, 1.875rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--ink);
+    white-space: nowrap;
+}
+.kpi-primary .kpi-value { color: var(--royal-blue); }
+.kpi-money .kpi-value { color: var(--gold-ink); }
+
+.chart-box {
+    position: relative;
+    height: 260px;
+    padding: 16px 16px 12px 8px;
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 24px;
+}
+@media (min-width: 1100px) {
+    .dash-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* Recent activity / donations lists (rows re-rendered by admin.js) */
+.activity-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.activity-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.875rem;
+    min-width: 0;
+}
+.activity-item:last-child { border-bottom: 0; }
+.activity-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 50%;
+    min-width: 0;
+    font-weight: 600;
+    color: var(--ink);
+}
+.activity-main-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.activity-sub {
+    font-weight: 400;
+    color: var(--muted);
+}
+.activity-meta {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    text-align: right;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.activity-amount {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    max-width: none;
+}
+.activity-empty {
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.activity-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+.activity-type-icon-registration { background: var(--royal-blue-wash); color: var(--royal-blue); }
+.activity-type-icon-message { background: #E3F1EF; color: #1B6F69; }
+.activity-type-icon-donation { background: var(--gold-wash); color: var(--gold-ink); }
+
+/* Persistent tag on whichever row is currently newest. */
+.badge-latest {
+    display: inline-block;
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--gold-wash);
+    color: var(--gold-ink);
+    vertical-align: middle;
+}
+
+/* Brief wash on a row that arrived since the last poll (see admin.js). */
+@keyframes newlyAddedFlash {
+    from { background: rgba(200,151,58,0.28); }
+    to { background: transparent; }
+}
+.newly-added { animation: newlyAddedFlash 2.5s ease-out; }
+
+/* ============ GIVING ============ */
+@media (min-width: 1200px) { .fund-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.fund-strip .kpi-value { font-size: 1.25rem; font-size: clamp(1rem, 12cqi, 1.5rem); }
+.admin-body a.kpi.is-selected {
+    background: var(--gold-wash);
+    box-shadow: inset 0 -3px 0 var(--gold);
+}
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+}
+.filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.filter-group-label { font-size: 0.8125rem; color: var(--muted); font-weight: 500; }
+.segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    padding: 3px;
+    gap: 2px;
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    max-width: 100%;
+}
+.admin-body .segmented a {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.admin-body .segmented a:hover { color: var(--ink); background: rgba(13,43,107,0.05); }
+.admin-body .segmented a.active {
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px var(--line-strong);
+}
+.total-figure {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============ PROFILE BITS ============ */
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    min-width: 0;
+}
+.profile-card > div { min-width: 0; }
+.profile-card-name {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+    overflow-wrap: anywhere;
+}
+.detail-list {
+    margin: 0;
+    padding: 0;
+}
+.detail-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+    font-size: 0.875rem;
+}
+.detail-list dt { font-weight: 500; color: var(--muted); }
+.detail-list dd { margin: 0; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+
+/* ============ AUTH SCREENS (login / forgot / reset) ============ */
+.auth-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    background: var(--surface);
+}
+.auth-aside {
+    background: var(--royal-blue);
+    color: #fff;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.auth-aside-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.auth-aside-brand img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 2px var(--gold);
+}
+.auth-aside-name {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.auth-aside-name small {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.65);
+}
+.auth-aside-quote,
+.auth-aside-foot { display: none; }
+
+.auth-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 24px 56px;
+}
+.auth-form {
+    width: 100%;
+    max-width: 380px;
+}
+.auth-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.875rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    color: var(--ink);
+}
+.auth-lede {
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-size: 0.9375rem;
+}
+.admin-body .auth-form .btn-admin-gold { width: 100%; padding: 10px 14px; font-size: 0.9375rem; margin-top: 6px; }
+.auth-form .field { margin-bottom: 18px; }
+.auth-links {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+    font-size: 0.875rem;
+}
+.admin-body .auth-links a { color: var(--muted); }
+.admin-body .auth-links a:hover { color: var(--royal-blue); }
+
+@media (min-width: 900px) {
+    .auth-shell {
+        grid-template-columns: minmax(340px, 5fr) 7fr;
+        grid-template-rows: 1fr;
+    }
+    .auth-aside {
+        padding: 40px 48px;
+        justify-content: space-between;
+        gap: 40px;
+        position: relative;
+    }
+    /* A single fine gold rule down the panel edge — the only ornament. */
+    .auth-aside::after {
+        content: '';
+        position: absolute;
+        top: 40px;
+        bottom: 40px;
+        right: 0;
+        width: 3px;
+        background: var(--gold);
+    }
+    .auth-main { align-items: center; }
+    .auth-aside-brand img { width: 48px; height: 48px; }
+    .auth-aside-name { font-size: 1.375rem; }
+    .auth-aside-quote {
+        display: block;
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        line-height: 1.3;
+        font-weight: 600;
+        max-width: 18ch;
+        margin: 0;
+    }
+    .auth-aside-quote cite {
+        display: block;
+        margin-top: 14px;
+        font-family: var(--font-ui);
+        font-style: normal;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: rgba(255,255,255,0.65);
+    }
+    .auth-aside-foot {
+        display: block;
+        font-size: 0.8125rem;
+        color: rgba(255,255,255,0.6);
+        margin: 0;
+    }
+}
+
+/* ============ RESPONSIVE: OFF-CANVAS SIDEBAR ============
+   Desktop (>=992px): sidebar is sticky in-flow. Below: fixed off-canvas
+   panel, opened by #sidebarToggle (admin.js). Deliberately NOT setting
+   overflow-x:hidden on html/body — that turns body into a scroll
+   container and breaks the desktop sidebar's position:sticky. */
 html.sidebar-open-lock,
 html.sidebar-open-lock body {
     overflow: hidden;
     height: 100%;
 }
 
-.sidebar-toggle-btn,
-.sidebar-close-btn {
-    background: none;
-    border: none;
-    color: var(--royal-blue);
-    font-size: 1.3rem;
-    padding: 4px 8px;
-    line-height: 1;
-    border-radius: var(--radius-sm);
-}
-
-.sidebar-close-btn {
-    color: rgba(255,255,255,0.8);
-}
-
-.sidebar-toggle-btn:hover {
-    background: var(--off-white);
-}
-
-.sidebar-close-btn:hover {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-}
-
 .sidebar-backdrop {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(8,26,69,0.5);
+    background: rgba(10,22,52,0.5);
     z-index: 1040;
-    opacity: 0;
-    transition: opacity var(--transition-base);
 }
 
 @media (max-width: 991.98px) {
     .admin-sidebar {
         position: fixed;
-        /* top+bottom (not height:100vh) so the sidebar always matches the
-           CURRENT visible viewport, even as mobile browsers show/hide their
-           address bar while scrolling — height:100vh is fixed to the
-           largest possible viewport and leaves a gap once the browser
-           chrome collapses and the real viewport shrinks. */
+        /* top+bottom (not 100vh) tracks the real visible viewport as mobile
+           browser chrome shows/hides. */
         top: 0;
         bottom: 0;
         left: 0;
         height: auto;
         z-index: 1050;
         width: 280px;
-        max-width: 82vw;
+        max-width: 84vw;
         transform: translateX(-100%);
-        transition: transform var(--transition-base);
-        box-shadow: var(--shadow-lg);
+        visibility: hidden;
+        transition: transform 220ms var(--ease), visibility 0s linear 220ms;
     }
-
     .admin-sidebar.show {
         transform: translateX(0);
+        visibility: visible;
+        transition: transform 220ms var(--ease), visibility 0s;
+        box-shadow: 0 24px 48px rgba(10,22,52,0.3);
     }
+    .sidebar-backdrop.show { display: block; }
 
-    .sidebar-backdrop.show {
-        display: block;
-        opacity: 1;
-    }
-
-    .admin-content {
-        padding: var(--space-4);
-    }
-
-    .admin-topbar {
-        padding: var(--space-3) var(--space-4);
-    }
+    .admin-topbar { padding: 0 16px; }
+    .admin-content { padding: 20px 16px 40px; }
+    .topbar-title { font-size: 1.1875rem; }
 }
 
 @media (min-width: 992px) {
     .sidebar-toggle-btn,
+    .sidebar-close-btn,
     .sidebar-backdrop {
         display: none !important;
     }
 }
 
-/* ============ STAT CARDS ============ */
-.stat-card {
-    background: #fff;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    padding: var(--space-5);
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-4);
-    transition: box-shadow var(--transition-base), transform var(--transition-base);
+@media (max-width: 575.98px) {
+    .user-chip-name { display: none; }
+    .topbar-right { gap: 8px; }
+    .user-chip { padding: 0; }
+    .live-indicator-text { display: none; }
+    .live-indicator { padding: 8px; }
+    .kpi { padding: 14px 16px 16px; }
+    .panel-head, .activity-item, .filter-bar { padding-left: 16px; padding-right: 16px; }
+    .table-admin th:first-child, .table-admin td:first-child { padding-left: 16px; }
+    .table-admin th:last-child, .table-admin td:last-child { padding-right: 16px; }
+    .form-section { padding: 20px 16px; }
+    .form-actions { padding: 14px 16px; }
+    .form-actions-note { margin-left: 0; width: 100%; }
+    .page-actions { margin-left: 0; width: 100%; }
+    .page-actions .btn { flex: 1 1 auto; }
 }
 
-.stat-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-3px);
-}
-
-.stat-icon {
-    flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: #fff;
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-}
-
-.stat-icon.blue { background: linear-gradient(135deg, var(--royal-blue-light) 0%, var(--royal-blue) 100%); }
-.stat-icon.teal { background: linear-gradient(135deg, #2AA198 0%, #1B7A73 100%); }
-.stat-icon.rose { background: linear-gradient(135deg, #C85A54 0%, #A3413C 100%); }
-
-.stat-card .stat-value {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--royal-blue);
-    font-variant-numeric: tabular-nums;
-    line-height: 1.15;
-}
-
-.stat-card .stat-label {
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-}
-
-/* ============ CARDS ============ */
-.admin-card {
-    background: #fff;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    padding: var(--space-5);
-    margin-bottom: var(--space-5);
-    transition: box-shadow var(--transition-base);
-}
-
-.admin-card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.admin-card h6 {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--royal-blue);
-}
-
-/* ============ BUTTONS ============ */
-.btn-admin-gold {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-    border: none;
-    color: #fff;
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
-}
-
-.btn-admin-gold:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-    color: #fff;
-}
-
-.btn-admin-gold:active {
-    transform: translateY(0);
-}
-
-.btn-admin-gold:focus-visible,
-.btn:focus-visible {
-    outline: 2px solid var(--royal-blue-light);
-    outline-offset: 2px;
-}
-
-/* ============ LOGIN SCREEN ============ */
-.admin-login-wrap {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-    background:
-        radial-gradient(circle at 20% 20%, rgba(200,151,58,0.18), transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(26,63,143,0.35), transparent 50%),
-        linear-gradient(165deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%);
-}
-
-.admin-login-card {
-    background: #fff;
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    width: 100%;
-    max-width: 420px;
-    box-shadow: var(--shadow-lg);
-    animation: admin-fade-in-up 450ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-.admin-login-card h4 {
-    font-family: var(--font-display);
-    font-weight: 700;
-}
-
-/* ============ TABLES ============ */
-.table-admin thead {
-    background: var(--off-white);
-}
-
-.table-admin thead th {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    border-bottom-width: 2px;
-}
-
-.table-admin tbody tr {
-    transition: background var(--transition-fast);
-}
-
-.table-admin tbody tr:hover {
-    background: rgba(200,151,58,0.07);
-}
-
-.badge-status-pending { background: #FFC107; }
-.badge-status-completed { background: #198754; }
-.badge-status-failed { background: #DC3545; }
-
-/* Dashboard "Recent Registrations"/"Recent Donations" — brief gold flash
-   when a row is new since the last poll (see admin.js), so a live update
-   actually reads as "something just happened" rather than the list
-   silently changing underneath you. */
-@keyframes newlyAddedFlash {
-    from { background: rgba(200,151,58,0.35); }
-    to { background: transparent; }
-}
-
-.newly-added {
-    animation: newlyAddedFlash 2.5s ease-out;
-}
-
+/* ============ REDUCED MOTION ============ */
 @media (prefers-reduced-motion: reduce) {
-    .newly-added {
-        animation: none;
-        background: rgba(200,151,58,0.2);
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
+    .live-dot { animation: none; }
+    .newly-added { animation: none; background: rgba(200,151,58,0.16); }
 }
 
-/* Persistent tag on the single newest row in "Recent Registrations"/
-   "Recent Donations" — unlike .newly-added (a transient flash on rows that
-   just appeared from a poll), this always marks whichever row is currently
-   first, on first page load included. */
-.badge-latest {
-    display: inline-block;
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgba(200,151,58,0.15);
-    color: var(--gold-dark);
-    border: 1px solid rgba(200,151,58,0.35);
-    vertical-align: middle;
+/* ============ SECTION PERMISSIONS GRID (account add / edit) ============ */
+.perm-grid { display: grid; gap: 12px; }
+.perm-full-note {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--royal-blue-wash);
+    color: var(--royal-blue);
 }
+.perm-full-note i { margin-right: 6px; }
+.perm-group {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px 10px;
+    margin: 0;
+    background: var(--surface);
+}
+.perm-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+}
+.perm-group-label {
+    float: none;
+    width: auto;
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.perm-select-all { margin: 0; font-size: 0.8125rem; }
+.perm-select-all .form-check-label { color: var(--ink-2); }
+.perm-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 6px 16px;
+}
+.perm-items .form-check { margin: 0; }
+.perm-grid input:disabled + .form-check-label { opacity: 0.75; }
+
+/* ============ PAGER (admin/_macros.html::pager) ============ */
+.pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+}
+.pager-info { font-size: 0.8125rem; color: var(--muted); }
+.pager-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.pager-link, .pager-gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+    text-decoration: none;
+}
+.pager-link { border: 1px solid var(--line); background: var(--surface); }
+a.pager-link:hover { border-color: var(--line-strong); color: var(--ink); background: var(--surface-sunk); }
+a.pager-link:focus-visible { outline: 2px solid var(--royal-blue); outline-offset: 2px; }
+.pager-link.is-current { background: var(--royal-blue); border-color: var(--royal-blue); color: #fff; font-weight: 600; }
+.pager-link.is-disabled { color: var(--line-strong); }
+.pager-gap { color: var(--muted); }
+@media (max-width: 575.98px) { .pager { padding: 12px 16px; } }

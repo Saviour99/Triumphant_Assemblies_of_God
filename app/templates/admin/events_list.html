@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row, status_pill, pager %}
+{% block title %}Events - Admin{% endblock %}
+{% block page_title %}Events{% endblock %}
+
+{% block page_intro %}Published events appear on the website's Events page: upcoming ones first, then recent past ones.{% endblock %}
+{% block page_actions %}
+    <a href="{{ url_for('admin.event_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add event</a>
+{% endblock %}
+
+{% macro event_rows(events, empty_title, empty_text, add_url) %}
+    {% for e in events %}
+    <tr>
+        <td style="width:60px;">
+            {% if e.image_filename %}
+                <img src="{{ url_for('static', filename=e.image_filename) }}" alt="" class="cell-thumb">
+            {% else %}
+                <span class="cell-thumb-empty" aria-hidden="true"><i class="fa-solid fa-calendar-days"></i></span>
+            {% endif %}
+        </td>
+        <td><span class="cell-primary">{{ e.title }}</span>{% if e.location %}<span class="cell-sub">{{ e.location }}</span>{% endif %}</td>
+        <td class="nowrap tabular">
+            {{ e.start_at.strftime('%a %d %b %Y, %H:%M') }}
+            {% if e.end_at %}<span class="cell-sub">until {{ e.end_at.strftime('%H:%M') if e.end_at.date() == e.start_at.date() else e.end_at.strftime('%d %b %Y, %H:%M') }}</span>{% endif %}
+        </td>
+        <td>{{ status_pill('completed', 'Published') if e.is_published else status_pill('inactive', 'Draft') }}</td>
+        <td>
+            <div class="row-actions">
+                <a href="{{ url_for('admin.event_edit', event_id=e.id) }}" class="btn btn-sm btn-admin-quiet">Edit</a>
+                <form action="{{ url_for('admin.event_delete', event_id=e.id) }}" method="POST" class="confirm-delete" data-confirm-message="Delete &quot;{{ e.title }}&quot;? Its image is removed too. This can't be undone.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-admin-danger">Delete</button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% else %}
+    {{ empty_row(5, 'fa-calendar-days', empty_title, empty_text, add_url, 'Add event') }}
+    {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<section class="panel panel-table">
+    <div class="panel-head">
+        <h2 class="panel-title">Upcoming</h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col"><span class="visually-hidden">Image</span></th><th scope="col">Event</th><th scope="col">When</th><th scope="col">Status</th><th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+                {{ event_rows(upcoming, 'No upcoming events', 'Add one to show it on the website.', url_for('admin.event_add')) }}
+            </tbody>
+        </table>
+    </div>
+    {{ pager(upcoming_page, url_for, 'admin.events_list', request.args, param='upcoming_page') }}
+</section>
+
+<section class="panel panel-table mt-4">
+    <div class="panel-head">
+        <h2 class="panel-title">Past</h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col"><span class="visually-hidden">Image</span></th><th scope="col">Event</th><th scope="col">When</th><th scope="col">Status</th><th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+                {{ event_rows(past, 'No past events', None, None) }}
+            </tbody>
+        </table>
+    </div>
+    {{ pager(past_page, url_for, 'admin.events_list', request.args) }}
+</section>
+{% endblock %}

@@ -40,6 +40,7 @@ def _webhook_payload(reference, amount_ghs, status='success'):
             'reference': reference,
             'status': status,
             'amount': round(amount_ghs * 100),
+            'currency': 'GHS',  # Paystack always sends it; checked server-side
         }
     }).encode('utf-8')
 

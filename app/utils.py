@@ -6,18 +6,40 @@ public API endpoints (app/routes.py) and the admin dashboard (app/admin.py).
 import re
 from urllib.parse import urlparse
 
+import email_validator as _email_validator_module
+from email_validator import validate_email as _validate_email_lib, EmailNotValidError, caching_resolver
+
+# WTForms' Email(check_deliverability=True) uses email-validator's global
+# DNS timeout (15s by default) — too long to block a request worker on.
+_email_validator_module.DEFAULT_TIMEOUT = 3
+
 from app import cache
 
-EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 HTML_TAG_PATTERN = re.compile(r'<[^>]*>')
 DANGEROUS_CHARS_PATTERN = re.compile(r'[<>"\'%;()&+]')
 
 YOUTUBE_HOSTS = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'}
 
+# Reused across calls so repeated submissions for the same domain (e.g. many
+# @gmail.com signups) hit an in-memory DNS cache instead of a fresh lookup
+# each time. This is process-local, separate from Flask-Caching.
+_dns_resolver = caching_resolver(timeout=3)  # short: runs inside request handlers
+
 
 def validate_email(email):
-    """Validate email format."""
-    return bool(email) and EMAIL_PATTERN.match(email) is not None
+    """Validate email syntax AND confirm the domain can actually receive
+    mail (MX/A record lookup), so a well-formed but made-up address like
+    'name@fake123xyz.com' is rejected, not just malformed ones. Fails open
+    (accepts the address) only when the DNS check itself errors out for a
+    reason unrelated to deliverability, so a transient resolver hiccup on
+    our end can't block a real user from submitting a form."""
+    if not email:
+        return False
+    try:
+        _validate_email_lib(email, check_deliverability=True, dns_resolver=_dns_resolver)
+        return True
+    except EmailNotValidError:
+        return False
 
 
 def sanitize_text(text):
@@ -135,11 +157,27 @@ def get_ebooks_by_category(category):
     return Ebook.query.filter_by(category=category).order_by(Ebook.title.asc()).all()
 
 
+def is_valid_photo_file(file_storage):
+    """Magic-byte check for photo uploads that accept JPEG, PNG or WebP
+    (member/admin testimony photos). WebP is a RIFF container whose bytes
+    8-11 spell 'WEBP'."""
+    try:
+        header = file_storage.stream.read(12)
+    finally:
+        file_storage.stream.seek(0)
+
+    if not header:
+        return False
+    if header.startswith(b'\xff\xd8\xff') or header.startswith(b'\x89PNG\r\n\x1a\n'):
+        return True
+    return header[:4] == b'RIFF' and header[8:12] == b'WEBP'
+
+
 @cache.memoize(timeout=300)
 def get_testimonies(limit=None):
-    """Cached testimonies query for /blog and /blog/testimonies. Seed-only
-    data (no admin CRUD), so a plain timeout is enough — no invalidation
-    hook needed."""
+    """Cached query of APPROVED testimonies for /blog and /blog/testimonies.
+    Pending/rejected member submissions are never public. Invalidated from
+    the admin testimony routes (app/admin_manage.py)."""
     from app.models import Testimony
-    query = Testimony.query.order_by(Testimony.created_at.desc())
+    query = Testimony.query.filter_by(status='approved').order_by(Testimony.created_at.desc())
     return query.limit(limit).all() if limit else query.all()

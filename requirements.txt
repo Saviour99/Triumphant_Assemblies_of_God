@@ -1,55 +1,54 @@
-# Core Flask
-Flask==2.3.3
-python-dotenv==1.0.0
-Werkzeug==2.3.7
-Jinja2==3.1.2
+# Runtime dependencies only. Dev/test tools live in requirements-dev.txt.
+# Pins = versions actually installed in the project venv (triumphant/).
+
+# Core Flask (Flask >= 3.1 provides the TRUSTED_HOSTS Host-header allow-list)
+Flask==3.1.3
+python-dotenv==1.2.4
+Werkzeug==3.1.9
+Jinja2==3.1.6
 
 # Auth
 Flask-Login==0.6.3
-itsdangerous==2.1.2
+itsdangerous==2.2.0
 
 # Database (PyMySQL is installed as a drop-in MySQLdb replacement — see
 # pymysql.install_as_MySQLdb() in app/__init__.py and init_db.py — so no
 # mysqlclient/C-extension dependency is needed)
 Flask-SQLAlchemy==3.1.1
-PyMySQL==1.1.0
+SQLAlchemy==2.1.8
+PyMySQL==1.2.3
 
-# Performance & Caching
-Flask-Caching==2.0.2
+# Performance & Caching (Flask-Caching >= 2.1 needs CACHE_TYPE class names:
+# 'SimpleCache' / 'RedisCache' — see config.py)
+Flask-Caching==2.5.1
 redis==5.0.0
 
 # Rate limiting
-Flask-Limiter==3.5.0
+Flask-Limiter==4.1.1
 
 # Security
 Flask-Talisman==1.1.0
-cryptography==41.0.7
+cryptography==50.0.2
 
 # Compression
-Flask-Compress==1.14
+Flask-Compress==1.26
 
 # Forms & Validation
-Flask-WTF==1.1.1
-WTForms==3.0.1
-email-validator==2.0.0
+Flask-WTF==1.3.0
+WTForms==3.3.2
+# email-validator: also used with check_deliverability=True (WTForms
+# Email() and app/utils.py::validate_email) to confirm a submitted
+# address's domain can actually receive mail via MX/A record lookup, not
+# just that it's shaped like an email.
+email-validator==2.3.0
 
 # Utilities
-requests==2.31.0
+requests==2.34.2
 python-dateutil==2.8.2
 
 # Production Server
-gunicorn==21.2.0
+gunicorn==26.2.0
 gevent==26.4.0
 
 # Monitoring & Logging
 python-json-logger==2.0.7
-
-# Testing
-pytest==7.4.2
-pytest-flask==1.2.0
-pytest-cov==4.1.0
-
-# Code Quality
-black==23.10.1
-flake8==6.1.0
-pylint==3.0.2

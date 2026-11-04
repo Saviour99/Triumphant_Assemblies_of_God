@@ -1,0 +1,83 @@
+{#- Shared admin UI pieces. Import with:
+    {% from "admin/_macros.html" import field, empty_row, role_pill, status_pill %}
+    Macros are imported without context, so anything that needs url_for /
+    csrf_token is passed in by the caller. -#}
+
+{#- One labelled form field: label tied to the input id, optional help
+    text (wired via aria-describedby), invalid state + error messages.
+    Extra keyword args (placeholder, rows, type, id, autocomplete...) are
+    forwarded to the WTForms field unchanged. -#}
+{% macro field(f, label=None, help=None, optional=False, cls='form-control') -%}
+{%- set fid = kwargs.get('id', f.id) -%}
+{%- set input_cls = cls ~ (' is-invalid' if f.errors else '') -%}
+<div class="field{% if f.errors %} has-error{% endif %}">
+    <label class="form-label" for="{{ fid }}">{{ label or f.label.text }}{% if optional %} <span class="field-optional">optional</span>{% endif %}</label>
+    {% if help %}
+        {{ f(class=input_cls, aria_describedby=fid ~ '-help', **kwargs) }}
+        <div class="form-text" id="{{ fid }}-help">{{ help }}</div>
+    {% else %}
+        {{ f(class=input_cls, **kwargs) }}
+    {% endif %}
+    {% for error in f.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+</div>
+{%- endmacro %}
+
+{#- Empty-state row for a data table. -#}
+{% macro empty_row(colspan, icon, title, text=None, action_url=None, action_label=None) -%}
+<tr class="empty-row">
+    <td colspan="{{ colspan }}">
+        <div class="empty-state">
+            <i class="fa-solid {{ icon }}" aria-hidden="true"></i>
+            <p class="empty-title">{{ title }}</p>
+            {% if text %}<p class="empty-text">{{ text }}</p>{% endif %}
+            {% if action_url %}<a href="{{ action_url }}" class="btn btn-admin-gold btn-sm">{{ action_label }}</a>{% endif %}
+        </div>
+    </td>
+</tr>
+{%- endmacro %}
+
+{#- Role label: gold = admin, blue = developer, green = pastor. -#}
+{% macro role_pill(account) -%}
+<span class="role-pill role-{{ account.role }}">{{ account.display_role }}</span>
+{%- endmacro %}
+
+{#- Payment / record state with a dot so it never relies on colour alone
+    (the word is always printed). -#}
+{% macro status_pill(status, label=None) -%}
+<span class="status-pill status-{{ status }}">{{ label or status|title }}</span>
+{%- endmacro %}
+
+{#- Pager under a paginated admin table. Macros are imported without
+    context, so pass url_for and the current query args in:
+    {{ pager(pagination, url_for, 'admin.members_list', request.args) }}
+    `param` is the query-string key for the page number (default 'page');
+    every other current arg (filters) is kept on the links. Renders
+    nothing when there's only one page. -#}
+{% macro pager(p, url_for, endpoint, args={}, param='page') -%}
+{%- if p and p.pages > 1 -%}
+{%- set base = {} -%}
+{%- for k, v in args.items() if k != param -%}{%- set _ = base.update({k: v}) -%}{%- endfor -%}
+<nav class="pager" aria-label="Pages">
+    <span class="pager-info tabular">{{ p.first }}–{{ p.last }} of {{ p.total }}</span>
+    <ul class="pager-list">
+        <li>
+            {%- if p.has_prev -%}{%- set _ = base.update({param: p.prev_num}) -%}
+            <a class="pager-link" href="{{ url_for(endpoint, **base) }}" rel="prev" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
+            {%- else -%}<span class="pager-link is-disabled" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span>{%- endif -%}
+        </li>
+        {% for n in p.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+        <li>
+            {%- if n is none -%}<span class="pager-gap" aria-hidden="true">…</span>
+            {%- elif n == p.page -%}<span class="pager-link is-current" aria-current="page">{{ n }}</span>
+            {%- else -%}{%- set _ = base.update({param: n}) -%}<a class="pager-link" href="{{ url_for(endpoint, **base) }}" aria-label="Page {{ n }}">{{ n }}</a>{%- endif -%}
+        </li>
+        {% endfor %}
+        <li>
+            {%- if p.has_next -%}{%- set _ = base.update({param: p.next_num}) -%}
+            <a class="pager-link" href="{{ url_for(endpoint, **base) }}" rel="next" aria-label="Next page"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+            {%- else -%}<span class="pager-link is-disabled" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>{%- endif -%}
+        </li>
+    </ul>
+</nav>
+{%- endif -%}
+{%- endmacro %}

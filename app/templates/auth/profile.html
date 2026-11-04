@@ -1,13 +1,13 @@
 {% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
 {% block title %}My Profile - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/members.jpg{% endblock %}
 
 {% block content %}
-<section class="page-header bg-blue-gradient">
-    <div class="container">
+{% call page_header(self.page_banner_image()) %}
         <h1>My Profile</h1>
         <p class="lead">Welcome, {{ member.full_name }}.</p>
-    </div>
-</section>
+{% endcall %}
 
 <section>
     <div class="container">
@@ -29,20 +29,16 @@
                         {% for error in form.avatar.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                         <button type="submit" class="btn-gold-sm w-100">Update Photo</button>
                     </form>
-                    <script>
-                        document.getElementById('avatarToggle').addEventListener('click', function () {
-                            const form = document.getElementById('avatarUploadForm');
-                            const isHidden = form.classList.toggle('d-none');
-                            this.setAttribute('aria-expanded', String(!isHidden));
-                        });
-                    </script>
 
                     <h4 style="font-family:var(--font-display); color:white;">Account Details</h4>
                     <p class="mb-1 text-start"><i class="fa-solid fa-user"></i> {{ member.full_name }}</p>
                     <p class="mb-1 text-start"><i class="fa-solid fa-envelope"></i> {{ member.email }}</p>
                     <p class="mb-1 text-start"><i class="fa-solid fa-phone"></i> {{ member.phone or 'Not provided' }}</p>
                     <p class="mb-3 text-start"><i class="fa-solid fa-calendar"></i> Member since {{ member.created_at.strftime('%d %B %Y') }}</p>
-                    <a href="{{ url_for('auth.logout') }}" class="btn-primary-gold" style="border:none;">Logout</a>
+                    <form method="post" action="{{ url_for('auth.logout') }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-primary-gold">Logout</button>
+                    </form>
                 </div>
             </div>
             <div class="col-lg-8">

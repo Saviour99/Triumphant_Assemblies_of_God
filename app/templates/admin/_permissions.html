@@ -1,0 +1,84 @@
+{#- Section-permission checkbox grid, grouped like the sidebar.
+    {% from "admin/_permissions.html" import permissions_grid %}
+    {{ permissions_grid(admin_section_groups, selected_keys, role_select_id='roleField', role=current_role) }}
+    Checkboxes post as name="permissions" (one value per section key).
+    For developer/pastor every box is checked + disabled (full access by
+    role); the script below keeps that in sync with the role <select>. -#}
+{% macro permissions_grid(groups, selected, role_select_id=None, role='admin') -%}
+{%- set full = role in ('developer', 'pastor') -%}
+<div class="perm-grid" data-perm-grid {% if role_select_id %}data-role-select="{{ role_select_id }}"{% endif %}>
+    <p class="perm-full-note form-text" data-perm-full-note {% if not full %}hidden{% endif %}>
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        Developer and Pastor accounts always have every section, so these can't be changed. Only the Admin role uses the ticks below.
+    </p>
+    {% for group_label, items in groups %}
+    {%- set gid = 'perm-group-' ~ loop.index -%}
+    <fieldset class="perm-group" data-perm-group>
+        <div class="perm-group-head">
+            <legend class="perm-group-label">{{ group_label }}</legend>
+            <div class="form-check perm-select-all">
+                <input class="form-check-input" type="checkbox" id="{{ gid }}-all" data-perm-all {% if full %}disabled{% endif %}>
+                <label class="form-check-label" for="{{ gid }}-all">Select all</label>
+            </div>
+        </div>
+        <div class="perm-items">
+            {% for key, label in items %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="permissions" value="{{ key }}" id="perm-{{ key }}"
+                       data-perm-item {% if full or key in selected %}checked{% endif %} {% if full %}disabled{% endif %}
+                       {% if key in selected %}data-was-checked="1"{% endif %}>
+                <label class="form-check-label" for="perm-{{ key }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </fieldset>
+    {% endfor %}
+</div>
+<script>
+(function () {
+    const grid = document.currentScript.previousElementSibling;
+    const groups = Array.from(grid.querySelectorAll('[data-perm-group]'));
+    const note = grid.querySelector('[data-perm-full-note]');
+    const roleSelect = grid.dataset.roleSelect ? document.getElementById(grid.dataset.roleSelect) : null;
+
+    function syncGroup(group) {
+        const items = Array.from(group.querySelectorAll('[data-perm-item]'));
+        const all = group.querySelector('[data-perm-all]');
+        const checked = items.filter(i => i.checked).length;
+        all.checked = checked === items.length;
+        all.indeterminate = checked > 0 && checked < items.length;
+    }
+
+    groups.forEach(group => {
+        const all = group.querySelector('[data-perm-all]');
+        all.addEventListener('change', () => {
+            group.querySelectorAll('[data-perm-item]').forEach(i => { i.checked = all.checked; });
+            syncGroup(group);
+        });
+        group.querySelectorAll('[data-perm-item]').forEach(i => {
+            i.addEventListener('change', () => {
+                i.dataset.wasChecked = i.checked ? '1' : '';
+                syncGroup(group);
+            });
+        });
+        syncGroup(group);
+    });
+
+    function applyRole() {
+        if (!roleSelect) return;
+        const full = roleSelect.value === 'developer' || roleSelect.value === 'pastor';
+        note.hidden = !full;
+        grid.querySelectorAll('[data-perm-item]').forEach(i => {
+            i.disabled = full;
+            i.checked = full ? true : i.dataset.wasChecked === '1';
+        });
+        grid.querySelectorAll('[data-perm-all]').forEach(a => { a.disabled = full; });
+        groups.forEach(syncGroup);
+    }
+    if (roleSelect) {
+        roleSelect.addEventListener('change', applyRole);
+        applyRole();
+    }
+})();
+</script>
+{%- endmacro %}

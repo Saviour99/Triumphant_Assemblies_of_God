@@ -1,19 +1,19 @@
 {% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
 {% from "public/_devotion_card.html" import devotion_card %}
 {% from "public/_testimony_card.html" import testimony_card %}
 
 {% block title %}Blog - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/blog.jpg{% endblock %}
 {% block meta_description %}Read today's daily devotion, browse recent testimonies, and stay encouraged with fresh content from Triumphant Assemblies of God.{% endblock %}
 
 {% block content %}
 
 <!-- Page Header -->
-<section class="page-header bg-blue-gradient">
-    <div class="container">
+{% call page_header(self.page_banner_image()) %}
         <h1>Blog & Devotionals</h1>
         <p class="lead">Inspiration, encouragement, and spiritual growth</p>
-    </div>
-</section>
+{% endcall %}
 
 <!-- Blog Posts -->
 <section class="blog-section">
@@ -21,10 +21,7 @@
         <div class="row">
             <!-- Main Blog Posts -->
             <div class="col-lg-8">
-                <div class="text-start">
-                    <h2>Daily <span class="text-gold">Devotion</span></h2>
-                    <div class="section-divider"></div>
-                </div>
+                <h2 class="display-heading mb-4">Daily devotion</h2>
 
                 {% if devotion %}
                     {{ devotion_card(devotion) }}
@@ -50,9 +47,9 @@
 <!-- Testimonies Section -->
 <section class="testimonies-section bg-light">
     <div class="container">
-        <div class="section-title">
-            <h2>Member Testimonies</h2>
-            <p class="section-subtitle">Stories of faith, transformation, and God's faithfulness</p>
+        <div class="section-head">
+            <h2 class="display-heading">Member testimonies</h2>
+            <p>Stories of faith, transformation, and God's faithfulness.</p>
         </div>
 
         {% if recent_testimonies %}
@@ -67,10 +64,10 @@
 
             {% if recent_testimonies|length > 1 %}
             <button class="carousel-control-prev" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous testimony</span>
             </button>
             <button class="carousel-control-next" type="button" data-bs-target="#testimoniesCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
+                <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next testimony</span>
             </button>
             {% endif %}
         </div>

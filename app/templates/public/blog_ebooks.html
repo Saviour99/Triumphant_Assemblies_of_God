@@ -1,17 +1,17 @@
 {% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
 {% from "public/_ebook_card.html" import ebook_card %}
 
 {% block title %}{{ category|title }} E-Books - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/ebooks.jpg{% endblock %}
 {% block meta_description %}{% if category == 'worship' %}A curated reading list of Christian worship e-books — title, author, and summary — recommended by Triumphant Assemblies of God.{% else %}A curated reading list of Christian leadership e-books — title, author, and summary — recommended by Triumphant Assemblies of God.{% endif %}{% endblock %}
 
 {% block content %}
 
-<section class="page-header bg-blue-gradient">
-    <div class="container">
+{% call page_header(self.page_banner_image()) %}
         <h1>{{ category|title }}</h1>
         <p class="lead">A short reading list on Christian {{ category }}</p>
-    </div>
-</section>
+{% endcall %}
 
 <section class="blog-section">
     <div class="container">

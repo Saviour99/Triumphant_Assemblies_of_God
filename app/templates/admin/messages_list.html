@@ -1,26 +1,36 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row, pager %}
 {% block title %}Contact Messages - Admin{% endblock %}
-{% block page_title %}Contact Messages{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block page_intro %}Sent through the contact form on the website, newest first.{% endblock %}
 
 {% block content %}
-<div class="admin-card">
-    <div class="table-responsive">
-        <table class="table table-admin align-middle">
-            <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Subject</th><th>Message</th></tr></thead>
+<section class="panel panel-table">
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col">Received</th><th scope="col">From</th><th scope="col">Phone</th><th scope="col">Subject</th><th scope="col">Message</th></tr></thead>
             <tbody>
                 {% for m in messages %}
                 <tr>
-                    <td class="text-nowrap">{{ m.created_at.strftime('%d %b %Y') }}</td>
-                    <td>{{ m.name }}</td>
-                    <td>{{ m.email }}</td>
-                    <td>{{ m.subject }}</td>
-                    <td style="max-width:400px;">{{ m.message }}</td>
+                    <td class="nowrap" style="vertical-align:top;">{{ m.created_at.strftime('%d %b %Y') }}</td>
+                    <td style="vertical-align:top; min-width:200px;">
+                        <span class="cell-primary">{{ m.name }}</span>
+                        <a href="mailto:{{ m.email }}" class="cell-sub">{{ m.email }}</a>
+                    </td>
+                    <td class="nowrap tabular" style="vertical-align:top;">
+                        {%- set phone = (m.phone or '') | trim -%}
+                        {% if phone %}<a href="tel:{{ phone | replace(' ', '') }}">{{ phone }}</a>{% else %}<span class="cell-muted">—</span>{% endif %}
+                    </td>
+                    <td style="vertical-align:top; min-width:160px;">{{ m.subject }}</td>
+                    <td class="cell-message" style="vertical-align:top;">{{ m.message }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-4">No messages yet.</td></tr>
+                {{ empty_row(5, 'fa-envelope', 'No messages yet', 'Messages sent from the Contact page will appear here.') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+    {{ pager(pagination, url_for, 'admin.messages_list', request.args) }}
+</section>
 {% endblock %}

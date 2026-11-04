@@ -1,23 +1,23 @@
 {% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
 {% from "public/_devotion_card.html" import devotion_card %}
 {% from "public/_ebook_card.html" import ebook_card %}
 {% from "public/_testimony_card.html" import testimony_card %}
 
 {% block title %}Search {{ 'for "' + query + '" - ' if query }}Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/search.jpg{% endblock %}
 {% block meta_description %}Search devotionals, e-books, and testimonies on the Triumphant Assemblies of God blog.{% endblock %}
 
 {% block content %}
 
-<section class="page-header bg-blue-gradient">
-    <div class="container">
+{% call page_header(self.page_banner_image()) %}
         <h1>Search</h1>
         {% if query %}
             <p class="lead">Results for &ldquo;{{ query }}&rdquo;</p>
         {% else %}
             <p class="lead">Type something in the sidebar to search the blog</p>
         {% endif %}
-    </div>
-</section>
+{% endcall %}
 
 <section class="blog-section">
     <div class="container">

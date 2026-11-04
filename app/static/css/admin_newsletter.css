@@ -1,0 +1,103 @@
+/* Newsletter pages (compose / review / confirm / history). Builds only on
+   the tokens and components in admin.css — load after it. */
+
+/* Status pills for campaigns (draft/sending/sent; failed is in admin.css). */
+.status-draft { background: var(--idle-wash); color: var(--idle); }
+.status-sending { background: var(--warn-wash); color: var(--warn); }
+.status-sent { background: var(--ok-wash); color: var(--ok); }
+
+/* Form beside its live preview; stacks below 1200px. */
+.nl-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 24px;
+    align-items: start;
+}
+@media (min-width: 1200px) {
+    .nl-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .nl-preview { position: sticky; top: calc(var(--topbar-h) + 16px); }
+}
+.nl-subhead { border-top: 1px solid var(--line); }
+.nl-subhead .panel-title .field-optional { margin-left: 6px; }
+.admin-body .nl-form textarea.form-control {
+    min-height: 260px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+.nl-preview { overflow: hidden; }
+.nl-preview-state { font-size: 0.8125rem; color: var(--muted); min-height: 1.2em; }
+.nl-preview-frame {
+    background: #F3F1EC;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.nl-preview-frame iframe {
+    display: block;
+    width: 100%;
+    height: 760px;
+    max-height: 78vh;
+    border: 0;
+    background: #F3F1EC;
+}
+
+/* Not-connected notice */
+.nl-connect { border-left: 4px solid var(--gold); }
+.nl-connect-body { display: flex; gap: 16px; padding: 18px 20px; align-items: flex-start; }
+.nl-connect-icon {
+    flex: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--gold-wash); color: var(--gold-ink);
+}
+.nl-connect-text { margin: 6px 0 10px; color: var(--ink-2); font-size: 0.875rem; max-width: 70ch; }
+.nl-key-list {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 8px 16px;
+}
+.nl-key-list li { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; }
+.nl-key-list code, .nl-connect-text code {
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--royal-blue);
+    font-size: 0.8125rem;
+}
+
+/* Review page */
+.nl-detail div:first-child { border-top: 0; }
+.nl-error {
+    display: flex; gap: 10px; align-items: flex-start;
+    margin: 0; padding: 12px 20px;
+    background: var(--bad-wash); color: #7A1B12;
+    border-top: 1px solid #F4C7C2;
+    font-size: 0.875rem;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.nl-error i { color: var(--bad); margin-top: 3px; }
+.nl-note-flat { border-bottom: 0; border-top: 1px solid var(--line); }
+.nl-send-meta { margin: 0 0 8px; font-size: 0.875rem; color: var(--ink-2); overflow-wrap: anywhere; }
+.nl-send-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 4px; }
+
+/* Confirm page */
+.nl-confirm-head { display: flex; gap: 16px; align-items: center; padding: 24px 24px 8px; }
+.nl-confirm-icon {
+    flex: none;
+    width: 48px; height: 48px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--royal-blue-wash); color: var(--royal-blue); font-size: 1.125rem;
+}
+.nl-confirm-title { font-family: var(--font-display); font-size: 1.375rem; margin: 0; color: var(--ink); }
+.nl-confirm-lede { margin: 2px 0 0; color: var(--muted); font-size: 0.875rem; }
+.nl-confirm-list { margin-top: 12px; }
+.nl-confirm-list div { padding-left: 24px; padding-right: 24px; }
+.nl-confirm .panel-note { padding-left: 24px; padding-right: 24px; }
+.nl-confirm .panel-body { padding: 18px 24px; }
+.admin-body .nl-confirm-check { display: flex; gap: 10px; align-items: flex-start; padding-left: 0; margin: 0; }
+.admin-body .nl-confirm-check .form-check-input { float: none; margin: 3px 0 0; flex: none; }
+.nl-confirm-check .form-check-label { font-weight: 600; }
+
+/* History table on the Newsletter landing page */
+.nl-history .cell-primary { display: block; max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,36 +1,44 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
 {% block title %}{{ 'Edit' if member else 'Add' }} Member - Admin{% endblock %}
-{% block page_title %}{{ 'Edit' if member else 'Add' }} Member{% endblock %}
+{% block page_title %}{{ 'Edit member' if member else 'Add member' }}{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:560px;">
-    <form method="POST" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            {{ form.full_name(class="form-control") }}
-            {% for error in form.full_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+<form method="POST" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Details</h2>
+            <p class="form-section-text">How the member appears in lists and on their profile.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            {{ form.email(class="form-control") }}
-            {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.full_name, autocomplete="off") }}
+            <div class="form-grid-2">
+                {{ field(form.email, autocomplete="off") }}
+                {{ field(form.phone, optional=True, autocomplete="off") }}
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Phone</label>
-            {{ form.phone(class="form-control") }}
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Sign-in</h2>
+            <p class="form-section-text">Members use this to sign in on the public website.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Password {% if member %}<span class="text-muted small">(leave blank to keep current)</span>{% endif %}</label>
-            {{ form.password(class="form-control") }}
-            {% for error in form.password.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.password, label='New password' if member else 'Password', optional=True, help='At least 8 characters. Leave blank to keep the current password.' if member else 'At least 8 characters. If left blank, a random password is set and the member can reset it from the website.', autocomplete="new-password") }}
+            <div class="form-check mt-3">
+                {{ form.is_active_member(class="form-check-input") }}
+                <label class="form-check-label" for="{{ form.is_active_member.id }}">Active member</label>
+                <div class="form-text mt-1">Deactivated members can't sign in. Their giving history is kept.</div>
+            </div>
         </div>
-        <div class="form-check mb-3">
-            {{ form.is_active_member(class="form-check-input") }}
-            <label class="form-check-label" for="{{ form.is_active_member.id }}">Active</label>
-        </div>
-        <button type="submit" class="btn btn-admin-gold">Save</button>
-        <a href="{{ url_for('admin.members_list') }}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if member else 'Add member' }}</button>
+        <a href="{{ url_for('admin.member_profile', member_id=member.id) if member else url_for('admin.members_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
 {% endblock %}

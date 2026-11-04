@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% block title %}Send newsletter - Admin{% endblock %}
+{% block page_title %}Send newsletter{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_newsletter.css') }}">{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.newsletter_detail', campaign_id=campaign.id) }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to the newsletter</a>{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('admin.newsletter_send', campaign_id=campaign.id) }}" class="panel panel-narrow nl-confirm" id="sendForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="nl-confirm-head">
+        <span class="nl-confirm-icon" aria-hidden="true"><i class="fa-solid fa-paper-plane"></i></span>
+        <div>
+            <h2 class="nl-confirm-title">Ready to send?</h2>
+            <p class="nl-confirm-lede">Once it's sent, it can't be called back.</p>
+        </div>
+    </div>
+
+    <dl class="detail-list nl-confirm-list">
+        <div><dt>Subject</dt><dd><strong>{{ campaign.subject }}</strong></dd></div>
+        <div><dt>Website subscribers</dt><dd class="tabular">{{ subscriber_count }}</dd></div>
+        <div><dt>Resend audience</dt><dd class="tabular">
+            {%- if audience_count is not none -%}{{ audience_count }} subscribed contact{{ 's' if audience_count != 1 }}
+            {%- else -%}<span class="cell-muted">Couldn't check ({{ audience_error }})</span>{%- endif -%}
+        </dd></div>
+        <div><dt>From</dt><dd>{{ nl_from }}</dd></div>
+        <div><dt>Replies go to</dt><dd>{{ nl_reply_to or '—' }}</dd></div>
+    </dl>
+    <p class="panel-note nl-note-flat">New website sign-ups are added to the Resend audience first. People who unsubscribed stay unsubscribed.</p>
+
+    <div class="panel-body">
+        <div class="form-check nl-confirm-check">
+            <input class="form-check-input" type="checkbox" name="confirm" value="yes" id="confirmSend" required>
+            <label class="form-check-label" for="confirmSend">Yes, send &ldquo;{{ campaign.subject }}&rdquo; to all subscribers now.</label>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold" id="sendBtn" data-once><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send newsletter</button>
+        <a href="{{ url_for('admin.newsletter_detail', campaign_id=campaign.id) }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}<script src="{{ url_for('static', filename='js/admin_newsletter.js') }}"></script>{% endblock %}

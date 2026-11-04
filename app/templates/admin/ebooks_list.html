@@ -1,50 +1,52 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row %}
 {% block title %}E-Books - Admin{% endblock %}
-{% block page_title %}E-Books (Worship / Leadership){% endblock %}
+{% block page_title %}E-books{% endblock %}
+
+{% block page_intro %}Worship and leadership reading. Only upload PDFs you have the rights to share; titles without a file still show on the website, just without a download button.{% endblock %}
+{% block page_actions %}
+    <a href="{{ url_for('admin.ebook_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add e-book</a>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-end mb-3">
-    <a href="{{ url_for('admin.ebook_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus"></i> Add E-Book</a>
-</div>
-
-<div class="admin-card">
-    <p class="text-muted small">Only upload a PDF you actually have the rights to distribute. Entries without a file still show on the public site, just without a download button.</p>
-    <div class="table-responsive">
-        <table class="table table-admin align-middle">
-            <thead><tr><th>Cover</th><th>Title</th><th>Author</th><th>Category</th><th>File</th><th class="text-end">Actions</th></tr></thead>
+<section class="panel panel-table">
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col"><span class="visually-hidden">Cover</span></th><th scope="col">Title</th><th scope="col">Category</th><th scope="col">File</th><th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
             <tbody>
                 {% for e in ebooks %}
                 <tr>
-                    <td>
+                    <td style="width:60px;">
                         {% if e.thumbnail_filename %}
-                            <img src="{{ url_for('static', filename=e.thumbnail_filename) }}" alt="{{ e.title }}" style="width:36px; height:48px; object-fit:cover; border-radius:4px;">
+                            <img src="{{ url_for('static', filename=e.thumbnail_filename) }}" alt="" class="cell-thumb">
                         {% else %}
-                            <span class="text-muted small">—</span>
+                            <span class="cell-thumb-empty" aria-hidden="true"><i class="fa-solid fa-book"></i></span>
                         {% endif %}
                     </td>
-                    <td>{{ e.title }}</td>
-                    <td>{{ e.author }}</td>
-                    <td><span class="badge bg-secondary">{{ e.category|title }}</span></td>
-                    <td>
+                    <td><span class="cell-primary">{{ e.title }}</span><span class="cell-sub">{{ e.author }}</span></td>
+                    <td><span class="tag-pill">{{ e.category|title }}</span></td>
+                    <td class="nowrap">
                         {% if e.file_path %}
-                            <a href="{{ url_for('static', filename=e.file_path) }}" target="_blank">View <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                            <a href="{{ url_for('static', filename=e.file_path) }}" target="_blank" rel="noopener">Open PDF <i class="fa-solid fa-arrow-up-right-from-square fa-xs" aria-hidden="true"></i></a>
                         {% else %}
-                            <span class="text-muted">No file yet</span>
+                            <span class="cell-muted">No file</span>
                         {% endif %}
                     </td>
-                    <td class="text-end">
-                        <a href="{{ url_for('admin.ebook_edit', ebook_id=e.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        <form action="{{ url_for('admin.ebook_delete', ebook_id=e.id) }}" method="POST" class="d-inline confirm-delete" data-confirm-message="Delete this e-book?">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                        </form>
+                    <td>
+                        <div class="row-actions">
+                            <a href="{{ url_for('admin.ebook_edit', ebook_id=e.id) }}" class="btn btn-sm btn-admin-quiet">Edit</a>
+                            <form action="{{ url_for('admin.ebook_delete', ebook_id=e.id) }}" method="POST" class="confirm-delete" data-confirm-message="Delete &quot;{{ e.title }}&quot;? Its PDF and cover are removed too. This can't be undone.">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-admin-danger">Delete</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="6" class="text-center text-muted py-4">No e-books yet.</td></tr>
+                {{ empty_row(5, 'fa-book', 'No e-books yet', 'Add a title to list it on the website’s reading page.', url_for('admin.ebook_add'), 'Add e-book') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 {% endblock %}

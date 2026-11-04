@@ -1,0 +1,67 @@
+/* Admin testimonies list + form (moderation preview). Uses admin.css tokens. */
+
+.tm-count {
+    display: inline-block;
+    min-width: 1.4em;
+    padding: 0 6px;
+    margin-left: 4px;
+    border-radius: 999px;
+    background: var(--warn-wash);
+    color: var(--warn);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.tm-admin-table td { vertical-align: top; }
+.tm-admin-person { min-width: 220px; }
+.tm-admin-who { display: flex; gap: 12px; align-items: flex-start; }
+.tm-admin-who .cell-sub { display: block; }
+
+.tm-admin-photo {
+    flex: none;
+    display: block;
+    width: 56px;
+    height: 70px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface-sunk);
+}
+.tm-admin-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tm-admin-photo:focus-visible { outline: 2px solid var(--royal-blue); outline-offset: 2px; }
+
+.tm-admin-mono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--royal-blue);
+    color: var(--gold);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.tm-admin-text { max-width: 52ch; }
+.tm-admin-text summary {
+    cursor: pointer;
+    color: var(--royal-blue);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+.tm-admin-full { margin: 8px 0 0; white-space: pre-line; }
+.tm-admin-actions .row-actions { flex-wrap: wrap; justify-content: flex-end; }
+
+.tm-admin-current {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.tm-admin-current img {
+    width: 96px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+}

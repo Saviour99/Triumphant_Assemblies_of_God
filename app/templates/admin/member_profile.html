@@ -1,39 +1,56 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row, status_pill %}
 {% block title %}{{ member.full_name }} - Admin{% endblock %}
-{% block page_title %}Member Profile{% endblock %}
+{% block page_title %}{{ member.full_name | title }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.members_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All members</a>{% endblock %}
+{% block page_actions %}
+    <a href="{{ url_for('admin.member_edit', member_id=member.id) }}" class="btn btn-admin-quiet"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit member</a>
+{% endblock %}
 
 {% block content %}
-<div class="row g-3">
+{%- set completed = donations | selectattr('status', 'equalto', 'completed') | list -%}
+<div class="row g-4">
     <div class="col-lg-4">
-        <div class="admin-card">
-            <h5>{{ member.full_name }}</h5>
-            <p class="text-muted mb-1"><i class="fa-solid fa-envelope"></i> {{ member.email }}</p>
-            <p class="text-muted mb-1"><i class="fa-solid fa-phone"></i> {{ member.phone or '—' }}</p>
-            <p class="text-muted mb-3"><i class="fa-solid fa-calendar"></i> Joined {{ member.created_at.strftime('%d %b %Y') }}</p>
-            <a href="{{ url_for('admin.member_edit', member_id=member.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-        </div>
+        <section class="panel">
+            <div class="profile-card">
+                <span class="admin-avatar admin-avatar-placeholder" style="width:56px;height:56px;font-size:1.25rem;" aria-hidden="true">{{ member.full_name[:1] }}</span>
+                <div>
+                    <h2 class="profile-card-name">{{ member.full_name | title }}</h2>
+                    {% if member.is_active_member %}{{ status_pill('active', 'Active') }}{% else %}{{ status_pill('inactive', 'Deactivated') }}{% endif %}
+                </div>
+            </div>
+            <dl class="detail-list">
+                <div><dt>Email</dt><dd><a href="mailto:{{ member.email }}">{{ member.email }}</a></dd></div>
+                <div><dt>Phone</dt><dd>{{ member.phone or '—' }}</dd></div>
+                <div><dt>Joined</dt><dd>{{ member.created_at.strftime('%d %b %Y') }}</dd></div>
+                <div><dt>Total given</dt><dd class="tabular"><strong>₵{{ '{:,.2f}'.format(completed | sum(attribute='amount')) }}</strong></dd></div>
+            </dl>
+        </section>
     </div>
     <div class="col-lg-8">
-        <div class="admin-card">
-            <h6 class="mb-3">Donation History</h6>
-            <div class="table-responsive">
-                <table class="table table-admin">
-                    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+        <section class="panel panel-table">
+            <div class="panel-head">
+                <h2 class="panel-title">Giving history<span class="panel-sub">{{ donations|length }} transaction{{ 's' if donations|length != 1 }}, including pending and failed</span></h2>
+            </div>
+            <div class="table-wrap">
+                <table class="table-admin">
+                    <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col" class="num">Amount</th><th scope="col">Status</th></tr></thead>
                     <tbody>
                         {% for d in donations %}
                         <tr>
-                            <td>{{ d.created_at.strftime('%d %b %Y') }}</td>
-                            <td>{{ d.giving_type|title }}</td>
-                            <td>₵{{ '%.2f'|format(d.amount) }}</td>
-                            <td><span class="badge badge-status-{{ d.status }}">{{ d.status|title }}</span></td>
+                            <td class="nowrap">{{ d.created_at.strftime('%d %b %Y') }}</td>
+                            <td>{{ d.giving_type|replace('_', ' ')|title }}</td>
+                            <td class="num">₵{{ '{:,.2f}'.format(d.amount) }}</td>
+                            <td>{{ status_pill(d.status) }}</td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="4" class="text-center text-muted py-3">No donations yet.</td></tr>
+                        {{ empty_row(4, 'fa-hand-holding-dollar', 'No giving recorded', 'Gifts this member makes while signed in will show here.') }}
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     </div>
 </div>
 {% endblock %}

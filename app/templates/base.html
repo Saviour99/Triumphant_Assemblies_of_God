@@ -5,18 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{% block meta_description %}Triumphant Assemblies of God (TAG) - A Place of Triumph, Love & Purpose. Join us in Accra, Ghana for worship, sermons, and community.{% endblock %}">
     <meta name="keywords" content="church, Ghana, Accra, Pentecostal, worship, community">
-    <link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ request.path }}">
+    <link rel="canonical" href="{{ site_url }}{{ request.path }}">
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
     <meta property="og:description" content="{{ self.meta_description() }}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/logo3.jpg') }}">
+    <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+    <meta property="og:image" content="{{ site_url }}{{ url_for('static', filename='img/logo3.jpg') }}">
     <meta property="og:site_name" content="Triumphant Assemblies of God (TAG)">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ self.og_title() }}">
     <meta name="twitter:description" content="{{ self.meta_description() }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {#- Interior pages set this to their banner photo (see public/_page_header.html). -#}
+    {% if false %}{% block page_banner_image %}{% endblock %}{% endif %}
     <title>{% block title %}Triumphant Assemblies of God (TAG){% endblock %}</title>
 
     <script type="application/ld+json">
@@ -24,9 +26,9 @@
         "@context": "https://schema.org",
         "@type": "Church",
         "name": "{{ church_info.name }}",
-        "url": "{{ request.url_root }}",
-        "logo": "{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/logo3.jpg') }}",
-        "image": "{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='img/logo3.jpg') }}",
+        "url": "{{ site_url }}/",
+        "logo": "{{ site_url }}{{ url_for('static', filename='img/logo3.jpg') }}",
+        "image": "{{ site_url }}{{ url_for('static', filename='img/logo3.jpg') }}",
         "telephone": "{{ church_info.phone }}",
         "email": "{{ church_info.email }}",
         "address": {
@@ -38,40 +40,47 @@
     }
     </script>
 
+    <!-- Preloader gate: tiny synchronous script so it can add html.js / html.tag-preload
+         before first paint (preloader is hidden without JS and after the first page view). -->
+    <script src="{{ url_for('static', filename='js/preloader.js') }}"></script>
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Bodoni Moda (display) + Figtree (text). Cormorant Garamond/Nunito kept loaded
+         because older component styles in style.css still reference them by name. -->
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..800;1,6..96,400..600&family=Figtree:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/preloader.css') }}">
 
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+    <a class="skip-link" href="#main">Skip to main content</a>
     <!-- Preloader -->
-    <div id="preloader" class="preloader">
-        <div class="preloader-cross"></div>
-        <div class="brand-text preloader-text">
-            <strong>Triumphant</strong>
-            <small>Assemblies of God</small>
-        </div>
-        <div class="preloader-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
+    <div id="preloader" class="preloader" aria-hidden="true">
+        <span class="preloader-glow"></span>
+        <picture class="preloader-mark">
+            <source srcset="{{ url_for('static', filename='img/preloader-logo.webp') }}" type="image/webp">
+            <img src="{{ url_for('static', filename='img/preloader-logo.png') }}" alt="" width="128" height="128" decoding="async">
+        </picture>
+        <span class="preloader-rule"></span>
+        <p class="preloader-word">Jesus is Lord</p>
     </div>
 
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="navbar">
+    <nav class="navbar navbar-expand-xl navbar-dark sticky-top" id="navbar" aria-label="Main">
         <div class="container-fluid px-4">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <div class="brand-icon"><img src="{{ url_for('static', filename='img/logo3.jpg') }}" width="50" alt="Church Logo"></div>
+            <a class="navbar-brand" href="{{ url_for('main.index') }}" aria-label="Triumphant Assemblies of God, home">
+                <div class="brand-icon"><img src="{{ url_for('static', filename='img/logo3.jpg') }}" width="50" height="50" alt=""></div>
                 <div class="brand-text">
                     <strong>Triumphant</strong>
                     <small>Assemblies of God</small>
@@ -108,7 +117,10 @@
                         <a class="nav-link" href="{{ url_for('auth.profile') }}">My Profile</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                        <form method="post" action="{{ url_for('auth.logout') }}" class="nav-logout-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="nav-link nav-logout">Logout</button>
+                        </form>
                     </li>
                     {% else %}
                     <li class="nav-item">
@@ -119,127 +131,155 @@
                     </li>
                     {% endif %}
                 </ul>
-                <a href="{{ url_for('main.giving') }}" class="btn btn-gold ms-3">Give Online</a>
+                <a href="{{ url_for('main.giving') }}" class="btn btn-gold nav-give">Give Online</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
+    <main id="main" tabindex="-1">
     {% block content %}{% endblock %}
+    </main>
 
     <!-- Back to Top Button -->
-    <button id="backToTop" class="back-to-top" title="Back to top">
-        <i class="fas fa-chevron-up"></i>
+    <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
     </button>
 
     <!-- WhatsApp Floating Button -->
-    <a href="https://wa.me/233501116130" class="whatsapp-btn" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
-        <i class="fab fa-whatsapp"></i>
+    <a href="https://wa.me/233501116130" class="whatsapp-btn" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
+        <i class="fab fa-whatsapp" aria-hidden="true"></i>
     </a>
 
+    <!-- Cookie Consent Banner -->
+    <div id="cookieConsent" class="cookie-consent" role="dialog" aria-live="polite" aria-label="Cookie consent">
+        <div class="cookie-consent-inner">
+            <p class="cookie-consent-text">
+                                We use essential cookies to keep you signed in and to keep the Site secure. We don't use these
+                cookies for advertising or tracking. See our <a href="{{ url_for('main.privacy_policy') }}">Privacy Policy</a> to learn more.
+            </p>
+            <div class="cookie-consent-actions">
+                <button type="button" id="cookieConsentAccept" class="btn-gold-sm">Accept</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer id="footer">
-        <div class="container">
-            <div class="row g-5">
-                <!-- Brand -->
-                <div class="col-lg-4 col-md-6 reveal">
-                    <div class="footer-brand">
-                        <div class="brand-icon"><img src="{{ url_for('static', filename='img/logo3.jpg') }}" width="50" alt="Church Logo"></div>
-                        <div class="brand-icon"><img src="{{ url_for('static', filename='img/logo.jpg') }}" width="50" alt="Church Logo"></div>
-                        <div class="brand-text">
-                            <strong>Triumphant</strong>
-                            <small>Assemblies of God</small>
-                        </div>
-                    </div>
-                    <p class="footer-about">
-                        A Place of Triumph, Love &amp; Purpose. Serving the people of Accra, Ghana, and the nations since 1998 through the power of the Holy Spirit.
-                    </p>
-                    <div class="social-row">
-                        <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                        <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter/X"><i class="fa-brands fa-x-twitter"></i></a>
-                        <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
-                    </div>
+    <footer id="footer" class="site-footer">
+        {% block footer_band %}
+        <!-- Closing invitation (pages can override this block; the home page,
+             which already ends on "Plan your visit", leaves it empty) -->
+        <div class="footer-band">
+            <div class="container footer-band-inner">
+                <div>
+                    <h2 class="footer-band-title">Worship with us this Sunday</h2>
+                    <p class="footer-band-text">Joint Service, 7:00 to 10:30 AM. {{ church_info.address }}.</p>
                 </div>
-
-                <!-- Quick Links -->
-                <div class="col-lg-2 col-md-6 reveal delay-1">
-                    <h5 class="footer-heading">Quick Links</h5>
-                    <ul class="footer-links">
-                        <li><a href="{{ url_for('main.index') }}"><i class="fa-solid fa-star-of-life"></i> Home</a></li>
-                        <li><a href="{{ url_for('main.about') }}"><i class="fa-solid fa-star-of-life"></i> About Us</a></li>
-                        <li><a href="{{ url_for('main.ministries') }}"><i class="fa-solid fa-star-of-life"></i> Ministries</a></li>
-                        <li><a href="{{ url_for('main.sermons') }}"><i class="fa-solid fa-star-of-life"></i> Sermons</a></li>
-                        <li><a href="{{ url_for('main.events') }}"><i class="fa-solid fa-star-of-life"></i> Events</a></li>
-                        <li><a href="{{ url_for('main.blog') }}"><i class="fa-solid fa-star-of-life"></i> Blog</a></li>
-                        <li><a href="{{ url_for('main.contact') }}"><i class="fa-solid fa-star-of-life"></i> Contact</a></li>
-                        <li><a href="#giving"><i class="fa-solid fa-star-of-life"></i> Give Online</a></li>
-                    </ul>
-                </div>
-
-                <!-- Service Times -->
-                <div class="col-lg-3 col-md-6 reveal delay-2">
-                    <h5 class="footer-heading">Service Times</h5>
-                    <div class="footer-service-item">
-                        <span class="day">Sunday Morning</span>
-                        <div style="font-size:0.85rem">Joint Service:   7:00 — 10:30 AM</div>
-                    </div>
-                    <div class="footer-service-item">
-                        <span class="day">Monday</span>
-                        <div style="font-size:0.85rem">Women Follow — 7:00 PM</div>
-                    </div>
-                    <div class="footer-service-item">
-                        <span class="day">Wednesday</span>
-                        <div style="font-size:0.85rem">Prayer Service — 7:00 PM</div>
-                    </div>
-                    <div class="footer-service-item">
-                        <span class="day">Thursday</span>
-                        <div style="font-size:0.85rem">Youth Meeting — 7:00 PM</div>
-                    </div>
-                    
-                </div>
-
-                <!-- Newsletter -->
-                <div class="col-lg-3 col-md-6 reveal delay-3">
-                    <h5 class="footer-heading">Newsletter</h5>
-                    <p style="font-size:0.85rem; margin-bottom:16px">Get weekly devotionals, sermon notes, and TAG updates straight to your inbox.</p>
-                    <form id="footerNewsletterForm" action="{{ url_for('api.newsletter') }}" method="POST" novalidate>
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                        <div class="footer-newsletter">
-                            <input type="email" id="footerNewsletterEmail" name="email" placeholder="Your email address" required aria-label="Footer newsletter email" autocomplete="email" />
-                            <button type="submit" class="btn-gold-sm w-100">Subscribe <i class="bi bi-arrow-right ms-1"></i></button>
-                        </div>
-                    </form>
-                    <!-- <div style="margin-top:20px; font-size:0.82rem; color:rgba(255,255,255,0.5)">
-                        <i class="fa-solid fa-location-dot text-gold me-1"></i> Dansoman - Accra, Ghana
-                    </div> -->
+                <div class="footer-band-actions">
+                    <a href="{{ url_for('main.contact') }}#map-section" class="btn-primary-gold">Get directions</a>
+                    <a href="{{ url_for('main.giving') }}" class="btn-outline-white">Give online</a>
                 </div>
             </div>
+        </div>
+        {% endblock %}
 
-            <!-- Footer Bottom -->
-            <div class="footer-bottom">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <p class="footer-bottom-text mb-0">
-                            &copy; <script>document.write(new Date().getFullYear())</script> Triumphant Assemblies of God, Accra. All Rights Reserved.
+        <div class="footer-main">
+            <div class="container">
+                <div class="footer-grid">
+                    <!-- Brand -->
+                    <div class="footer-col footer-col-brand">
+                        <a class="footer-brand" href="{{ url_for('main.index') }}" aria-label="Triumphant Assemblies of God, home">
+                            <span class="brand-icon"><img src="{{ url_for('static', filename='img/logo.jpg') }}" width="48" height="48" alt=""></span>
+                            <span class="brand-icon"><img src="{{ url_for('static', filename='img/logo3.jpg') }}" width="48" height="48" alt=""></span>
+                            <span class="brand-text">
+                                <strong>Triumphant</strong>
+                                <small>Assemblies of God</small>
+                            </span>
+                        </a>
+                        <p class="footer-about">
+                            A Place of Triumph, Love &amp; Purpose. Serving the people of Accra, Ghana, and the nations since 1998 through the power of the Holy Spirit.
                         </p>
+                        <ul class="footer-social" aria-label="TAG on social media">
+                            <li><a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a></li>
+                            <li><a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a></li>
+                            <li><a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a></li>
+                            <li><a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter" aria-hidden="true"></i></a></li>
+                            <li><a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i class="fab fa-tiktok" aria-hidden="true"></i></a></li>
+                        </ul>
                     </div>
-                    <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                        <p class="footer-bottom-text mb-0">
-                            <span>Developed by <span class="text-danger"><b>DelaTech Consult</b></span></span>
-                        </p>
+
+                    <!-- Visit & contact -->
+                    <div class="footer-col">
+                        <h2 class="footer-heading">Visit &amp; contact</h2>
+                        <address class="footer-contact">
+                            <p><span class="footer-label">Address</span>{{ church_info.address }}<br>
+                                <a href="{{ url_for('main.contact') }}#map-section">Map &amp; directions</a></p>
+                            <p><span class="footer-label">Phone &amp; WhatsApp</span><a href="tel:{{ church_info.phone|replace(' ', '') }}">{{ church_info.phone }}</a></p>
+                            <p><span class="footer-label">Email</span><a href="mailto:{{ church_info.email }}">{{ church_info.email }}</a></p>
+                        </address>
+                    </div>
+
+                    <!-- Service Times -->
+                    <div class="footer-col">
+                        <h2 class="footer-heading">Service times</h2>
+                        <dl class="footer-times">
+                            <div><dt>Sunday</dt><dd>Joint Service, 7:00 – 10:30 AM</dd></div>
+                            <div><dt>Monday</dt><dd>Women Fellowship, 7:00 PM</dd></div>
+                            <div><dt>Tuesday</dt><dd>Bible Studies, 7:00 PM</dd></div>
+                            <div><dt>Wednesday</dt><dd>Prayer Service, 7:00 PM</dd></div>
+                            <div><dt>Thursday</dt><dd>Youth Meeting, 7:00 PM</dd></div>
+                        </dl>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <nav class="footer-col" aria-label="Footer">
+                        <h2 class="footer-heading">Explore</h2>
+                        <ul class="footer-links">
+                            <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                            <li><a href="{{ url_for('main.about') }}">About Us</a></li>
+                            <li><a href="{{ url_for('main.ministries') }}">Ministries</a></li>
+                            <li><a href="{{ url_for('main.sermons') }}">Sermons</a></li>
+                            <li><a href="{{ url_for('main.events') }}">Events</a></li>
+                            <li><a href="{{ url_for('main.blog') }}">Blog</a></li>
+                            <li><a href="{{ url_for('main.contact') }}">Contact</a></li>
+                            <li><a href="{{ url_for('main.giving') }}">Give Online</a></li>
+                        </ul>
+                    </nav>
+
+                    <!-- Newsletter -->
+                    <div class="footer-col footer-col-news">
+                        <h2 class="footer-heading">Newsletter</h2>
+                        <p class="footer-news-text">Weekly devotionals, sermon notes, and TAG updates straight to your inbox.</p>
+                        <form id="footerNewsletterForm" action="{{ url_for('api.newsletter') }}" method="POST" novalidate>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <div class="footer-newsletter">
+                                <label for="footerNewsletterEmail" class="visually-hidden">Email address</label>
+                                <input type="email" id="footerNewsletterEmail" name="email" placeholder="Your email address" required autocomplete="email" />
+                                <button type="submit" class="btn-gold-sm">Subscribe</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </footer>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="container footer-bottom-inner">
+                <p class="footer-bottom-text">
+                    &copy; <span id="footerYear">2026</span> Triumphant Assemblies of God, Accra. All Rights Reserved.
+                </p>
+                <ul class="footer-legal">
+                    <li><a href="{{ url_for('main.privacy_policy') }}">Privacy Policy</a></li>
+                    <li><a href="{{ url_for('main.terms') }}">Terms &amp; Conditions</a></li>
+                </ul>
+                <p class="footer-bottom-text footer-credit">Developed by <strong>DelaTech Consult</strong></p>
+            </div>
+        </div>
+            </footer>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Three.js for 3D effects (optional) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

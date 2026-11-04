@@ -1,30 +1,54 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
 {% block title %}Live Stream - Admin{% endblock %}
-{% block page_title %}Live Stream{% endblock %}
+{% block page_title %}Live stream{% endblock %}
+
+{% block page_intro %}When the stream is on, a live video section appears on the public homepage. Turn it off when the service ends.{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:600px;">
-    <p class="text-muted">Toggle "Go Live" and paste the YouTube Live Stream URL. When on, a Live Stream section appears on the public site.</p>
-    <form method="POST" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="form-check form-switch mb-3">
-            {{ form.is_live(class="form-check-input", role="switch") }}
-            <label class="form-check-label" for="{{ form.is_live.id }}">Go Live</label>
+<form method="POST" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Status</h2>
+            <p class="form-section-text">Takes effect as soon as you save.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">YouTube Live URL</label>
-            {{ form.youtube_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
-            {% for error in form.youtube_url.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div class="switch-row">
+            <div class="form-check form-switch">
+                {{ form.is_live(class="form-check-input", role="switch") }}
+                <label class="form-check-label" for="{{ form.is_live.id }}">Go live</label>
+            </div>
+            <span class="switch-state">
+                {% if setting and setting.is_live %}Currently live on the website{% else %}Currently off{% endif %}
+            </span>
         </div>
-        <button type="submit" class="btn btn-admin-gold">Save</button>
-    </form>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Stream link</h2>
+            <p class="form-section-text">Copy the link from YouTube once the live stream has been scheduled.</p>
+        </div>
+        <div>
+            {{ field(form.youtube_url, placeholder="https://www.youtube.com/watch?v=...", help="A youtube.com or youtu.be link to the live stream.", inputmode="url") }}
+        </div>
+    </div>
 
     {% if setting and setting.is_live and setting.youtube_url %}
-    <hr>
-    <p class="small text-muted mb-2">Currently live with:</p>
-    <div class="ratio ratio-16x9">
-        <iframe src="{{ youtube_embed_url(setting.youtube_url) }}" allowfullscreen></iframe>
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Preview</h2>
+            <p class="form-section-text">What visitors see on the homepage right now.</p>
+        </div>
+        <div class="ratio ratio-16x9" style="border-radius:8px; overflow:hidden; background:#000;">
+            <iframe src="{{ youtube_embed_url(setting.youtube_url) }}" title="Live stream preview" allowfullscreen></iframe>
+        </div>
     </div>
     {% endif %}
-</div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">Save</button>
+    </div>
+</form>
 {% endblock %}

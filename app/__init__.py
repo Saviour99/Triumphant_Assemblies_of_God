@@ -6,7 +6,7 @@ Initializes and configures the TAG Church website application
 import pymysql
 pymysql.install_as_MySQLdb()  # Use pymysql as a drop-in
 
-from flask import Flask, session
+from flask import Flask, session, request as _request
 from flask_sqlalchemy import SQLAlchemy
 from flask_caching import Cache
 from flask_compress import Compress
@@ -25,7 +25,25 @@ cache = Cache()
 compress = Compress()
 login_manager = LoginManager()
 csrf = CSRFProtect()
-limiter = Limiter(key_func=get_remote_address, default_limits=['200 per day', '50 per hour'])
+
+
+def _rate_limit_key():
+    """Client IP for rate limiting — CF-Connecting-IP when CLOUDFLARE_PROXY
+    is on (otherwise every visitor would share Cloudflare's edge IP)."""
+    from app.security import client_ip
+    try:
+        return client_ip()
+    except RuntimeError:
+        return get_remote_address()
+
+
+# Generous default so normal browsing (page + assets) is never throttled;
+# write/auth endpoints carry their own tighter limits. Static files exempt.
+limiter = Limiter(
+    key_func=_rate_limit_key,
+    default_limits=['600 per hour', '120 per minute'],
+    default_limits_exempt_when=lambda: _request.endpoint == 'static',
+)
 
 def create_app(config_name='development'):
     """
@@ -43,7 +61,14 @@ def create_app(config_name='development'):
     # Load configuration
     from config import config
     app.config.from_object(config[config_name])
-    
+    # Production refuses to start without a real SECRET_KEY / SITE_URL and
+    # derives TRUSTED_HOSTS (Host-header allow-list) from SITE_URL.
+    config[config_name].init_app(app)
+
+    if app.config.get('TRUST_PROXY'):
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
     # Initialize extensions
     db.init_app(app)
     cache.init_app(app)
@@ -61,11 +86,25 @@ def create_app(config_name='development'):
             kind, raw_id = compound_id.split(':', 1)
         except ValueError:
             return None
+        try:
+            pk = int(raw_id)
+        except ValueError:
+            return None
         if kind == 'admin':
-            return db.session.get(Admin, int(raw_id))
-        if kind == 'member':
-            return db.session.get(Member, int(raw_id))
-        return None
+            user = db.session.get(Admin, pk)
+        elif kind == 'member':
+            user = db.session.get(Member, pk)
+        else:
+            return None
+        # Drop the session if the account was deactivated, or if its
+        # password changed since this session logged in (the session
+        # carries a fingerprint of the password hash — see app/security.py).
+        if user is None or not user.is_active:
+            return None
+        from app.security import fingerprints_match
+        if not fingerprints_match(session.get('_pw_fp'), user.password_hash):
+            return None
+        return user
 
     @login_manager.unauthorized_handler
     def unauthorized():
@@ -81,6 +120,11 @@ def create_app(config_name='development'):
         strict_transport_security_max_age=31536000,
         content_security_policy={
             'default-src': "'self'",
+            'object-src': "'none'",
+            'base-uri': "'self'",
+            'form-action': ["'self'", "checkout.paystack.com"],
+            'frame-ancestors': "'self'",
+            'media-src': "'self'",
             'script-src': ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "www.youtube.com", "s.ytimg.com", "js.paystack.co"],
             'style-src': ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com"],
             'font-src': ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
@@ -104,23 +148,37 @@ def create_app(config_name='development'):
     os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'audio'), exist_ok=True)
 
     # Admin sessions get a shorter idle timeout than the general 7-day
-    # "remember me" style session used elsewhere.
+    # "remember me" style session used elsewhere, plus an absolute cap.
+    # Background polling (dashboard auto-refresh) must not count as
+    # activity, or an unattended dashboard tab would never time out.
+    BACKGROUND_POLL_ENDPOINTS = {'admin.recent_activity', 'admin.chart_data'}
+
     @app.before_request
     def enforce_admin_session_timeout():
         from flask import request
         from flask_login import current_user, logout_user
-        from datetime import datetime
+        import time
         if not request.path.startswith('/admin'):
             return
         from app.models import Admin
         if current_user.is_authenticated and isinstance(current_user, Admin):
+            now = time.time()
             last_seen = session.get('admin_last_seen')
-            now = datetime.utcnow().timestamp()
-            timeout = app.config['ADMIN_SESSION_LIFETIME'].total_seconds()
-            if last_seen and (now - last_seen) > timeout:
+            login_at = session.get('admin_login_at')
+            if login_at is None:
+                # Session from before the absolute cap existed — start it now.
+                login_at = session['admin_login_at'] = now
+            idle_timeout = app.config['ADMIN_SESSION_LIFETIME'].total_seconds()
+            absolute_timeout = app.config['ADMIN_ABSOLUTE_SESSION_LIFETIME'].total_seconds()
+            if (last_seen and (now - last_seen) > idle_timeout) or (now - login_at) > absolute_timeout:
                 logout_user()
                 session.clear()
-            else:
+                return
+            is_background_poll = (
+                request.endpoint in BACKGROUND_POLL_ENDPOINTS
+                or request.headers.get('X-Background-Poll') == '1'
+            )
+            if not is_background_poll or last_seen is None:
                 session['admin_last_seen'] = now
 
     # Error handlers
@@ -157,49 +215,73 @@ def create_app(config_name='development'):
         """Inject church information into all templates"""
         from app.models import LiveStreamSetting, Devotion, Ebook, Testimony
         try:
-            live_stream = LiveStreamSetting.query.get(1)
+            live_stream = db.session.get(LiveStreamSetting, 1)
         except Exception:
             live_stream = None
 
         # Live counts for the blog sidebar's Categories widget — computed
-        # once here instead of duplicated in every /blog/* route.
-        try:
-            blog_category_counts = {
-                'devotional': Devotion.query.count(),
-                'worship': Ebook.query.filter_by(category='worship').count(),
-                'leadership': Ebook.query.filter_by(category='leadership').count(),
-                'testimonies': Testimony.query.count(),
-            }
-        except Exception:
-            blog_category_counts = {'devotional': 0, 'worship': 0, 'leadership': 0, 'testimonies': 0}
+        # once here instead of duplicated in every /blog/* route. Cached for
+        # 60s: this runs on EVERY template render (admin pages included), so
+        # uncached it was 4 extra COUNT queries per page view.
+        blog_category_counts = cache.get('blog_category_counts')
+        if blog_category_counts is None:
+            try:
+                blog_category_counts = {
+                    'devotional': Devotion.query.count(),
+                    'worship': Ebook.query.filter_by(category='worship').count(),
+                    'leadership': Ebook.query.filter_by(category='leadership').count(),
+                    'testimonies': Testimony.query.filter_by(status='approved').count(),
+                }
+                cache.set('blog_category_counts', blog_category_counts, timeout=60)
+            except Exception:
+                blog_category_counts = {'devotional': 0, 'worship': 0, 'leadership': 0, 'testimonies': 0}
+
+        from app.security import site_base_url
+        from app.site_settings import get_church_info
+
+        # Admin-editable site info (developer/pastor, /admin/site-settings),
+        # cached and invalidated on save; falls back to the shipped defaults
+        # if the site_settings table is empty or unreadable.
+        church_info = get_church_info()
 
         return {
-            'church_info': {
-                'name': 'Triumphant Assemblies of God (TAG)',
-                'address': 'Zuman, between Atomic and Glefe, Accra, Ghana',
-                'phone': '+233 501 116 130',
-                'email': 'info@tag.com',
-                'digital_address': 'GA-123-456',
-                'tagline': 'A Place of Triumph, Love & Purpose'
-            },
+            'church_info': church_info,
+            'site_settings': church_info,
             'live_stream': live_stream,
             'blog_category_counts': blog_category_counts,
-            'paystack_public_key': app.config.get('PAYSTACK_PUBLIC_KEY', '')
+            'paystack_public_key': app.config.get('PAYSTACK_PUBLIC_KEY', ''),
+            # Absolute public base URL (no trailing slash) from SITE_URL —
+            # use instead of request.url_root (Host-header controlled).
+            'site_url': site_base_url(),
         }
 
     @app.template_global()
     def youtube_embed_url(url):
         """Turn a youtube.com/watch?v=... or youtu.be/... URL into an embeddable one."""
+        # Only ever emits https://www.youtube.com/embed/<11-char id>; anything
+        # that doesn't yield a well-formed video id renders nothing.
+        import re
+        from urllib.parse import urlparse, parse_qs
         if not url:
             return ''
-        if 'youtu.be/' in url:
-            video_id = url.split('youtu.be/')[-1].split('?')[0]
-        elif 'v=' in url:
-            video_id = url.split('v=')[-1].split('&')[0]
-        elif '/embed/' in url:
-            return url
+        try:
+            parsed = urlparse(url.strip())
+        except ValueError:
+            return ''
+        host = (parsed.hostname or '').lower()
+        if host not in ('youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtube-nocookie.com'):
+            return ''
+        video_id = ''
+        if host == 'youtu.be':
+            video_id = parsed.path.lstrip('/').split('/')[0]
+        elif parse_qs(parsed.query).get('v'):
+            video_id = parse_qs(parsed.query)['v'][0]
         else:
-            return url
+            parts = [p for p in parsed.path.split('/') if p]
+            if len(parts) >= 2 and parts[0] in ('embed', 'live', 'shorts', 'v'):
+                video_id = parts[1]
+        if not re.fullmatch(r'[A-Za-z0-9_-]{11}', video_id or ''):
+            return ''
         return f'https://www.youtube.com/embed/{video_id}'
 
     # Health check endpoint

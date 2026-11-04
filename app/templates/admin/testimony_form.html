@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field, status_pill %}
+{% block title %}{{ 'Edit' if testimony else 'Add' }} Testimony - Admin{% endblock %}
+{% block page_title %}{{ 'Edit testimony' if testimony else 'Add testimony' }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_testimonies.css') }}">{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.testimonies_list', status=request.args.get('status') or None) }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All testimonies</a>{% endblock %}
+
+{% block content %}
+{% set current_photo = (url_for('static', filename=testimony.image_filename) if testimony.image_filename else testimony.image_url) if testimony else None %}
+<form method="POST" enctype="multipart/form-data" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Testimony</h2>
+            <p class="form-section-text">Only publish words the person has agreed to share.</p>
+            {% if testimony %}
+            <p class="form-section-text">
+                {% if testimony.status == 'approved' %}{{ status_pill('active', 'On the website') }}
+                {% elif testimony.status == 'pending' %}{{ status_pill('pending', 'Waiting for review') }}
+                {% else %}{{ status_pill('failed', 'Rejected') }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div>
+            {{ field(form.name, help='As it should appear on the website.') }}
+            {{ field(form.testimony, rows=8) }}
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Photo</h2>
+            <p class="form-section-text">A real photo of this person, shared with their permission. Without one, the website shows their initials.</p>
+        </div>
+        <div>
+            {% if current_photo %}
+            <div class="tm-admin-current">
+                <img src="{{ current_photo }}" alt="Current photo of {{ testimony.name }}" width="96" height="120">
+                <div class="field mb-0">
+                    <div class="form-check">
+                        {{ form.remove_photo(class="form-check-input") }}
+                        {{ form.remove_photo.label(class="form-check-label") }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {{ field(form.photo, label=('Replace photo' if current_photo else 'Photo'), optional=True, help='JPG, PNG or WebP, up to 3 MB. Portrait photos crop best.', accept='image/jpeg,image/png,image/webp') }}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if testimony else 'Add testimony' }}</button>
+        <a href="{{ url_for('admin.testimonies_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
+{% endblock %}

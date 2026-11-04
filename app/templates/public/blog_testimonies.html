@@ -1,17 +1,17 @@
 {% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
 {% from "public/_testimony_card.html" import testimony_card %}
 
 {% block title %}Testimonies - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/testimonies.jpg{% endblock %}
 {% block meta_description %}Read testimonies from members of Triumphant Assemblies of God about how faith and community have made a difference in their lives.{% endblock %}
 
 {% block content %}
 
-<section class="page-header bg-blue-gradient">
-    <div class="container">
+{% call page_header(self.page_banner_image()) %}
         <h1>Member Testimonies</h1>
         <p class="lead">Stories of faith, transformation, and God's faithfulness</p>
-    </div>
-</section>
+{% endcall %}
 
 <section class="blog-section">
     <div class="container">

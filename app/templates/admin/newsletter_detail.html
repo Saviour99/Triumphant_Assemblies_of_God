@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import status_pill %}
+{% block title %}{{ campaign.subject }} - Newsletter - Admin{% endblock %}
+{% block page_title %}Newsletter{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_newsletter.css') }}">{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.newsletter_subscribers_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Newsletter</a>{% endblock %}
+
+{% block page_actions %}
+{% if editable %}
+    <a href="{{ url_for('admin.newsletter_edit', campaign_id=campaign.id) }}" class="btn btn-admin-quiet"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if not nl_configured and editable %}{% include "admin/_newsletter_connect_notice.html" %}{% endif %}
+
+<div class="nl-split">
+    <div>
+        <section class="panel">
+            <div class="panel-head">
+                <h2 class="panel-title">{{ campaign.subject }}
+                    <span class="panel-sub">{% if campaign.preview_text %}{{ campaign.preview_text }}{% else %}No preview text{% endif %}</span>
+                </h2>
+                {{ status_pill(campaign.status, {'draft': 'Draft', 'sending': 'Sending', 'sent': 'Sent', 'failed': 'Not sent'}[campaign.status] if campaign.status in ('draft','sending','sent','failed') else None) }}
+            </div>
+            <dl class="detail-list nl-detail">
+                <div><dt>Written by</dt><dd>{{ campaign.author.username if campaign.author else '—' }}</dd></div>
+                <div><dt>Created</dt><dd>{{ campaign.created_at.strftime('%d %b %Y, %H:%M') if campaign.created_at else '—' }}</dd></div>
+                {% if campaign.status == 'sent' %}
+                <div><dt>Sent</dt><dd>{{ campaign.sent_at.strftime('%d %b %Y, %H:%M') if campaign.sent_at else '—' }}</dd></div>
+                <div><dt>Recipients</dt><dd class="tabular">{{ campaign.recipient_count if campaign.recipient_count is not none else '—' }}</dd></div>
+                {% else %}
+                <div><dt>Subscribers now</dt><dd class="tabular">{{ subscriber_count }}</dd></div>
+                {% endif %}
+                {% if campaign.cta_label %}<div><dt>Button</dt><dd>{{ campaign.cta_label }} &rarr; <span class="cell-muted">{{ campaign.cta_url }}</span></dd></div>{% endif %}
+            </dl>
+            {% if campaign.status == 'failed' and campaign.error %}
+            <div class="nl-error" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                <div><strong>The last send attempt failed.</strong> Resend said: {{ campaign.error }}</div>
+            </div>
+            {% elif campaign.status == 'sending' %}
+            <p class="panel-note nl-note-flat">This newsletter is being handed to Resend. Refresh in a moment.</p>
+            {% endif %}
+        </section>
+
+        {% if editable %}
+        <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">Send</h2></div>
+            <div class="panel-body nl-send-body">
+                <p class="nl-send-meta">
+                    From <strong>{{ nl_from }}</strong>{% if nl_reply_to %} &middot; replies go to <strong>{{ nl_reply_to }}</strong>{% endif %}
+                </p>
+
+                <div class="nl-send-actions">
+                    <form method="POST" action="{{ url_for('admin.newsletter_test', campaign_id=campaign.id) }}" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-admin-quiet" {% if not nl_configured %}disabled aria-disabled="true"{% endif %} data-once>
+                            <i class="fa-solid fa-flask" aria-hidden="true"></i> Send a test to me
+                        </button>
+                    </form>
+                    {% if nl_configured %}
+                    <a href="{{ url_for('admin.newsletter_confirm', campaign_id=campaign.id) }}" class="btn btn-admin-gold"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send to all subscribers&hellip;</a>
+                    {% else %}
+                    <button type="button" class="btn btn-admin-gold" disabled aria-disabled="true"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send to all subscribers&hellip;</button>
+                    {% endif %}
+                </div>
+                <p class="form-text">The test goes to {{ current_user.email }}. You'll confirm before anything goes to subscribers.</p>
+            </div>
+            <div class="form-actions">
+                <form method="POST" action="{{ url_for('admin.newsletter_delete', campaign_id=campaign.id) }}" class="m-0 confirm-delete" data-confirm-message="Delete this draft? This can't be undone.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-admin-danger btn-sm"><i class="fa-solid fa-trash" aria-hidden="true"></i> Delete draft</button>
+                </form>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <section class="panel nl-preview" aria-labelledby="nlPreviewTitle">
+        <div class="panel-head"><h2 class="panel-title" id="nlPreviewTitle">Email preview</h2></div>
+        <div class="nl-preview-frame">
+            <iframe title="Email preview" sandbox="" srcdoc="{{ preview_html }}"></iframe>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{{ url_for('static', filename='js/admin_newsletter.js') }}"></script>{% endblock %}

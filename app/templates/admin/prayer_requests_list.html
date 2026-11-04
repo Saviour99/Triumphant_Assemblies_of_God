@@ -1,26 +1,32 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row, pager %}
 {% block title %}Prayer Requests - Admin{% endblock %}
-{% block page_title %}Prayer Requests{% endblock %}
+{% block page_title %}Prayer requests{% endblock %}
+
+{% block page_intro %}Submitted through the website, newest first. Please treat these as confidential.{% endblock %}
 
 {% block content %}
-<div class="admin-card">
-    <div class="table-responsive">
-        <table class="table table-admin align-middle">
-            <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Topic</th><th>Message</th></tr></thead>
+<section class="panel panel-table">
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col">Received</th><th scope="col">From</th><th scope="col">Topic</th><th scope="col">Request</th></tr></thead>
             <tbody>
                 {% for r in requests %}
                 <tr>
-                    <td class="text-nowrap">{{ r.created_at.strftime('%d %b %Y') }}</td>
-                    <td>{{ r.name }}</td>
-                    <td>{{ r.email }}</td>
-                    <td>{{ r.topic }}</td>
-                    <td style="max-width:400px;">{{ r.message }}</td>
+                    <td class="nowrap" style="vertical-align:top;">{{ r.created_at.strftime('%d %b %Y') }}</td>
+                    <td style="vertical-align:top; min-width:200px;">
+                        <span class="cell-primary">{{ r.name }}</span>
+                        {% if r.email %}<a href="mailto:{{ r.email }}" class="cell-sub">{{ r.email }}</a>{% endif %}
+                    </td>
+                    <td style="vertical-align:top;">{% if r.topic %}<span class="tag-pill">{{ r.topic }}</span>{% else %}<span class="cell-muted">—</span>{% endif %}</td>
+                    <td class="cell-message" style="vertical-align:top;">{{ r.message }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-4">No prayer requests yet.</td></tr>
+                {{ empty_row(4, 'fa-hands-praying', 'No prayer requests yet', 'Requests sent from the Prayer page will appear here.') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+    {{ pager(pagination, url_for, 'admin.prayer_requests_list', request.args) }}
+</section>
 {% endblock %}

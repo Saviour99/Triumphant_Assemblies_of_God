@@ -1,55 +1,66 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
 {% block title %}{{ 'Edit Devotion' if devotion else 'Post Devotion' }} - Admin{% endblock %}
-{% block page_title %}{{ 'Edit Devotion' if devotion else "Post Today's Devotion" }}{% endblock %}
+{% block page_title %}{{ 'Edit devotion' if devotion else "Post today's devotion" }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.devotions_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All devotions</a>{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:680px;">
-    <p class="text-muted">Date: <strong>{{ (devotion.devotion_date if devotion else today).strftime('%d %B %Y') }}</strong> (not editable)</p>
+{% if not devotion and already_posted %}
+    <section class="panel panel-narrow">
+        <div class="empty-state">
+            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+            <p class="empty-title">Today's devotion is already posted</p>
+            <p class="empty-text">"{{ already_posted.title }}" went up today. Only one devotion can be posted per day; you can still edit it.</p>
+            <a href="{{ url_for('admin.devotion_edit', devotion_id=already_posted.id) }}" class="btn btn-admin-gold btn-sm">Edit today's devotion</a>
+        </div>
+    </section>
+{% else %}
+<form method="POST" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
 
-    {% if not devotion and already_posted %}
-        <div class="alert alert-warning">A devotion has already been posted today: "<strong>{{ already_posted.title }}</strong>". Only one devotion per day is allowed.</div>
-    {% else %}
-    <form method="POST" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            {{ form.title(class="form-control") }}
-            {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Heading</h2>
+            <p class="form-section-text">The date is set automatically and can't be changed.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Quote</label>
-            {{ form.quote(class="form-control") }}
-            {% for error in form.quote.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            <div class="field">
+                <span class="form-label d-block">Date</span>
+                <div class="form-fixed-value"><i class="fa-regular fa-calendar" aria-hidden="true"></i> {{ (devotion.devotion_date if devotion else today).strftime('%A, %d %B %Y') }}</div>
+            </div>
+            {{ field(form.title) }}
+            {{ field(form.writer_name) }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Theme</label>
-            {{ form.quote_theme(class="form-control") }}
-            {% for error in form.quote_theme.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Quote</h2>
+            <p class="form-section-text">The short quote sits beside the title; the theme is shown as the lead line in italics.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Writer's Name</label>
-            {{ form.writer_name(class="form-control") }}
-            {% for error in form.writer_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.quote) }}
+            {{ field(form.quote_theme) }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Reflection</label>
-            {{ form.reflection(class="form-control", rows=5) }}
-            {% for error in form.reflection.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Body</h2>
+            <p class="form-section-text">Shown in this order on the public devotion page.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Prayer Points</label>
-            {{ form.prayer_points(class="form-control", rows=4, placeholder="One prayer point per line...") }}
-            <div class="form-text">One point per line — each line will be shown as its own bullet. Leave blank if there are none today.</div>
-            {% for error in form.prayer_points.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.reflection, rows=7) }}
+            {{ field(form.prayer_points, optional=True, rows=4, placeholder="One prayer point per line", help="Each line becomes its own bullet. Leave blank if there are none today.") }}
+            {{ field(form.declaration, rows=3) }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Declaration</label>
-            {{ form.declaration(class="form-control", rows=3) }}
-            {% for error in form.declaration.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
-        <button type="submit" class="btn btn-admin-gold">{{ 'Save Changes' if devotion else 'Post Devotion' }}</button>
-        <a href="{{ url_for('admin.devotions_list') }}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-    {% endif %}
-</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if devotion else 'Post devotion' }}</button>
+        <a href="{{ url_for('admin.devotions_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
+{% endif %}
 {% endblock %}

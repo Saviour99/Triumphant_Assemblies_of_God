@@ -1,41 +1,47 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
 {% block title %}{{ 'Edit' if sermon else 'Upload' }} Audio Sermon - Admin{% endblock %}
-{% block page_title %}{{ 'Edit' if sermon else 'Upload' }} Audio Sermon{% endblock %}
+{% block page_title %}{{ 'Edit audio sermon' if sermon else 'Upload audio sermon' }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.audio_sermons_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All audio sermons</a>{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:640px;">
-    <form method="POST" enctype="multipart/form-data" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            {{ form.title(class="form-control") }}
-            {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+<form method="POST" enctype="multipart/form-data" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Sermon</h2>
+            <p class="form-section-text">Title, preacher and the date it was preached.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Preacher / Writer</label>
-            {{ form.preacher(class="form-control") }}
-            {% for error in form.preacher.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.title) }}
+            <div class="form-grid-2">
+                {{ field(form.preacher) }}
+                {{ field(form.sermon_date, type="date") }}
+            </div>
+            {{ field(form.message, optional=True, rows=4, help="A sentence or two shown with the recording.") }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Date</label>
-            {{ form.sermon_date(class="form-control", type="date") }}
-            {% for error in form.sermon_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Recording</h2>
+            <p class="form-section-text">{{ 'Leave blank to keep the current file.' if sermon else 'An MP3 file of the sermon.' }}</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Short Message</label>
-            {{ form.message(class="form-control", rows=4) }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">{{ 'Replace Audio File (optional)' if sermon else 'Audio File (mp3)' }}</label>
+        <div>
             {% if sermon %}
-                <audio controls src="{{ url_for('static', filename=sermon.audio_path) }}" class="d-block mb-2" style="max-width:100%;"></audio>
+            <div class="file-current">
+                <audio controls preload="none" src="{{ url_for('static', filename=sermon.audio_path) }}" aria-label="Current recording"></audio>
+            </div>
             {% endif %}
-            {{ form.audio_file(class="form-control") }}
-            {% for error in form.audio_file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-            {% if sermon %}<div class="form-text">Leave blank to keep the current audio file.</div>{% endif %}
+            {{ field(form.audio_file, label='Replace audio file' if sermon else 'Audio file', optional=sermon is defined and sermon, accept="audio/mpeg,.mp3") }}
         </div>
-        <button type="submit" class="btn btn-admin-gold">{{ 'Save Changes' if sermon else 'Upload' }}</button>
-        <a href="{{ url_for('admin.audio_sermons_list') }}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if sermon else 'Upload sermon' }}</button>
+        <a href="{{ url_for('admin.audio_sermons_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
 {% endblock %}

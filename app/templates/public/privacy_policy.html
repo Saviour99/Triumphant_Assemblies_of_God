@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
+
+{% block title %}Privacy Policy - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/legal.jpg{% endblock %}
+{% block meta_description %}Read the Triumphant Assemblies of God (TAG) privacy policy to learn how we collect, use, and protect your personal information.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+{% call page_header(self.page_banner_image()) %}
+        <h1>Privacy Policy</h1>
+        <p class="lead">How we collect, use, and protect your information</p>
+{% endcall %}
+
+<section class="legal-content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+                <p class="legal-updated">Last updated: August 2, 2026</p>
+
+                <p class="legal-intro">
+                    {{ church_info.name }} ("TAG", "we", "us", or "our") respects your privacy and is committed to
+                    protecting the personal information you share with us through
+                    <strong>{{ site_url }}</strong> (the "Site"). This Privacy Policy explains
+                    what information we collect, how we use it, and the choices you have.
+                </p>
+
+                <div class="legal-toc">
+                    <h2>Contents</h2>
+                    <ol>
+                        <li><a href="#information-we-collect">Information We Collect</a></li>
+                        <li><a href="#how-we-use">How We Use Your Information</a></li>
+                        <li><a href="#giving-payments">Giving & Payments</a></li>
+                        <li><a href="#cookies">Cookies & Session Data</a></li>
+                        <li><a href="#sharing">How We Share Information</a></li>
+                        <li><a href="#data-retention">Data Retention</a></li>
+                        <li><a href="#your-rights">Your Rights & Choices</a></li>
+                        <li><a href="#childrens-privacy">Children's Privacy</a></li>
+                        <li><a href="#security">Security</a></li>
+                        <li><a href="#changes">Changes to This Policy</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                    </ol>
+                </div>
+
+                <div class="legal-section" id="information-we-collect">
+                    <h2>1. Information We Collect</h2>
+                    <p>We collect information you voluntarily provide when you interact with the Site:</p>
+                    <h3>Member Account</h3>
+                    <p>When you register as a member, we collect your full name, email address, phone number, and a password (stored as a secure one-way hash — we never store your password in plain text). You may optionally upload a profile avatar.</p>
+                    <h3>Prayer Requests & Contact Messages</h3>
+                    <p>When you submit a prayer request or use our contact form, we collect your name, email address, and the message content (including the topic or subject you provide).</p>
+                    <h3>Newsletter Subscription</h3>
+                    <p>When you subscribe to our newsletter, we collect your email address.</p>
+                    <h3>Giving / Donations</h3>
+                    <p>When you give online, we collect your name, email address, donation amount, and the fund you're giving toward (e.g. tithe, offering, missions, building fund). See <a href="#giving-payments">Giving &amp; Payments</a> below for how card details are handled.</p>
+                    <h3>Automatically Collected Information</h3>
+                    <p>Like most websites, our server may log standard technical data such as IP address and browser type for security and troubleshooting purposes.</p>
+                </div>
+
+                <div class="legal-section" id="how-we-use">
+                    <h2>2. How We Use Your Information</h2>
+                    <p>We use the information we collect to:</p>
+                    <ul>
+                        <li>Create and manage your member account and profile</li>
+                        <li>Respond to prayer requests and contact/general inquiries</li>
+                        <li>Send the newsletter to subscribers who opt in</li>
+                        <li>Process and record donations, and maintain your giving history if you're a logged-in member</li>
+                        <li>Maintain the security of the Site, including detecting and preventing abuse</li>
+                        <li>Communicate important updates about church events, services, or your account</li>
+                    </ul>
+                    <p>We do not sell your personal information, and we do not use your data for third-party advertising.</p>
+                </div>
+
+                <div class="legal-section" id="giving-payments">
+                    <h2>3. Giving &amp; Payments</h2>
+                    <p>
+                        Online giving is processed through <strong>Paystack</strong>, a third-party payment processor.
+                        When you make a donation, your card details are entered directly into Paystack's secure
+                        payment popup and are never transmitted to or stored on our servers. We only receive and
+                        store the donation amount, fund type, donor name/email, and a payment reference/status
+                        (pending, completed, or failed) used to confirm your transaction. Paystack's own privacy
+                        policy governs how they handle your payment card data.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="cookies">
+                    <h2>4. Cookies &amp; Session Data</h2>
+                    <p>
+                        We use a session cookie to keep you signed in after you log in as a member or admin, and a
+                        CSRF token to protect forms on the Site from cross-site request forgery. These cookies are
+                        essential to the Site's functioning and are not used for advertising or cross-site tracking.
+                        We do not currently use third-party analytics or advertising cookies.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="sharing">
+                    <h2>5. How We Share Information</h2>
+                    <p>We do not sell or rent your personal information. We share information only in these limited circumstances:</p>
+                    <ul>
+                        <li>With Paystack, solely to process a donation you initiate</li>
+                        <li>With church staff/administrators who need it to respond to your request, manage your membership, or record your giving</li>
+                        <li>Where required to comply with a legal obligation, or to protect the rights, property, or safety of TAG, our members, or the public</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="data-retention">
+                    <h2>6. Data Retention</h2>
+                    <p>
+                        We retain member account data for as long as your account remains active. Prayer requests,
+                        contact messages, and donation records are retained as part of the church's ongoing
+                        pastoral and financial records. You may request deletion of your member account at any
+                        time as described in <a href="#your-rights">Your Rights &amp; Choices</a> below.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="your-rights">
+                    <h2>7. Your Rights &amp; Choices</h2>
+                    <ul>
+                        <li><strong>Access &amp; correction</strong> — you can review and update your details from your member profile at any time.</li>
+                        <li><strong>Newsletter opt-out</strong> — every newsletter email includes an unsubscribe option, or you may email us directly.</li>
+                        <li><strong>Account deletion</strong> — contact us using the details below to request deletion of your member account and associated personal data, subject to any records we're required to keep for financial or legal reasons.</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="childrens-privacy">
+                    <h2>8. Children's Privacy</h2>
+                    <p>
+                        The Site is intended for general audiences and member registration is intended for adults.
+                        We do not knowingly collect personal information directly from children through the member
+                        registration system. If you believe a child has provided us with personal information,
+                        please contact us so we can remove it.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="security">
+                    <h2>9. Security</h2>
+                    <p>
+                        We use industry-standard measures to protect your information, including password hashing,
+                        CSRF protection on all forms, and signature-verified payment webhooks. No method of
+                        transmission or storage is completely secure, and we cannot guarantee absolute security.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="changes">
+                    <h2>10. Changes to This Policy</h2>
+                    <p>
+                        We may update this Privacy Policy from time to time. Any changes will be posted on this
+                        page with an updated "Last updated" date. Continued use of the Site after changes take
+                        effect constitutes acceptance of the revised policy.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="contact">
+                    <h2>11. Contact Us</h2>
+                    <p>If you have questions about this Privacy Policy or how your information is handled, please contact us:</p>
+                    <ul>
+                        <li>Email: <a href="mailto:{{ church_info.email }}">{{ church_info.email }}</a></li>
+                        <li>Phone: {{ church_info.phone }}</li>
+                        <li>Address: {{ church_info.address }}</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

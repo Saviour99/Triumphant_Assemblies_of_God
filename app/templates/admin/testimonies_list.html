@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row, pager, status_pill %}
+{% block title %}Testimonies - Admin{% endblock %}
+{% block page_title %}Testimonies{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_testimonies.css') }}">{% endblock %}
+
+{% block page_intro %}Members can share a testimony from the website. It stays hidden until you approve it here. Only approved testimonies appear on the blog.{% endblock %}
+{% block page_actions %}
+    <a href="{{ url_for('admin.testimony_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add testimony</a>
+{% endblock %}
+
+{% block content %}
+{% set pill_class = {'approved': 'active', 'pending': 'pending', 'rejected': 'failed'} %}
+{% set pill_label = {'approved': 'On the website', 'pending': 'Waiting', 'rejected': 'Rejected'} %}
+<section class="panel panel-table">
+    <div class="filter-bar" role="navigation" aria-label="Filter testimonies">
+        <div class="filter-group">
+            <span class="filter-group-label">Show</span>
+            <div class="segmented">
+                <a href="{{ url_for('admin.testimonies_list') }}" class="{% if not status_filter %}active{% endif %}" {% if not status_filter %}aria-current="true"{% endif %}>All</a>
+                <a href="{{ url_for('admin.testimonies_list', status='pending') }}" class="{% if status_filter == 'pending' %}active{% endif %}" {% if status_filter == 'pending' %}aria-current="true"{% endif %}>Waiting for review{% if counts.pending %} <span class="tm-count">{{ counts.pending }}</span>{% endif %}</a>
+                <a href="{{ url_for('admin.testimonies_list', status='approved') }}" class="{% if status_filter == 'approved' %}active{% endif %}" {% if status_filter == 'approved' %}aria-current="true"{% endif %}>On the website</a>
+                <a href="{{ url_for('admin.testimonies_list', status='rejected') }}" class="{% if status_filter == 'rejected' %}active{% endif %}" {% if status_filter == 'rejected' %}aria-current="true"{% endif %}>Rejected</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="table-admin tm-admin-table">
+            <thead><tr><th scope="col">Person</th><th scope="col">Testimony</th><th scope="col">Status</th><th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+                {% for t in testimonies %}
+                {% set photo = url_for('static', filename=t.image_filename) if t.image_filename else t.image_url %}
+                {% set when = t.submitted_at or t.created_at %}
+                <tr>
+                    <td class="tm-admin-person">
+                        <div class="tm-admin-who">
+                            {% if photo %}
+                                <a href="{{ photo }}" target="_blank" rel="noopener" class="tm-admin-photo" title="Open the full photo">
+                                    <img src="{{ photo }}" alt="Photo of {{ t.name }}" width="56" height="70" loading="lazy">
+                                </a>
+                            {% else %}
+                                <span class="tm-admin-photo tm-admin-mono" aria-hidden="true">{{ t.initials }}</span>
+                            {% endif %}
+                            <div>
+                                <span class="cell-primary">{{ t.name }}</span>
+                                <span class="cell-sub">{% if t.member_id %}Shared by a member{% else %}Added by staff{% endif %}</span>
+                                {% if when %}<span class="cell-sub">{{ when.strftime('%d %b %Y') }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="cell-message tm-admin-text">
+                        {% if t.testimony | length > 220 %}
+                            <p class="mb-1">{{ t.testimony[:220] }}…</p>
+                            <details>
+                                <summary>Read the full testimony</summary>
+                                <p class="tm-admin-full">{{ t.testimony }}</p>
+                            </details>
+                        {% else %}
+                            <p class="mb-0">{{ t.testimony }}</p>
+                        {% endif %}
+                    </td>
+                    <td class="nowrap tm-admin-status">
+                        {{ status_pill(pill_class.get(t.status, 'inactive'), pill_label.get(t.status, t.status|title)) }}
+                    </td>
+                    <td class="tm-admin-actions">
+                        <div class="row-actions">
+                            {% if t.status != 'approved' %}
+                            <form action="{{ url_for('admin.testimony_approve', testimony_id=t.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="back_status" value="{{ status_filter }}">
+                                <button type="submit" class="btn btn-sm btn-admin-gold">Approve</button>
+                            </form>
+                            {% endif %}
+                            {% if t.status != 'rejected' %}
+                            <form action="{{ url_for('admin.testimony_reject', testimony_id=t.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="back_status" value="{{ status_filter }}">
+                                <button type="submit" class="btn btn-sm btn-admin-quiet">{% if t.status == 'approved' %}Unpublish{% else %}Reject{% endif %}</button>
+                            </form>
+                            {% endif %}
+                            <a href="{{ url_for('admin.testimony_edit', testimony_id=t.id, status=status_filter or None) }}" class="btn btn-sm btn-admin-quiet">Edit</a>
+                            <form action="{{ url_for('admin.testimony_delete', testimony_id=t.id) }}" method="POST" class="confirm-delete" data-confirm-message="Delete {{ t.name }}'s testimony and its photo? This can't be undone.">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-admin-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                {% if status_filter == 'pending' %}
+                {{ empty_row(4, 'fa-circle-check', 'Nothing waiting for review', 'New testimonies from members will appear here.') }}
+                {% else %}
+                {{ empty_row(4, 'fa-comment-dots', 'No testimonies here yet', 'Add one to show it on the website.', url_for('admin.testimony_add'), 'Add testimony') }}
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {{ pager(pagination, url_for, 'admin.testimonies_list', request.args) }}
+</section>
+{% endblock %}

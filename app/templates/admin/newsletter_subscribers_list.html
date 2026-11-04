@@ -1,23 +1,72 @@
 {% extends "admin/base.html" %}
-{% block title %}Newsletter Subscribers - Admin{% endblock %}
-{% block page_title %}Newsletter Subscribers{% endblock %}
+{% from "admin/_macros.html" import empty_row, status_pill, pager %}
+{% block title %}Newsletter - Admin{% endblock %}
+{% block page_title %}Newsletter{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_newsletter.css') }}">{% endblock %}
+
+{% block page_intro %}{{ pagination.total }} subscriber{{ 's' if pagination.total != 1 }} signed up on the website. Write a newsletter and it goes to all of them through Resend.{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('admin.newsletter_compose') }}" class="btn btn-admin-gold"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Write a newsletter</a>
+{% endblock %}
 
 {% block content %}
-<div class="admin-card">
-    <div class="table-responsive">
-        <table class="table table-admin align-middle">
-            <thead><tr><th>Email</th><th>Subscribed</th></tr></thead>
+{% if not nl_configured %}{% include "admin/_newsletter_connect_notice.html" %}{% endif %}
+
+<section class="panel panel-table nl-history" aria-labelledby="nlHistoryTitle">
+    <div class="panel-head">
+        <h2 class="panel-title" id="nlHistoryTitle">Newsletters <span class="panel-sub">Drafts and everything sent from here, newest first.</span></h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr>
+                <th scope="col">Subject</th>
+                <th scope="col">Status</th>
+                <th scope="col">Written by</th>
+                <th scope="col" class="num">Recipients</th>
+                <th scope="col" class="text-end">Date</th>
+            </tr></thead>
             <tbody>
-                {% for s in subscribers %}
+                {% for c in campaigns %}
                 <tr>
-                    <td>{{ s.email }}</td>
-                    <td class="text-nowrap">{{ s.subscribed_at.strftime('%d %b %Y') }}</td>
+                    <td><a class="cell-primary" href="{{ url_for('admin.newsletter_detail', campaign_id=c.id) }}" title="{{ c.subject }}">{{ c.subject }}</a>
+                        {% if c.preview_text %}<span class="cell-sub">{{ c.preview_text }}</span>{% endif %}</td>
+                    <td>{{ status_pill(c.status, {'draft': 'Draft', 'sending': 'Sending', 'sent': 'Sent', 'failed': 'Not sent'}.get(c.status)) }}</td>
+                    <td class="cell-muted">{{ c.author.username if c.author else '—' }}</td>
+                    <td class="num">{{ c.recipient_count if c.recipient_count is not none else '—' }}</td>
+                    <td class="nowrap text-end">
+                        {%- if c.status == 'sent' and c.sent_at -%}{{ c.sent_at.strftime('%d %b %Y') }}<span class="cell-sub">sent</span>
+                        {%- elif c.created_at -%}{{ c.created_at.strftime('%d %b %Y') }}<span class="cell-sub">created</span>{%- endif -%}
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="2" class="text-center text-muted py-4">No subscribers yet.</td></tr>
+                {{ empty_row(5, 'fa-envelope-open-text', 'No newsletters yet', 'Write one in plain text — it is turned into a designed email with the church banner and logo.', url_for('admin.newsletter_compose'), 'Write a newsletter') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
+
+<section class="panel panel-table panel-narrow" aria-labelledby="nlSubsTitle">
+    <div class="panel-head">
+        <h2 class="panel-title" id="nlSubsTitle">Subscribers <span class="panel-sub">Signed up on the website. Unsubscribes are handled by the unsubscribe link in each email.</span></h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col">Email</th><th scope="col" class="text-end">Subscribed</th></tr></thead>
+            <tbody>
+                {% for s in subscribers %}
+                <tr>
+                    <td><a href="mailto:{{ s.email }}">{{ s.email }}</a></td>
+                    <td class="nowrap text-end">{{ s.subscribed_at.strftime('%d %b %Y') }}</td>
+                </tr>
+                {% else %}
+                {{ empty_row(2, 'fa-paper-plane', 'No subscribers yet', 'People who sign up for the newsletter on the website will appear here.') }}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {{ pager(pagination, url_for, 'admin.newsletter_subscribers_list', request.args) }}
+</section>
 {% endblock %}

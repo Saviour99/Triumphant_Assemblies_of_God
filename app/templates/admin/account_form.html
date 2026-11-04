@@ -1,48 +1,138 @@
 {% extends "admin/base.html" %}
-{% block title %}Edit {{ account.username }} - Manage Accounts{% endblock %}
-{% block page_title %}Edit {{ account.display_role }} Account{% endblock %}
+{% from "admin/_macros.html" import field, role_pill, status_pill %}
+{% from "admin/_permissions.html" import permissions_grid %}
+{% block title %}Edit {{ account.username }} - Admin Accounts{% endblock %}
+{% block page_title %}Edit {{ account.username }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.accounts_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All admin accounts</a>{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:560px;">
-    <form method="POST" enctype="multipart/form-data" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            <label class="form-label">Username</label>
-            {{ form.username(class="form-control") }}
-            {% for error in form.username.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            {{ form.email(class="form-control") }}
-            {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Profile Photo</label>
-            {{ form.avatar(class="form-control") }}
-            {% for error in form.avatar.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
+<form method="POST" enctype="multipart/form-data" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
 
-        <hr>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <label class="form-label mb-0">Reset Password</label>
-            <button type="button" id="generatePasswordBtn" class="btn btn-sm btn-outline-secondary">
-                <i class="fa-solid fa-dice"></i> Generate Random Password
-            </button>
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Account</h2>
+            <p class="form-section-text">Role: {{ role_pill(account) }}<br>Change the role, sections or active status under Access below.</p>
         </div>
-        <div class="mb-3">
-            {{ form.new_password(class="form-control", id="newPasswordField") }}
-            {% for error in form.new_password.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-            <div class="form-text">Leave blank to keep the current password.</div>
+        <div>
+            <div class="form-grid-2">
+                {{ field(form.username, autocomplete="off") }}
+                {{ field(form.email, autocomplete="off") }}
+            </div>
+            <div class="file-current">
+                {% if account.avatar_filename %}
+                    <img src="{{ url_for('static', filename=account.avatar_filename) }}" class="admin-avatar" style="width:48px;height:48px;" alt="Current photo">
+                {% else %}
+                    <span class="admin-avatar admin-avatar-placeholder" style="width:48px;height:48px;" aria-hidden="true">{{ account.username[:1] }}</span>
+                {% endif %}
+                <span class="cell-muted">Current photo</span>
+            </div>
+            {{ field(form.avatar, label='Replace photo', optional=True, help='JPG, PNG or GIF, up to 2 MB.', accept="image/png,image/jpeg,image/gif") }}
         </div>
-        <div class="mb-3">
-            {{ form.confirm_password(class="form-control", id="confirmPasswordField") }}
-            {% for error in form.confirm_password.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
+    </div>
 
-        <button type="submit" class="btn btn-admin-gold">Save Changes</button>
-        <a href="{{ url_for('admin.accounts_list') }}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-</div>
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Reset password</h2>
+            <p class="form-section-text">Leave both fields blank to keep the current password.</p>
+        </div>
+        <div>
+            <div class="mb-3">
+                <button type="button" id="generatePasswordBtn" class="btn btn-sm btn-admin-quiet">
+                    <i class="fa-solid fa-key" aria-hidden="true"></i> Generate a strong password
+                </button>
+            </div>
+            <div class="form-grid-2">
+                {{ field(form.new_password, id="newPasswordField", autocomplete="new-password") }}
+                {{ field(form.confirm_password, id="confirmPasswordField", autocomplete="new-password") }}
+            </div>
+            <p class="form-text mb-0" id="generatedPasswordNote" hidden>Password generated and shown in both fields. Copy it now: it won't be shown again after you save.</p>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">Save changes</button>
+        <a href="{{ url_for('admin.accounts_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
+
+{# ---- Access: role, active flag, section permissions (posts to admin.account_access) ---- #}
+{%- set is_self = account.id == current_user.id -%}
+<form method="POST" action="{{ url_for('admin.account_access', account_id=account.id) }}" novalidate class="panel panel-narrow mt-4" id="access">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Access</h2>
+            <p class="form-section-text">Admin accounts only see the sections ticked here, on the sidebar and on the server. Developer and Pastor always see every section; only Developers manage accounts.</p>
+        </div>
+        <div>
+            <div class="field">
+                <label class="form-label" for="roleField">Role</label>
+                <select class="form-select" name="role" id="roleField" {% if is_self %}disabled aria-describedby="roleField-help"{% endif %}>
+                    {% for value, label in [('admin', 'Admin'), ('pastor', 'Pastor'), ('developer', 'Developer')] %}
+                    <option value="{{ value }}" {% if account.role == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if is_self %}
+                <input type="hidden" name="role" value="{{ account.role }}">
+                <div class="form-text" id="roleField-help">You can't change your own role, so you can't lock yourself out.</div>
+                {% endif %}
+            </div>
+            <div class="form-check mt-3">
+                {% if is_self %}
+                <input class="form-check-input" type="checkbox" id="accountActive" checked disabled>
+                <input type="hidden" name="is_active" value="y">
+                {% else %}
+                <input class="form-check-input" type="checkbox" name="is_active" value="y" id="accountActive" {% if account.is_active_account %}checked{% endif %}>
+                {% endif %}
+                <label class="form-check-label" for="accountActive">Active (can sign in)</label>
+                <div class="form-text mt-1">{% if is_self %}You can't deactivate your own account.{% else %}Deactivated accounts can't sign in and are signed out straight away. Nothing is deleted.{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Sections</h2>
+            <p class="form-section-text">Grouped like the sidebar.</p>
+        </div>
+        <div>
+            {{ permissions_grid(admin_section_groups, account.permission_list, role_select_id='roleField', role=account.role) }}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">Save access</button>
+    </div>
+</form>
+
+{# ---- Change history for this account ---- #}
+<section class="panel panel-narrow panel-table mt-4">
+    <div class="panel-head">
+        <h2 class="panel-title">Access history<span class="panel-sub">Account created, role, sections and active status changes</span></h2>
+    </div>
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col">When</th><th scope="col">Changed by</th><th scope="col">Change</th></tr></thead>
+            <tbody>
+                {% for log in account.account_logs.limit(50).all() %}
+                <tr>
+                    <td class="nowrap tabular">{{ log.changed_at.strftime('%d %b %Y, %H:%M') if log.changed_at else '—' }}</td>
+                    <td class="nowrap">{{ log.changed_by.username if log.changed_by else '—' }}</td>
+                    <td>
+                        <span class="cell-primary">{{ {'created': 'Account created', 'role_changed': 'Role changed', 'permissions_changed': 'Sections changed', 'activated': 'Activated', 'deactivated': 'Deactivated'}.get(log.action, log.action) }}</span>
+                        {% if log.details %}<span class="cell-sub">{{ log.details }}</span>{% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr class="empty-row"><td colspan="3"><div class="empty-state"><p class="empty-title">No access changes recorded yet.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
 <script>
 document.getElementById('generatePasswordBtn').addEventListener('click', () => {
@@ -57,6 +147,8 @@ document.getElementById('generatePasswordBtn').addEventListener('click', () => {
     confirmField.type = 'text';
     passwordField.value = password;
     confirmField.value = password;
+    document.getElementById('generatedPasswordNote').hidden = false;
+    passwordField.select();
 });
 </script>
 {% endblock %}

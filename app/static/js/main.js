@@ -2,15 +2,58 @@
    TAG CHURCH WEBSITE - MAIN JAVASCRIPT
    ============================================ */
 
-// ============ PRELOADER ============
-window.addEventListener('load', function() {
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-        setTimeout(() => {
-            preloader.style.display = 'none';
-        }, 2000);
+// ============ MOTION PREFERENCES ============
+const prefersReducedMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersSaveData = !!(navigator.connection && navigator.connection.saveData);
+
+// (Preloader lives in js/preloader.js, loaded in <head>.)
+
+// ============ HERO BACKGROUND VIDEO ============
+// The <video> ships without a src (preload="none" + data-src) so visitors who
+// asked for reduced motion or reduced data only ever download the poster.
+(function() {
+    const video = document.getElementById('heroVideo');
+    if (!video) return;
+    if (prefersReducedMotion || prefersSaveData || !video.dataset.src) return;
+
+    const toggle = document.getElementById('heroVideoToggle');
+    const hero = document.getElementById('hero');
+
+    video.src = video.dataset.src;
+    video.muted = true;
+    video.addEventListener('playing', () => hero && hero.classList.add('video-ready'), { once: true });
+    const attempt = video.play();
+    if (attempt && attempt.catch) attempt.catch(() => { /* autoplay blocked: poster stays */ });
+
+    if (toggle) {
+        toggle.hidden = false;
+        toggle.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (video.paused) {
+                video.play();
+                this.setAttribute('aria-pressed', 'false');
+                this.setAttribute('aria-label', 'Pause background video');
+                if (icon) icon.className = 'fa-solid fa-pause';
+            } else {
+                video.pause();
+                this.setAttribute('aria-pressed', 'true');
+                this.setAttribute('aria-label', 'Play background video');
+                if (icon) icon.className = 'fa-solid fa-play';
+            }
+        });
     }
-});
+
+    // Don't spend battery decoding video the visitor has scrolled past.
+    if ('IntersectionObserver' in window && hero) {
+        new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (toggle && toggle.getAttribute('aria-pressed') === 'true') return;
+                if (entry.isIntersecting) { video.play().catch(() => {}); } else { video.pause(); }
+            });
+        }, { threshold: 0.1 }).observe(hero);
+    }
+})();
 
 // ============ NAVBAR SCROLL EFFECT (FIXED FOR ALL PAGES) ============
 const navbar = document.getElementById('navbar');
@@ -62,39 +105,47 @@ if (backToTopBtn) {
     });
 }
 
-// ============ SCROLL REVEAL ANIMATION ============
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -100px 0px'
-};
+// ============ COOKIE CONSENT BANNER ============
+(function() {
+    const CONSENT_KEY = 'tag_cookie_consent';
+    const banner = document.getElementById('cookieConsent');
+    const acceptBtn = document.getElementById('cookieConsentAccept');
 
-const observer = new IntersectionObserver(function(entries) {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('fade-in');
-            observer.unobserve(entry.target);
+    if (!banner || !acceptBtn) {
+        return;
+    }
+
+    let alreadyAccepted = false;
+    try {
+        alreadyAccepted = localStorage.getItem(CONSENT_KEY) === 'accepted';
+    } catch (e) {
+        // localStorage unavailable (e.g. private browsing) - fall back to
+        // showing the banner every visit rather than breaking the page.
+    }
+
+    if (!alreadyAccepted) {
+        setTimeout(() => banner.classList.add('show'), 800);
+    }
+
+    acceptBtn.addEventListener('click', function() {
+        try {
+            localStorage.setItem(CONSENT_KEY, 'accepted');
+        } catch (e) {
+            // Ignore storage failures - the banner will just reappear next visit.
         }
+        banner.classList.remove('show');
     });
-}, observerOptions);
+})();
 
-// Observe all cards and sections - delay to ensure DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.card, section').forEach(el => {
-        observer.observe(el);
-    });
-});
-
-// Also observe on page load
-window.addEventListener('load', function() {
-    document.querySelectorAll('.card, section').forEach(el => {
-        if (!el.classList.contains('fade-in')) {
-            observer.observe(el);
-        }
-    });
-});
+// (The old per-section fade-in on scroll was removed in the 2026 layout
+// refresh: the hero carries the page's one orchestrated entrance.)
 
 // ============ ANIMATED COUNTERS ============
 function animateCounter(element, target, duration = 2000) {
+    if (prefersReducedMotion) {
+        element.textContent = target.toLocaleString();
+        return;
+    }
     let current = 0;
     const increment = target / (duration / 16);
     const timer = setInterval(() => {
@@ -322,6 +373,7 @@ function initializeContactForm() {
             const formData = {
                 name: document.getElementById('contactName').value,
                 email: document.getElementById('contactEmail').value,
+                phone: document.getElementById('contactPhone').value,
                 subject: document.getElementById('contactSubject').value,
                 message: document.getElementById('contactMessage').value
             };
@@ -385,9 +437,159 @@ function initializeNewsletterForm(formId, emailFieldId) {
     }
 }
 
-// Note: the online giving form (#givingForm on the Giving page) is handled
-// by its own inline script in offering.html, which drives the Paystack
-// popup flow — it is intentionally not wired up here.
+// ============ ONLINE GIVING (Paystack) ============
+// Moved here from an inline <script> in offering.html so the CSP can drop
+// 'unsafe-inline'. The public key and receipt URL come from data attributes
+// on #givingForm. Flow: /api/giving/init -> Paystack popup -> /api/paystack/verify
+// -> redirect to the receipt page, which reads the real status server-side.
+function initializeGivingForm() {
+    const form = document.getElementById('givingForm');
+    if (!form) return;
+
+    const amountInput = document.getElementById('givingAmount');
+    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            amountInput.value = this.dataset.amount;
+            amountInput.focus();
+        });
+    });
+
+    const publicKey = form.dataset.paystackKey || '';
+    const thankYouUrl = form.dataset.thankYouUrl || '';
+    const csrfToken = getCsrfToken();
+
+    function showGivingAlert(message, type) {
+        const box = document.getElementById('givingAlert');
+        box.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = `alert alert-${type}`;
+        div.setAttribute('role', 'alert');
+        div.textContent = message;
+        box.appendChild(div);
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        if (!publicKey || typeof PaystackPop === 'undefined') {
+            showGivingAlert('Online giving is temporarily unavailable. Please try again later.', 'danger');
+            return;
+        }
+
+        const payload = {
+            amount: amountInput.value,
+            giving_type: document.getElementById('givingType').value,
+            donor_name: document.getElementById('donorName').value,
+            donor_email: document.getElementById('donorEmail').value
+        };
+
+        fetch('/api/giving/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showGivingAlert(data.message || 'Something went wrong.', 'danger');
+                    return;
+                }
+
+                const handler = PaystackPop.setup({
+                    key: data.public_key,
+                    email: data.email,
+                    amount: Math.round(data.amount * 100),
+                    currency: 'GHS',
+                    ref: data.reference,
+                    callback: function(response) {
+                        showGivingAlert('Confirming your payment…', 'info');
+                        fetch('/api/paystack/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                            body: JSON.stringify({ reference: response.reference })
+                        })
+                            .then(res => res.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showGivingAlert('Thank you! Your giving was received successfully.', 'success');
+                                    form.reset();
+                                } else {
+                                    showGivingAlert('We could not verify your payment. Please contact the church office.', 'warning');
+                                }
+                            })
+                            .catch(() => { /* the receipt page shows the real status either way */ })
+                            .finally(() => {
+                                if (thankYouUrl) {
+                                    window.location.assign(thankYouUrl + '?reference=' + encodeURIComponent(response.reference));
+                                }
+                            });
+                    },
+                    onClose: function() {
+                        showGivingAlert('Payment window closed.', 'info');
+                    }
+                });
+                handler.openIframe();
+            })
+            .catch(() => showGivingAlert('Something went wrong. Please try again.', 'danger'));
+    });
+}
+
+// ============ CONTACT PAGE BUTTONS ============
+// (moved from an inline <script> in contact.html)
+function initializeContactPageButtons() {
+    document.getElementById('planVisitBtn')?.addEventListener('click', () => {
+        const subject = document.getElementById('contactSubject');
+        if (subject) subject.value = 'visit';
+        document.getElementById('map-section')?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    });
+
+    document.getElementById('getDirectionsBtn')?.addEventListener('click', () => {
+        const destination = encodeURIComponent('Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana');
+        const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+
+        if (!navigator.geolocation) {
+            window.open(fallbackUrl, '_blank');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const origin = `${position.coords.latitude},${position.coords.longitude}`;
+                window.open(
+                    `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`,
+                    '_blank'
+                );
+            },
+            () => window.open(fallbackUrl, '_blank')
+        );
+    });
+}
+
+// ============ PROFILE AVATAR TOGGLE ============
+// (moved from an inline <script> in auth/profile.html)
+function initializeAvatarToggle() {
+    const toggle = document.getElementById('avatarToggle');
+    const form = document.getElementById('avatarUploadForm');
+    if (!toggle || !form) return;
+    toggle.addEventListener('click', function() {
+        const isHidden = form.classList.toggle('d-none');
+        this.setAttribute('aria-expanded', String(!isHidden));
+    });
+}
+
+// ============ SMALL PAGE HELPERS ============
+function initializePageHelpers() {
+    const year = document.getElementById('footerYear');
+    if (year) year.textContent = new Date().getFullYear();
+
+    // Interior page banner: if a page's photo is missing, drop it so the
+    // banner falls back to its plain blue background.
+    document.querySelectorAll('.page-header-img').forEach(img => {
+        const drop = () => { img.closest('.page-header')?.classList.remove('has-image'); img.remove(); };
+        if (img.complete && img.naturalWidth === 0) drop();
+        else img.addEventListener('error', drop);
+    });
+}
 
 // Initialize all forms once on DOM ready. (Not also on window 'load' —
 // each init attaches a 'submit' listener, so registering twice would
@@ -397,6 +599,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeContactForm();
     initializeNewsletterForm('newsletterForm', 'newsletterEmail');
     initializeNewsletterForm('footerNewsletterForm', 'footerNewsletterEmail');
+    initializeGivingForm();
+    initializeContactPageButtons();
+    initializeAvatarToggle();
+    initializePageHelpers();
 });
 
 // ============ SINGLE-TRACK AUDIO PLAYBACK ============
@@ -509,6 +715,13 @@ setActiveNavLink();
 
 // ============ MOBILE MENU CLOSE ============
 const navbarCollapse = document.querySelector('.navbar-collapse');
+
+// Give the (otherwise transparent-over-hero) navbar a solid background
+// while the mobile menu is open.
+if (navbarCollapse && navbar) {
+    navbarCollapse.addEventListener('show.bs.collapse', () => navbar.classList.add('menu-open'));
+    navbarCollapse.addEventListener('hidden.bs.collapse', () => navbar.classList.remove('menu-open'));
+}
 const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
 
 navLinks.forEach(link => {
@@ -537,14 +750,6 @@ if ('IntersectionObserver' in window) {
     
     document.querySelectorAll('img.lazy').forEach(img => imageObserver.observe(img));
 }
-
-// ============ PULSING BUTTON EFFECT ============
-const ctaButtons = document.querySelectorAll('.btn-primary-hero, .btn-gold');
-ctaButtons.forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-        this.style.animation = 'pulse 0.6s ease-out';
-    });
-});
 
 // ============ CONSOLE LOGGING ============
 console.log('%cTriumphant Assemblies of God (TAG)', 'font-size: 20px; color: #C8973A; font-weight: bold;');

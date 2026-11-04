@@ -73,19 +73,55 @@ password-reset flows, near-zero field overlap) — don't collapse them into
 a single `User(role)` table.
 
 `Admin.role` is one of `'admin' | 'developer' | 'pastor'` (plain
-`VARCHAR(20)`, no DB-level enum). Admin and Pastor have identical
-dashboard access — `@admin_required` only checks `isinstance(current_user,
-Admin)`, it doesn't branch on role — the role exists purely to label which
-of the three intended people is logged in (shown as a colored badge:
-gold/admin, blue/developer, green/pastor). Developer is the only role with
-elevated, exclusive routes (see below). There's no UI to create accounts or
-change roles — all three are seeded once by `init_db.py` from `.env`
-(`ADMIN_DEFAULT_*` / `DEVELOPER_DEFAULT_*` / `PASTOR_DEFAULT_*`), each with
-a hardcoded fallback default if the env vars are absent.
+`VARCHAR(20)`, no DB-level enum), shown as a colored badge (gold/admin,
+blue/developer, green/pastor).
+
+**Per-section permissions.** The admin dashboard is split into section
+keys, grouped like the sidebar (`ADMIN_SECTION_GROUPS` in `app/models.py`):
+Overview — `dashboard`, `giving`, `live_stream`; People — `members`,
+`prayer_requests`, `messages`, `newsletter`; Content — `video_sermons`,
+`audio_sermons`, `devotions`, `ebooks`, `testimonies`, `events`.
+- Developer and Pastor always have every section (`Admin.permissions` is
+  ignored/NULL for them). Pastor = full content access, but no account
+  management.
+- Role `admin` gets exactly the sections in `admins.permissions` (TEXT,
+  JSON list of keys). New admins default to `['dashboard']`. **NULL means
+  "role default"**: a legacy `admin` row with NULL keeps full access to all
+  sections (what it had before permissions existed) until the developer
+  saves its access once.
+- `Admin.can(key)` / `Admin.permission_list` are the single source of
+  truth; templates use `current_user.can('members')`.
+- Enforcement is server-side: every section route uses
+  `@permission_required('<key>')` (`app/decorators.py`) — a denied admin
+  is flashed and redirected to the dashboard (JSON `/admin/api/*` → 403).
+  `/admin/dashboard` itself stays open to any active admin (it's the
+  landing page); without `dashboard` it shows only links to their
+  sections. With `dashboard`, each figure/chart/list is limited to sections
+  the admin has — `/admin/api/chart-data` and `/admin/api/recent-activity`
+  filter the same way and are cached per permission set
+  (`_permission_cache_key`), so admins never share a cached payload.
+  The sidebar hides links the account can't use. Any new admin route must
+  get a `@permission_required(...)` (or `@developer_required`).
+
+**Account management** (`app/admin_manage.py` routes on `admin_bp`,
+`@developer_required`): `/admin/accounts` lists accounts; Add admin
+(name, email, role, temporary password via the in-page generator, active
+toggle, section checkboxes); the account edit page has an Access panel
+(role, active, sections) and an Access history table. Accounts are never
+deleted — `admins.is_active` (`Admin.is_active_account`) soft-deactivates
+them: `login_user()` refuses them and the admin decorators sign out a
+deactivated admin on their next request. Lockout guard: a developer can't
+demote or deactivate themselves, and at least one active developer must
+always remain. Every create/role/sections/activation change is written to
+`admin_account_logs` (`AdminAccountLog`: whose account, who changed it,
+action, details, when). The three original accounts are still seeded once
+by `init_db.py` from `.env` (`ADMIN_DEFAULT_*` / `DEVELOPER_DEFAULT_*` /
+`PASTOR_DEFAULT_*`), each with a hardcoded fallback default.
 
 - `app/decorators.py`: `@admin_required` / `@member_required`, layered on
   top of Flask-Login's session handling, so a logged-in Member can't hit
-  `/admin/*` and vice versa. `@developer_required` is stricter still —
+  `/admin/*` and vice versa. `@permission_required(section_key)` adds the
+  per-section check above. `@developer_required` is stricter still —
   only `role == 'developer'` passes, used for account management and the
   login-audit log.
 - Admin sessions get a shorter idle timeout (`ADMIN_SESSION_LIFETIME` in
@@ -101,7 +137,10 @@ a hardcoded fallback default if the env vars are absent.
 
 - `main_bp` / `api_bp` (`app/routes.py`) — public site + JSON API.
 - `admin_bp` (`app/admin.py`, `/admin` prefix) — dashboard, member mgmt,
-  sermons, devotions, live-stream toggle, giving overview.
+  sermons, devotions, live-stream toggle, giving overview. Account
+  management (add/access/activate), testimonies and events routes live in
+  `app/admin_manage.py`, registered on the same `admin_bp` (imported at the
+  bottom of `app/admin.py`).
 - `auth_bp` (`app/auth.py`, `/members` prefix) — member register/login/
   logout/profile/password-reset.
 
@@ -149,6 +188,22 @@ a hardcoded fallback default if the env vars are absent.
         in the Paystack dashboard.
 - [x] Contact page map (keyless Google Maps embed, real address — no
       invented coordinates) + "Get Directions" via `navigator.geolocation`
+- [x] Newsletter via Mailchimp (`app/admin_newsletter.py` routes on
+      `admin_bp`, `app/mailchimp.py` Marketing API v3 client via
+      `requests`, `app/newsletter_render.py` + `templates/email/
+      newsletter.html`). Admin writes plain text (escaped, then blank
+      line = paragraph, "- " = bullet, bare URLs linked, `**bold**`);
+      it's rendered into the branded email with live preview, saved as a
+      `newsletter_campaigns` draft, test-sent to the writer, then sent to
+      the whole audience after a confirm page. Send first syncs local
+      `newsletter_subscribers` (batch, `update_existing: false` so
+      Mailchimp unsubscribes stick), reply-to = the sending admin's email
+      (free-mail → `MAILCHIMP_REPLY_TO` fallback). Double-send guard:
+      conditional `UPDATE ... WHERE status IN ('draft','failed')` →
+      `sending`, same pattern as `_set_donation_status_once`. Env:
+      `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `SITE_URL` required;
+      `MAILCHIMP_SERVER_PREFIX`/`_FROM_NAME`/`_REPLY_TO` optional —
+      without them drafting/preview still works, sending is disabled.
 - [x] CSRF on every POST route/form; parameterized queries via the ORM
 
 ## Location

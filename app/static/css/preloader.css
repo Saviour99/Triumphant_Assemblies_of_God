@@ -1,0 +1,140 @@
+/* ============================================
+   PRELOADER — "first light"
+   The church medallion surfaces out of a deep royal-blue field as a soft gold
+   light rises behind it, a gold hairline draws outward beneath, and the
+   church's confession ("Jesus is Lord") settles in. ~800ms of motion total.
+
+   Gating (see js/preloader.js, loaded synchronously in <head>):
+   - Hidden by default, so a visitor without JS never sees it.
+   - Only shown when <html> carries .tag-preload, which preloader.js adds on
+     the first page view of a browser session.
+   ============================================ */
+
+#preloader {
+    --pl-royal: #0D2B6B;
+    --pl-night: #06173D;
+    --pl-gold: #C8973A;
+    --pl-gold-soft: #E3C27F;
+    --pl-ivory: #F8F4EA;
+
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background:
+        radial-gradient(120% 90% at 50% 62%, var(--pl-royal) 0%, var(--pl-night) 72%);
+    color: var(--pl-ivory);
+    opacity: 1;
+    transition: opacity 360ms cubic-bezier(.4, 0, .2, 1), visibility 0s linear 0s;
+    pointer-events: none; /* never blocks clicks/scroll while it fades */
+}
+
+html.tag-preload #preloader { display: flex; }
+
+#preloader.is-leaving {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 360ms cubic-bezier(.4, 0, .2, 1), visibility 0s linear 360ms;
+}
+
+/* Soft light rising from below the medallion */
+.preloader-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(70vmin, 520px);
+    aspect-ratio: 1;
+    margin: calc(min(70vmin, 520px) / -2) 0 0 calc(min(70vmin, 520px) / -2);
+    border-radius: 50%;
+    /* warm core fading into a lifted royal blue: reads as light, not grey */
+    background: radial-gradient(circle at 50% 50%,
+        rgba(232, 184, 75, .30) 0%,
+        rgba(200, 151, 58, .12) 18%,
+        rgba(46, 86, 178, .38) 34%,
+        rgba(26, 63, 143, 0) 68%);
+    transform: translateY(-14%);
+    animation: plRise 900ms cubic-bezier(.2, .7, .2, 1) both;
+}
+
+.preloader-mark {
+    position: relative;
+    display: block;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 1px rgba(227, 194, 127, .55),
+        0 0 0 7px rgba(6, 23, 61, .55),
+        0 0 0 8px rgba(200, 151, 58, .28),
+        0 18px 40px -12px rgba(0, 0, 0, .55);
+    animation: plMark 620ms cubic-bezier(.2, .7, .2, 1) both;
+}
+.preloader-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.preloader-rule {
+    position: relative;
+    display: block;
+    width: 168px;
+    height: 1px;
+    margin-top: 30px;
+    background: linear-gradient(90deg,
+        rgba(200, 151, 58, 0) 0%,
+        var(--pl-gold) 22%,
+        #E8B84B 50%,
+        var(--pl-gold) 78%,
+        rgba(200, 151, 58, 0) 100%);
+    transform: scaleX(0);
+    animation: plDraw 640ms cubic-bezier(.65, 0, .35, 1) 140ms forwards;
+}
+
+.preloader-word {
+    position: relative;
+    margin: 14px 0 0;
+    font-family: 'Bodoni Moda', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.05rem;
+    letter-spacing: .04em;
+    color: var(--pl-gold-soft);
+    opacity: 0;
+    animation: plWord 520ms ease-out 300ms forwards;
+}
+
+@keyframes plRise {
+    from { opacity: 0; transform: translateY(6%) scale(.86); }
+    to   { opacity: 1; transform: translateY(-14%) scale(1); }
+}
+@keyframes plMark {
+    from { opacity: 0; transform: translateY(8px) scale(.96); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes plDraw {
+    to { transform: scaleX(1); }
+}
+@keyframes plWord {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Reduced motion: static composition, no fade (JS hides it instantly). */
+@media (prefers-reduced-motion: reduce) {
+    #preloader,
+    #preloader.is-leaving { transition: none; }
+    .preloader-glow,
+    .preloader-mark,
+    .preloader-word { animation: none; opacity: 1; }
+    .preloader-rule { animation: none; transform: none; }
+}
+
+@media print {
+    #preloader { display: none !important; }
+}

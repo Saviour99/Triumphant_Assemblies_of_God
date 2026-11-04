@@ -1,37 +1,42 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
 {% block title %}{{ 'Edit' if sermon else 'Add' }} Video Sermon - Admin{% endblock %}
-{% block page_title %}{{ 'Edit' if sermon else 'Add' }} Video Sermon{% endblock %}
+{% block page_title %}{{ 'Edit video sermon' if sermon else 'Add video sermon' }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.video_sermons_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All video sermons</a>{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:640px;">
-    <form method="POST" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            {{ form.title(class="form-control") }}
-            {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+<form method="POST" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Sermon</h2>
+            <p class="form-section-text">Title, preacher and the date it was preached.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Preacher / Writer</label>
-            {{ form.preacher(class="form-control") }}
-            {% for error in form.preacher.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.title) }}
+            <div class="form-grid-2">
+                {{ field(form.preacher) }}
+                {{ field(form.sermon_date, type="date") }}
+            </div>
+            {{ field(form.message, optional=True, rows=4, help="A sentence or two shown under the video.") }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">YouTube URL</label>
-            {{ form.youtube_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
-            {% for error in form.youtube_url.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Video</h2>
+            <p class="form-section-text">The video stays on YouTube; the website embeds it.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Date</label>
-            {{ form.sermon_date(class="form-control", type="date") }}
-            {% for error in form.sermon_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.youtube_url, placeholder="https://www.youtube.com/watch?v=...", help="A youtube.com or youtu.be link.", inputmode="url") }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Short Message</label>
-            {{ form.message(class="form-control", rows=4) }}
-        </div>
-        <button type="submit" class="btn btn-admin-gold">{{ 'Save Changes' if sermon else 'Save' }}</button>
-        <a href="{{ url_for('admin.video_sermons_list') }}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if sermon else 'Add video sermon' }}</button>
+        <a href="{{ url_for('admin.video_sermons_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
 {% endblock %}

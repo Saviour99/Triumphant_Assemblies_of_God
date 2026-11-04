@@ -24,6 +24,34 @@ def add_column_if_missing(cursor, table, column, ddl):
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
 
 
+# Secondary indexes on columns the admin lists / dashboard / public pages
+# sort or filter by. Mirrored by the db.Index(...) declarations at the end
+# of app/models.py — keep the names in sync.
+PERFORMANCE_INDEXES = [
+    ('ix_giving_status_created_at', 'giving', '(status, created_at)'),
+    ('ix_members_created_at', 'members', '(created_at)'),
+    ('ix_contact_messages_created_at', 'contact_messages', '(created_at)'),
+    ('ix_prayer_requests_created_at', 'prayer_requests', '(created_at)'),
+    ('ix_newsletter_subscribers_subscribed_at', 'newsletter_subscribers', '(subscribed_at)'),
+    ('ix_admin_login_logs_login_at', 'admin_login_logs', '(login_at)'),
+    ('ix_video_sermons_sermon_date', 'video_sermons', '(sermon_date)'),
+    ('ix_audio_sermons_sermon_date', 'audio_sermons', '(sermon_date)'),
+]
+
+
+def add_index_if_missing(cursor, index_name, table, columns_sql):
+    """Idempotent CREATE INDEX (MySQL has no 'CREATE INDEX IF NOT EXISTS').
+    Additive only."""
+    cursor.execute(
+        """SELECT COUNT(*) FROM information_schema.STATISTICS
+           WHERE table_schema=%s AND table_name=%s AND index_name=%s""",
+        (DB, table, index_name)
+    )
+    if cursor.fetchone()[0] == 0:
+        cursor.execute(f"CREATE INDEX {index_name} ON {table} {columns_sql}")
+        print(f"✓ Index {index_name} created on {table}")
+
+
 def init_database():
     """Initialize database and create tables"""
     try:
@@ -57,13 +85,15 @@ def init_database():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NOT NULL,
+                phone VARCHAR(20) NULL,
                 subject VARCHAR(255) NOT NULL,
                 message TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_email (email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
-        
+        add_column_if_missing(cursor, 'contact_messages', 'phone', 'phone VARCHAR(20) NULL')
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS newsletter_subscribers (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -137,6 +167,16 @@ def init_database():
                 INDEX idx_date (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
+        # Testimony photos + member submissions with moderation (additive).
+        # status DEFAULT 'approved' keeps every existing row public.
+        add_column_if_missing(cursor, 'testimonies', 'image_filename', 'image_filename VARCHAR(500) NULL')
+        add_column_if_missing(cursor, 'testimonies', 'status',
+                              "status VARCHAR(20) NOT NULL DEFAULT 'approved'")
+        add_column_if_missing(cursor, 'testimonies', 'member_id', 'member_id INT NULL')
+        add_column_if_missing(cursor, 'testimonies', 'submitted_at', 'submitted_at DATETIME NULL')
+        add_column_if_missing(cursor, 'testimonies', 'reviewed_at', 'reviewed_at DATETIME NULL')
+        add_column_if_missing(cursor, 'testimonies', 'reviewed_by_admin_id', 'reviewed_by_admin_id INT NULL')
+        add_index_if_missing(cursor, 'idx_testimonies_status', 'testimonies', '(status, created_at)')
 
         # ============ CMS: admin / member / management-dashboard tables ============
         # All additive. Never drop or truncate a table here.
@@ -258,6 +298,132 @@ def init_database():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """)
 
+        # Newsletters written in the admin and sent as Resend Broadcasts
+        # (app/admin_newsletter.py). status: draft|sending|sent|failed.
+        # mailchimp_campaign_id is a leftover from the first (Mailchimp)
+        # version — kept, unused; provider/provider_message_id replace it.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS newsletter_campaigns (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                subject VARCHAR(150) NOT NULL,
+                preview_text VARCHAR(150) NULL,
+                body_text TEXT NOT NULL,
+                cta_label VARCHAR(40) NULL,
+                cta_url VARCHAR(500) NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'draft',
+                mailchimp_campaign_id VARCHAR(64) NULL,
+                author_admin_id INT NULL,
+                recipient_count INT NULL,
+                error TEXT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                sent_at DATETIME NULL,
+                INDEX idx_newsletter_status (status),
+                CONSTRAINT fk_newsletter_author FOREIGN KEY (author_admin_id) REFERENCES admins(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        add_column_if_missing(cursor, 'newsletter_campaigns', 'provider',
+                               'provider VARCHAR(20) NULL')
+        add_column_if_missing(cursor, 'newsletter_campaigns', 'provider_message_id',
+                               'provider_message_id VARCHAR(64) NULL')
+        add_column_if_missing(cursor, 'newsletter_campaigns', 'sending_started_at',
+                               'sending_started_at DATETIME NULL')
+
+        # Per-section admin permissions + soft deactivation.
+        # permissions: JSON list of section keys (app/models.py ADMIN_SECTION_KEYS).
+        #   NULL = role default — developer/pastor always get every section, and
+        #   existing 'admin' rows keep the full access they had before this column.
+        # is_active: FALSE = deactivated (can't sign in); rows are never deleted.
+        add_column_if_missing(cursor, 'admins', 'permissions', 'permissions TEXT NULL')
+        add_column_if_missing(cursor, 'admins', 'is_active',
+                               'is_active BOOLEAN NOT NULL DEFAULT TRUE')
+
+        # Audit trail for account management (created / role / permissions /
+        # activated / deactivated), shown on each account's edit page.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS admin_account_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT NOT NULL,
+                changed_by_id INT NULL,
+                action VARCHAR(50) NOT NULL,
+                details TEXT,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_account_log_admin (admin_id),
+                CONSTRAINT fk_account_log_admin FOREIGN KEY (admin_id) REFERENCES admins(id),
+                CONSTRAINT fk_account_log_changed_by FOREIGN KEY (changed_by_id) REFERENCES admins(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+
+        # Editable site information (developer/pastor only, /admin/site-settings).
+        # Key/value, value JSON-encoded; keys missing here fall back to
+        # app/site_settings.py::DEFAULTS, so no seed rows are needed.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS site_settings (
+                setting_key VARCHAR(64) NOT NULL PRIMARY KEY,
+                setting_value TEXT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_by_id INT NULL,
+                CONSTRAINT fk_site_settings_admin FOREIGN KEY (updated_by_id) REFERENCES admins(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        # Audit trail of site-settings saves (who / when / which fields).
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS site_settings_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT NULL,
+                changed_fields TEXT NULL,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_site_settings_logs_changed_at (changed_at),
+                CONSTRAINT fk_site_settings_logs_admin FOREIGN KEY (admin_id) REFERENCES admins(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+
+        # Developer-only integration credentials (/admin/integrations).
+        # value_encrypted is a Fernet token (app/integrations.py) — never
+        # plaintext. Missing keys fall back to .env.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS integration_settings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                setting_key VARCHAR(64) NOT NULL UNIQUE,
+                value_encrypted TEXT NULL,
+                is_secret BOOLEAN NOT NULL DEFAULT FALSE,
+                updated_by_admin_id INT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_integration_settings_admin FOREIGN KEY (updated_by_admin_id) REFERENCES admins(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+        # Audit trail of integration changes: key name / action / who / when
+        # — never the value.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS integration_setting_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                setting_key VARCHAR(64) NOT NULL,
+                action VARCHAR(20) NOT NULL,
+                admin_id INT NULL,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_integration_setting_logs_changed_at (changed_at),
+                CONSTRAINT fk_integration_setting_logs_admin FOREIGN KEY (admin_id) REFERENCES admins(id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+
+        # Church events for the public /events page (admin CRUD under the
+        # 'events' permission). image_filename is relative to static/.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                start_at DATETIME NOT NULL,
+                end_at DATETIME NULL,
+                location VARCHAR(255),
+                image_filename VARCHAR(500),
+                is_published BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_event_start (start_at),
+                INDEX idx_event_published (is_published)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """)
+
         # Extend the existing 'giving' table additively for member linkage + Paystack tracking.
         add_column_if_missing(cursor, 'giving', 'paystack_reference',
                                'paystack_reference VARCHAR(255) UNIQUE')
@@ -371,15 +537,25 @@ def init_database():
                 starter_testimonies
             )
 
+        for index_name, table, columns_sql in PERFORMANCE_INDEXES:
+            add_index_if_missing(cursor, index_name, table, columns_sql)
+
         # Seed default admin/developer accounts, one time each, keyed on
         # email/username (both are UNIQUE columns) so re-running after the
         # admins table already has rows never collides with an existing
         # account — it just skips seeding that one and leaves it alone.
+        # There is deliberately NO fallback password: if *_DEFAULT_PASSWORD
+        # isn't set in .env, that account is simply not seeded (a hardcoded
+        # default in a public repo is a known credential).
         def seed_account_if_missing(role, username_env, email_env, password_env,
-                                     default_username, default_email, default_password):
+                                     default_username, default_email):
             username = os.getenv(username_env, default_username)
             email = os.getenv(email_env, default_email)
-            password = os.getenv(password_env, default_password)
+            password = os.getenv(password_env, '')
+            if len(password) < 12:
+                print(f"⚠ Not seeding the {role} account: set {password_env} in .env "
+                      f"(at least 12 characters) and re-run init_db.py to create it.")
+                return
 
             cursor.execute(
                 "SELECT COUNT(*) FROM admins WHERE email = %s OR username = %s",
@@ -398,15 +574,15 @@ def init_database():
 
         seed_account_if_missing(
             'admin', 'ADMIN_DEFAULT_USERNAME', 'ADMIN_DEFAULT_EMAIL', 'ADMIN_DEFAULT_PASSWORD',
-            'admin', 'admin@triumphantag.com', 'ChangeMe123!'
+            'admin', 'admin@triumphantag.com'
         )
         seed_account_if_missing(
             'developer', 'DEVELOPER_DEFAULT_USERNAME', 'DEVELOPER_DEFAULT_EMAIL',
-            'DEVELOPER_DEFAULT_PASSWORD', 'developer', 'developer@triumphantag.com', 'ChangeDev123!'
+            'DEVELOPER_DEFAULT_PASSWORD', 'developer', 'developer@triumphantag.com'
         )
         seed_account_if_missing(
             'pastor', 'PASTOR_DEFAULT_USERNAME', 'PASTOR_DEFAULT_EMAIL',
-            'PASTOR_DEFAULT_PASSWORD', 'pastor', 'pastor@triumphantag.com', 'ChangePastor123!'
+            'PASTOR_DEFAULT_PASSWORD', 'pastor', 'pastor@triumphantag.com'
         )
 
         conn.commit()

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
+
+{% block title %}Terms & Conditions - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/legal.jpg{% endblock %}
+{% block meta_description %}Read the terms and conditions for using the Triumphant Assemblies of God (TAG) website, member accounts, and online giving.{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+{% call page_header(self.page_banner_image()) %}
+        <h1>Terms &amp; Conditions</h1>
+        <p class="lead">The rules for using our website and services</p>
+{% endcall %}
+
+<section class="legal-content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+                <p class="legal-updated">Last updated: August 2, 2026</p>
+
+                <p class="legal-intro">
+                    These Terms &amp; Conditions ("Terms") govern your use of
+                    <strong>{{ site_url }}</strong> (the "Site"), operated by
+                    {{ church_info.name }} ("TAG", "we", "us", or "our"). By accessing or using the Site, including
+                    registering a member account, submitting a form, or giving online, you agree to these Terms. If
+                    you do not agree, please do not use the Site.
+                </p>
+
+                <div class="legal-toc">
+                    <h2>Contents</h2>
+                    <ol>
+                        <li><a href="#use-of-site">Use of the Site</a></li>
+                        <li><a href="#member-accounts">Member Accounts</a></li>
+                        <li><a href="#user-submissions">User Submissions</a></li>
+                        <li><a href="#giving">Online Giving</a></li>
+                        <li><a href="#intellectual-property">Intellectual Property</a></li>
+                        <li><a href="#third-party-links">Third-Party Links & Services</a></li>
+                        <li><a href="#disclaimer">Disclaimer of Warranties</a></li>
+                        <li><a href="#liability">Limitation of Liability</a></li>
+                        <li><a href="#termination">Termination</a></li>
+                        <li><a href="#governing-law">Governing Law</a></li>
+                        <li><a href="#changes-terms">Changes to These Terms</a></li>
+                        <li><a href="#contact-terms">Contact Us</a></li>
+                    </ol>
+                </div>
+
+                <div class="legal-section" id="use-of-site">
+                    <h2>1. Use of the Site</h2>
+                    <p>You agree to use the Site only for lawful purposes and in a way that does not infringe the rights of, or restrict or inhibit the use and enjoyment of, the Site by anyone else. Prohibited uses include:</p>
+                    <ul>
+                        <li>Attempting to gain unauthorized access to any part of the Site, including admin or member areas</li>
+                        <li>Submitting false, misleading, abusive, or fraudulent information through any form</li>
+                        <li>Uploading or transmitting viruses, malware, or any other harmful code</li>
+                        <li>Using the Site to harass, defame, or harm another person</li>
+                    </ul>
+                </div>
+
+                <div class="legal-section" id="member-accounts">
+                    <h2>2. Member Accounts</h2>
+                    <p>
+                        You must provide accurate and complete information when registering a member account and
+                        keep your login credentials confidential. You are responsible for all activity that occurs
+                        under your account. Notify us immediately if you suspect unauthorized use of your account.
+                        We reserve the right to suspend or deactivate an account that violates these Terms.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="user-submissions">
+                    <h2>3. User Submissions</h2>
+                    <p>
+                        Content you submit through the Site — prayer requests, contact messages, testimonies, and
+                        similar submissions — should be truthful and respectful. By submitting content, you grant
+                        TAG permission to use it for the purpose it was submitted (for example, responding to your
+                        request, or sharing a testimony with the congregation with your consent). We may decline to
+                        publish or may remove any submission at our discretion.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="giving">
+                    <h2>4. Online Giving</h2>
+                    <p>
+                        Donations made through the Site are processed via Paystack. By giving online, you confirm
+                        that you are authorized to use the payment method provided. Donations are generally
+                        non-refundable; if you believe a donation was made in error, contact us at the details
+                        below and we will review the matter in good faith. TAG is not responsible for delays or
+                        failures caused by Paystack or your bank/card issuer.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="intellectual-property">
+                    <h2>5. Intellectual Property</h2>
+                    <p>
+                        Unless otherwise noted, the text, sermons, devotionals, images, logos, and other content on
+                        the Site are the property of TAG or its licensors and are protected by copyright. You may
+                        view, download, and share content for personal, non-commercial use. You may not reproduce,
+                        redistribute, or sell content from the Site without our prior written permission.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="third-party-links">
+                    <h2>6. Third-Party Links &amp; Services</h2>
+                    <p>
+                        The Site may link to third-party websites and services (for example, social media, YouTube
+                        sermon videos, WhatsApp, or Paystack). We do not control and are not responsible for the
+                        content, policies, or practices of any third-party site or service. Your use of those
+                        services is governed by their own terms and privacy policies.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="disclaimer">
+                    <h2>7. Disclaimer of Warranties</h2>
+                    <p>
+                        The Site and its content are provided "as is" and "as available" without warranties of any
+                        kind, express or implied. We do not warrant that the Site will be uninterrupted, error-free,
+                        or free of harmful components.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="liability">
+                    <h2>8. Limitation of Liability</h2>
+                    <p>
+                        To the fullest extent permitted by law, TAG shall not be liable for any indirect,
+                        incidental, or consequential damages arising out of or related to your use of the Site,
+                        including any errors, interruptions, or unauthorized access to your data.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="termination">
+                    <h2>9. Termination</h2>
+                    <p>
+                        We may suspend or terminate your access to the Site, including your member account, at any
+                        time if we reasonably believe you have violated these Terms.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="governing-law">
+                    <h2>10. Governing Law</h2>
+                    <p>
+                        These Terms are governed by the laws of the Republic of Ghana, without regard to its
+                        conflict-of-law principles.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="changes-terms">
+                    <h2>11. Changes to These Terms</h2>
+                    <p>
+                        We may update these Terms from time to time. Changes take effect once posted on this page
+                        with a revised "Last updated" date. Continued use of the Site after changes take effect
+                        constitutes acceptance of the revised Terms.
+                    </p>
+                </div>
+
+                <div class="legal-section" id="contact-terms">
+                    <h2>12. Contact Us</h2>
+                    <p>If you have questions about these Terms, please contact us:</p>
+                    <ul>
+                        <li>Email: <a href="mailto:{{ church_info.email }}">{{ church_info.email }}</a></li>
+                        <li>Phone: {{ church_info.phone }}</li>
+                        <li>Address: {{ church_info.address }}</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

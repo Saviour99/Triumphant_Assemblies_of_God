@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
+{% block title %}{{ 'Edit' if event else 'Add' }} Event - Admin{% endblock %}
+{% block page_title %}{{ 'Edit event' if event else 'Add event' }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.events_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All events</a>{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Event details</h2>
+            <p class="form-section-text">Shown on the website's Events page.</p>
+        </div>
+        <div>
+            {{ field(form.title) }}
+            {{ field(form.description, optional=True, rows=5) }}
+            {{ field(form.location, optional=True, placeholder='e.g. Main auditorium') }}
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">When</h2>
+            <p class="form-section-text">Once the start time has passed, the event moves to Past.</p>
+        </div>
+        <div>
+            <div class="form-grid-2">
+                {{ field(form.start_at) }}
+                {{ field(form.end_at, optional=True) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Image</h2>
+            <p class="form-section-text">{{ form.image.description }}</p>
+        </div>
+        <div>
+            {% if event and event.image_filename %}
+            <div class="file-current">
+                <img src="{{ url_for('static', filename=event.image_filename) }}" alt="Current image for {{ event.title }}">
+                <span class="cell-muted">Current image</span>
+            </div>
+            <div class="form-check mb-3">
+                {{ form.remove_image(class="form-check-input") }}
+                <label class="form-check-label" for="{{ form.remove_image.id }}">Remove current image</label>
+            </div>
+            {% endif %}
+            {{ field(form.image, label='Replace image' if (event and event.image_filename) else 'Image', optional=True, accept="image/png,image/jpeg,image/gif") }}
+        </div>
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Visibility</h2>
+            <p class="form-section-text">Drafts are kept here but not shown on the website.</p>
+        </div>
+        <div>
+            <div class="form-check">
+                {{ form.is_published(class="form-check-input") }}
+                <label class="form-check-label" for="{{ form.is_published.id }}">Published on the website</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if event else 'Add event' }}</button>
+        <a href="{{ url_for('admin.events_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
+{% endblock %}

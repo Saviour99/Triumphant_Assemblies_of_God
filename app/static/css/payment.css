@@ -1,0 +1,212 @@
+/* ==========================================================
+   Giving thank-you / receipt page (public/payment_received.html)
+   Page-scoped: every selector is .pay-* or under .page-payment.
+   Builds on the tokens defined in style.css (--royal, --night,
+   --gold, --gold-ink, --ink, --ink-soft, --mist, --line, --f-display,
+   --f-text, --radius-s, --radius-m).
+   ========================================================== */
+
+/* ---------- Banner ----------
+   Per-page photo with a solid royal-blue fallback: if payment.jpg is
+   missing the gradient + background-color still render. */
+.page-header.pay-header {
+    background-color: var(--royal, #0D2B6B);
+    background-image:
+        linear-gradient(100deg, rgba(6,23,61,0.96) 0%, rgba(6,23,61,0.88) 50%, rgba(13,43,107,0.7) 100%),
+        url('../img/pages/payment.jpg');
+    background-position: center, center 40%;
+    background-size: cover, cover;
+    background-repeat: no-repeat;
+}
+.pay-eyebrow {
+    margin: 0 0 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-soft, #E3C27F);
+}
+.pay-header h1 { max-width: 22ch; overflow-wrap: anywhere; }
+
+/* ---------- Page body ---------- */
+.pay-page {
+    background: var(--mist, #EEF1F7);
+    padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(3rem, 7vw, 5.5rem);
+}
+.pay-wrap { max-width: 44rem; margin: 0 auto; }
+
+.pay-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--line, rgba(13,43,107,0.14));
+    border-top: 3px solid var(--gold, #C8973A);
+    border-radius: var(--radius-m, 8px);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    padding-top: clamp(2.75rem, 5vw, 3.25rem);
+    margin-top: 2rem;
+}
+.pay-card-empty p { color: var(--ink-soft, #4A5168); margin: 0; max-width: 34rem; }
+
+/* Status mark sitting on the card's top edge */
+.pay-mark {
+    position: absolute;
+    top: 0;
+    left: clamp(1.5rem, 4vw, 2.5rem);
+    transform: translateY(-50%);
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    border: 1px solid var(--line, rgba(13,43,107,0.14));
+    font-size: 1.5rem;
+    color: var(--ink-soft, #4A5168);
+}
+.pay-state-completed .pay-mark { background: var(--royal, #0D2B6B); border-color: var(--royal, #0D2B6B); }
+.pay-state-failed .pay-mark { color: #9B2C1F; border-color: rgba(155,44,31,0.35); }
+.pay-state-unknown .pay-mark { color: var(--royal, #0D2B6B); font-size: 1.25rem; }
+
+/* Animated check (completed) */
+.pay-check { width: 2.25rem; height: 2.25rem; }
+.pay-check-ring { stroke: var(--gold-soft, #E3C27F); stroke-width: 2.5; stroke-dasharray: 151; stroke-dashoffset: 151; animation: pay-draw 0.7s ease-out 0.15s forwards; }
+.pay-check-tick { stroke: #fff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: pay-draw 0.4s ease-out 0.75s forwards; }
+@keyframes pay-draw { to { stroke-dashoffset: 0; } }
+
+/* Spinner (pending) */
+.pay-spinner {
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 50%;
+    border: 3px solid rgba(200,151,58,0.25);
+    border-top-color: var(--gold, #C8973A);
+    animation: pay-spin 1s linear infinite;
+}
+@keyframes pay-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .pay-check-ring, .pay-check-tick { animation: none; stroke-dashoffset: 0; }
+    .pay-spinner { animation: none; border-color: var(--gold, #C8973A); border-right-color: transparent; }
+}
+
+/* ---------- Card header ---------- */
+.pay-card-head { padding-bottom: 1rem; margin-bottom: 0.25rem; border-bottom: 1px solid var(--line, rgba(13,43,107,0.14)); }
+.pay-church { margin: 0; font-family: var(--f-display); font-size: 1.1rem; color: var(--royal, #0D2B6B); }
+.pay-address { margin: 0.1rem 0 0.9rem; font-size: 0.88rem; color: var(--ink-soft, #4A5168); }
+.pay-card-title {
+    margin: 0;
+    font-family: var(--f-text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-ink, #8A6420);
+}
+.pay-card-empty .pay-card-title { margin-bottom: 0.6rem; }
+
+/* ---------- Details ---------- */
+.pay-details { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 2rem; }
+.pay-details > div { padding: 1rem 0; border-bottom: 1px solid var(--line, rgba(13,43,107,0.14)); min-width: 0; }
+.pay-details dt { font-size: 0.85rem; font-weight: 600; color: var(--ink-soft, #4A5168); margin-bottom: 0.2rem; }
+.pay-details dd { margin: 0; color: var(--ink, #14192E); font-weight: 500; }
+.pay-amount { grid-column: 1 / -1; }
+.pay-amount dd {
+    font-family: var(--f-display);
+    font-size: clamp(2.2rem, 1.7rem + 2vw, 3rem);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--royal, #0D2B6B);
+    font-variant-numeric: lining-nums tabular-nums;
+}
+.pay-ref { grid-column: 1 / -1; border-bottom: 0 !important; }
+.pay-ref dd { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.pay-ref code {
+    font-size: 0.9rem;
+    color: var(--ink, #14192E);
+    background: var(--mist, #EEF1F7);
+    padding: 0.3rem 0.55rem;
+    border-radius: var(--radius-s, 4px);
+    word-break: break-all;
+}
+.pay-copy, .pay-check-again {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    border: 1px solid var(--line, rgba(13,43,107,0.14));
+    background: #fff;
+    color: var(--royal, #0D2B6B);
+    border-radius: var(--radius-s, 4px);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 2.25rem;
+}
+.pay-copy:hover, .pay-check-again:hover { border-color: var(--royal, #0D2B6B); }
+.pay-check-again[disabled] { opacity: 0.6; cursor: progress; }
+.pay-copy-msg { font-size: 0.85rem; color: var(--gold-ink, #8A6420); font-weight: 600; }
+
+.pay-pill { display: inline-block; padding: 0.15rem 0.65rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+.pay-pill-completed { background: #E7F4EC; color: #1E6B3A; }
+.pay-pill-pending { background: #FBF2DF; color: #7A5410; }
+.pay-pill-failed { background: #FDECEA; color: #9B2C1F; }
+
+/* ---------- Pending poll ---------- */
+.pay-poll {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem;
+    margin-top: 1.25rem; padding: 0.9rem 1rem;
+    background: #FBF7EE;
+    border: 1px solid rgba(200,151,58,0.35);
+    border-radius: var(--radius-s, 4px);
+}
+.pay-poll-msg { margin: 0; font-size: 0.93rem; color: #6B4C12; font-weight: 600; }
+
+/* ---------- Scripture ---------- */
+.pay-verse { margin: 1.5rem 0 0; padding: 0.25rem 0 0.25rem 1.1rem; border-left: 2px solid var(--gold, #C8973A); }
+.pay-verse p { font-family: var(--f-display); font-style: italic; font-size: 1.15rem; line-height: 1.45; color: var(--royal, #0D2B6B); margin: 0 0 0.4rem; }
+.pay-verse cite { font-style: normal; font-size: 0.9rem; color: var(--gold-ink, #8A6420); font-weight: 600; }
+
+/* ---------- Actions ---------- */
+.pay-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; margin-top: 2rem; }
+.pay-btn-outline {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border: 1px solid var(--royal, #0D2B6B);
+    border-radius: var(--radius-s, 4px);
+    background: transparent;
+    color: var(--royal, #0D2B6B);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.pay-btn-outline:hover, .pay-btn-outline:focus-visible { background: var(--royal, #0D2B6B); color: #fff; }
+
+.page-payment .pay-copy:focus-visible,
+.page-payment .pay-check-again:focus-visible,
+.page-payment .pay-btn-outline:focus-visible,
+.page-payment .pay-actions .btn-primary-gold:focus-visible,
+.page-payment .pay-actions .text-link:focus-visible {
+    outline: 3px solid var(--gold, #C8973A);
+    outline-offset: 3px;
+}
+
+@media (max-width: 575.98px) {
+    .pay-details { grid-template-columns: 1fr; }
+    .pay-actions > .btn-primary-gold, .pay-actions > .pay-btn-outline { flex: 1 1 100%; justify-content: center; }
+    .pay-actions > .text-link { margin: 0 auto; }
+}
+
+/* ---------- Print: a clean one-page receipt ---------- */
+@media print {
+    @page { margin: 18mm; }
+    #preloader, #navbar, #footer, .site-footer, .back-to-top, .whatsapp-btn, .cookie-consent, .skip-link,
+    .pay-header, .pay-actions, .pay-copy, .pay-copy-msg, .pay-mark, .pay-poll { display: none !important; }
+    body.page-payment { background: #fff !important; color: #000; font-size: 11pt; }
+    .pay-page { background: #fff; padding: 0; }
+    .pay-wrap { max-width: none; }
+    .pay-card { border: 1px solid #999; border-top: 3px solid #000; margin: 0; padding: 1.5rem; break-inside: avoid; }
+    .pay-church { font-size: 16pt; color: #000; }
+    .pay-address, .pay-details dt { color: #333; }
+    .pay-card-title, .pay-verse cite { color: #000; }
+    .pay-amount dd, .pay-verse p, .pay-details dd { color: #000; }
+    .pay-ref code { background: none; padding: 0; }
+    .pay-pill { background: none !important; color: #000 !important; padding: 0; }
+    .pay-verse { border-left-color: #000; }
+}

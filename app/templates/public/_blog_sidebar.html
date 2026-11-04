@@ -5,7 +5,7 @@
         <div class="input-group">
             <input type="text" name="q" class="form-control" placeholder="Search..." value="{{ request.args.get('q', '') }}" aria-label="Search the blog">
             <button class="btn btn-gold" type="submit">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search" aria-hidden="true"></i><span class="visually-hidden">Search</span>
             </button>
         </div>
     </form>
@@ -45,7 +45,8 @@
     <p class="small mb-3">Get inspiring articles and devotionals delivered to your inbox.</p>
     <form id="newsletterForm">
         <div class="mb-2">
-            <input type="email" id="newsletterEmail" class="form-control" placeholder="Your email" required>
+            <label for="newsletterEmail" class="visually-hidden">Email address</label>
+            <input type="email" id="newsletterEmail" class="form-control" placeholder="Your email" autocomplete="email" required>
         </div>
         <button type="submit" class="btn btn-gold w-100">Subscribe</button>
     </form>

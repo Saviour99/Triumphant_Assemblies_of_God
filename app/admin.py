@@ -4,9 +4,10 @@ management, devotion management, live-stream toggle, giving overview,
 dashboard stats.
 """
 
+import itertools
 import os
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from flask import (
     Blueprint, render_template, redirect, url_for, flash, request,
@@ -19,8 +20,8 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 
 from app import db, cache, limiter
-from app.decorators import admin_required, developer_required
-from app.email_utils import send_email
+from app.decorators import admin_required, developer_required, permission_required
+from app.email_utils import send_password_reset
 from app.forms import (
     AdminLoginForm, AdminForgotPasswordForm, AdminResetPasswordForm, AdminProfileForm,
     AdminAccountManageForm, AdminMemberForm, VideoSermonForm, AudioSermonForm,
@@ -38,16 +39,35 @@ from app.utils import (
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 RESET_SALT = 'admin-password-reset'
+RESET_TOKEN_MAX_AGE = 1800  # seconds (30 minutes)
 
 
 def _serializer():
     return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
 
 
+ADMIN_PAGE_SIZE = 25
+
+
+def _paginate(query, param='page', per_page=ADMIN_PAGE_SIZE):
+    """Paginate an admin list query from ?page=N (or another param name).
+    Out-of-range pages give an empty page rather than a 404. Rendered with
+    the `pager` macro in admin/_macros.html."""
+    page = request.args.get(param, 1, type=int) or 1
+    return query.paginate(page=max(page, 1), per_page=per_page, error_out=False)
+
+
+from app.security import (  # noqa: E402  (kept beside the auth helpers)
+    safe_next_url, external_url, client_ip, password_fingerprint,
+    fingerprints_match, burn_password_check, bind_session_to_password
+)
+import time  # noqa: E402
+
+
 # ============ AUTH ============
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit('10 per minute')
+@limiter.limit('10 per minute;30 per hour', methods=['POST'])
 def login():
     if current_user.is_authenticated and isinstance(current_user, Admin):
         return redirect(url_for('admin.dashboard'))
@@ -55,20 +75,30 @@ def login():
     form = AdminLoginForm()
     if form.validate_on_submit():
         admin = Admin.query.filter_by(email=form.email.data.lower().strip()).first()
-        if admin and admin.check_password(form.password.data):
+        if admin is None:
+            burn_password_check(form.password.data)  # equalise timing
+        elif admin.check_password(form.password.data):
+            if not admin.is_active:
+                # Correct password but deactivated: clear message, no
+                # session, no login-log row.
+                flash('This account has been deactivated. Contact the developer.', 'danger')
+                return render_template('admin/login.html', form=form)
             login_user(admin)
+            bind_session_to_password(admin)
             admin.last_login_at = datetime.utcnow()
-            db.session.add(AdminLoginLog(admin_id=admin.id, ip_address=request.remote_addr))
+            db.session.add(AdminLoginLog(admin_id=admin.id, ip_address=client_ip()))
             db.session.commit()
-            session['admin_last_seen'] = datetime.utcnow().timestamp()
-            next_url = request.args.get('next')
+            now_ts = time.time()
+            session['admin_last_seen'] = now_ts
+            session['admin_login_at'] = now_ts
+            next_url = safe_next_url(request.args.get('next'))
             return redirect(next_url or url_for('admin.dashboard'))
         flash('Invalid email or password.', 'danger')
 
     return render_template('admin/login.html', form=form)
 
 
-@admin_bp.route('/logout')
+@admin_bp.route('/logout', methods=['POST'])
 @admin_required
 def logout():
     logout_user()
@@ -91,12 +121,19 @@ def profile():
             dest_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
             os.makedirs(dest_dir, exist_ok=True)
             form.avatar.data.save(os.path.join(dest_dir, stored_name))
+            previous_avatar = current_user.avatar_filename
             current_user.avatar_filename = f"uploads/avatars/{stored_name}"
+            if previous_avatar and previous_avatar.startswith('uploads/avatars/'):
+                _remove_static_file(previous_avatar)
 
         if form.new_password.data:
             current_user.set_password(form.new_password.data)
 
         db.session.commit()
+        if form.new_password.data:
+            # Keep THIS session valid; every other session for this account
+            # is dropped by the password fingerprint check in user_loader.
+            bind_session_to_password(current_user)
         flash('Profile updated.', 'success')
         return redirect(url_for('admin.profile'))
 
@@ -140,7 +177,10 @@ def account_edit(account_id):
             dest_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
             os.makedirs(dest_dir, exist_ok=True)
             form.avatar.data.save(os.path.join(dest_dir, stored_name))
+            previous_avatar = account.avatar_filename
             account.avatar_filename = f"uploads/avatars/{stored_name}"
+            if previous_avatar and previous_avatar.startswith('uploads/avatars/'):
+                _remove_static_file(previous_avatar)
 
         account.username = sanitize_text(form.username.data)
         account.email = form.email.data.lower().strip()
@@ -148,6 +188,10 @@ def account_edit(account_id):
             account.set_password(form.new_password.data)
 
         db.session.commit()
+        if form.new_password.data and account.id == current_user.id:
+            # Changing your own password here must not log you out (other
+            # sessions for this account are still dropped by user_loader).
+            bind_session_to_password(account)
         flash(f"{account.display_role} account updated.", 'success')
         return redirect(url_for('admin.accounts_list'))
 
@@ -155,18 +199,24 @@ def account_edit(account_id):
 
 
 @admin_bp.route('/forgot-password', methods=['GET', 'POST'])
-@limiter.limit('5 per hour')
+@limiter.limit('5 per hour', methods=['POST'])
 def forgot_password():
     form = AdminForgotPasswordForm()
     if form.validate_on_submit():
         admin = Admin.query.filter_by(email=form.email.data.lower().strip()).first()
-        if admin:
-            token = _serializer().dumps({'admin_id': admin.id}, salt=RESET_SALT)
-            reset_url = url_for('admin.reset_password', token=token, _external=True)
-            send_email(
-                admin.email,
-                'Reset your TAG admin password',
-                f'Click the link to reset your admin password (valid for 1 hour): {reset_url}'
+        if admin and admin.is_active:
+            # Token is bound to the current password hash -> single use.
+            token = _serializer().dumps(
+                {'admin_id': admin.id, 'fp': password_fingerprint(admin.password_hash)},
+                salt=RESET_SALT
+            )
+            # Built from SITE_URL, never the request's Host header.
+            reset_url = external_url('admin.reset_password', token=token)
+            # Result deliberately ignored: the response is identical
+            # whether or not the email went out (no enumeration).
+            send_password_reset(
+                admin.email, reset_url, RESET_TOKEN_MAX_AGE // 60,
+                audience='admin', key_parts=(token,),
             )
         flash('If that email is registered, a reset link has been sent.', 'info')
         return redirect(url_for('admin.login'))
@@ -174,16 +224,17 @@ def forgot_password():
 
 
 @admin_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+@limiter.limit('10 per hour', methods=['POST'])
 def reset_password(token):
     try:
-        data = _serializer().loads(token, salt=RESET_SALT, max_age=3600)
+        data = _serializer().loads(token, salt=RESET_SALT, max_age=RESET_TOKEN_MAX_AGE)
     except (BadSignature, SignatureExpired):
         flash('That reset link is invalid or has expired.', 'danger')
         return redirect(url_for('admin.forgot_password'))
 
-    admin = db.session.get(Admin, data.get('admin_id'))
-    if not admin:
-        flash('That reset link is invalid.', 'danger')
+    admin = db.session.get(Admin, data.get('admin_id')) if isinstance(data, dict) else None
+    if not admin or not fingerprints_match(data.get('fp'), admin.password_hash):
+        flash('That reset link is invalid or has already been used.', 'danger')
         return redirect(url_for('admin.forgot_password'))
 
     form = AdminResetPasswordForm()
@@ -200,30 +251,97 @@ def reset_password(token):
 
 def _dashboard_stats():
     """Shared by the initial dashboard render and the /api/recent-activity
-    polling endpoint, so the two can never drift out of sync."""
-    return {
-        'total_members': Member.query.filter_by(is_active_member=True).count(),
-        'total_donations': float(db.session.query(func.sum(Giving.amount)).filter(
+    polling endpoint, so the two can never drift out of sync. Only figures
+    for sections the current admin may see are computed/returned."""
+    can = current_user.can
+    stats = {}
+    if can('members'):
+        stats['total_members'] = Member.query.filter_by(is_active_member=True).count()
+    if can('giving'):
+        stats['total_donations'] = float(db.session.query(func.sum(Giving.amount)).filter(
             Giving.status == 'completed'
-        ).scalar() or 0),
-        'total_prayer_requests': PrayerRequest.query.count(),
-        'total_messages': ContactMessage.query.count(),
-        'total_newsletter_subscribers': NewsletterSubscriber.query.count(),
-        'total_devotions': Devotion.query.count(),
-    }
+        ).scalar() or 0)
+    if can('prayer_requests'):
+        stats['total_prayer_requests'] = PrayerRequest.query.count()
+    if can('messages'):
+        stats['total_messages'] = ContactMessage.query.count()
+    if can('newsletter'):
+        stats['total_newsletter_subscribers'] = NewsletterSubscriber.query.count()
+    if can('devotions'):
+        stats['total_devotions'] = Devotion.query.count()
+    return stats
+
+
+def _permission_cache_key(prefix):
+    """Cache-key factory for per-user-visible JSON endpoints: the payload
+    depends on which sections the admin may see, so admins with different
+    permission sets must never share a cached response."""
+    def make_key():
+        return f"{prefix}:{','.join(current_user.permission_list)}"
+    return make_key
+
+
+def _recent_activity_feed(limit=5):
+    """Merges the most-recent Member registrations and ContactMessage
+    submissions into one reverse-chronological feed of at most `limit`
+    items TOTAL — mirrors the existing 5-item convention used by every
+    other dashboard panel. Normalized into a flat {type, id, title, detail}
+    shape consumed identically by the server-rendered dashboard template
+    and the /api/recent-activity JSON endpoint, so the two can never drift
+    (same reasoning as _dashboard_stats()). `id` is namespaced by type
+    ("registration-7" / "message-7") since Member.id and ContactMessage.id
+    are independent sequences that can collide numerically."""
+    registrations = (Member.query.order_by(Member.created_at.desc()).limit(limit).all()
+                     if current_user.can('members') else [])
+    messages = (ContactMessage.query.order_by(ContactMessage.created_at.desc()).limit(limit).all()
+                if current_user.can('messages') else [])
+
+    candidates = itertools.chain(
+        (('registration', m.created_at, m) for m in registrations),
+        (('message', c.created_at, c) for c in messages),
+    )
+    top = sorted(candidates, key=lambda row: row[1], reverse=True)[:limit]
+
+    feed = []
+    for kind, created_at, obj in top:
+        if kind == 'registration':
+            feed.append({
+                'type': 'registration',
+                'id': f'registration-{obj.id}',
+                'title': obj.full_name,
+                'detail': created_at.strftime('%d %b %Y'),
+            })
+        else:
+            preview = obj.message.strip()
+            if len(preview) > 60:
+                preview = preview[:60].rstrip() + '…'
+            feed.append({
+                'type': 'message',
+                'id': f'message-{obj.id}',
+                'title': obj.email,
+                'detail': preview,
+            })
+    return feed
 
 
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
+    # The dashboard is every admin's landing page, so the route itself stays
+    # open to any active admin; the 'dashboard' permission controls whether
+    # the overview (figures, charts, activity) is shown, and each figure is
+    # further limited to the sections the admin may see.
+    if not current_user.can('dashboard'):
+        return render_template('admin/dashboard.html', show_overview=False,
+                               is_live=False, recent_activity_feed=[],
+                               recent_donations=[], recent_logins=None)
+
     stats = _dashboard_stats()
     is_live = LiveStreamSetting.query.get(1)
     is_live = bool(is_live and is_live.is_live)
 
-    recent_registrations = Member.query.order_by(Member.created_at.desc()).limit(5).all()
-    recent_donations = Giving.query.filter_by(status='completed').order_by(
-        Giving.created_at.desc()
-    ).limit(5).all()
+    recent_activity_feed = _recent_activity_feed(limit=5)
+    recent_donations = _recent_donations(limit=5)
 
     # Login-audit visibility is developer-only (see class docstring on
     # AdminLoginLog) — plain admins don't see who logged in when.
@@ -233,8 +351,9 @@ def dashboard():
 
     return render_template(
         'admin/dashboard.html',
+        show_overview=True,
         is_live=is_live,
-        recent_registrations=recent_registrations,
+        recent_activity_feed=recent_activity_feed,
         recent_donations=recent_donations,
         recent_logins=recent_logins,
         **stats
@@ -242,34 +361,33 @@ def dashboard():
 
 
 @admin_bp.route('/api/recent-activity')
-@admin_required
+@permission_required('dashboard')
 @limiter.exempt
+@cache.cached(timeout=5, key_prefix=_permission_cache_key('recent-activity'))
 def recent_activity():
-    """Polled by the dashboard every few seconds (see admin.js) so new
-    donations/registrations show up without a manual refresh — regardless
-    of whether a donation was completed via the client-side verify call or
-    the Paystack webhook. Deliberately NOT cached (unlike /api/chart-data):
-    the entire point of this endpoint is to reflect brand-new rows
-    immediately, so a cache would defeat it. Exempt from the global rate
-    limit since it's an authenticated admin polling loop, not public
-    traffic."""
+    """Polled by the dashboard every 5s (see admin.js) so new donations,
+    registrations, and contact messages show up without a manual refresh —
+    regardless of whether a donation was completed via the client-side
+    verify call or the Paystack webhook. Cached for 5s (matching the poll
+    interval) via the same Flask-Caching/Redis `cache` object already used
+    by /api/chart-data, so N concurrent admin tabs/sessions polling this
+    endpoint cause at most one DB round-trip per 5s window instead of N.
+    This is a deliberate tradeoff of up to ~5s staleness for materially
+    less DB load under concurrent admin sessions — chosen over WebSockets
+    (which would need a new Flask-SocketIO dependency, a gunicorn
+    worker-class change, and Redis message-queue wiring across the 4
+    gunicorn workers) since this is a single-developer project and the
+    existing polling architecture is already proven. Exempt from the
+    global rate limit since it's an authenticated admin polling loop, not
+    public traffic."""
     stats = _dashboard_stats()
 
-    recent_registrations = Member.query.order_by(Member.created_at.desc()).limit(5).all()
-    recent_donations = Giving.query.filter_by(status='completed').order_by(
-        Giving.created_at.desc()
-    ).limit(5).all()
+    activity_feed = _recent_activity_feed(limit=5)
+    recent_donations = _recent_donations(limit=5)
 
     return jsonify({
         **stats,
-        'recent_registrations': [
-            {
-                'id': m.id,
-                'full_name': m.full_name,
-                'created_at': m.created_at.strftime('%d %b %Y'),
-            }
-            for m in recent_registrations
-        ],
+        'recent_activity': activity_feed,
         'recent_donations': [
             {
                 'id': d.id,
@@ -286,41 +404,85 @@ def recent_activity():
 @developer_required
 def login_history():
     """Login audit trail — the dashboard panel only shows the latest 5;
-    this shows the latest 100."""
-    logins = AdminLoginLog.query.order_by(AdminLoginLog.login_at.desc()).limit(100).all()
-    return render_template('admin/login_history.html', logins=logins)
+    this shows every sign-in, 25 per page."""
+    pagination = _paginate(AdminLoginLog.query.order_by(AdminLoginLog.login_at.desc()))
+    return render_template('admin/login_history.html', logins=pagination.items, pagination=pagination)
 
 
 @admin_bp.route('/api/chart-data')
-@admin_required
-@cache.cached(timeout=60)
+@permission_required('dashboard')
+@cache.cached(timeout=60, key_prefix=_permission_cache_key('chart-data'))
 def chart_data():
-    donation_trend = db.session.query(
-        func.date_format(Giving.created_at, '%Y-%m').label('month'),
-        func.sum(Giving.amount)
-    ).filter(Giving.status == 'completed').group_by('month').order_by('month').all()
+    """Each series is only computed/returned if the admin may see its
+    section ('giving' -> donation_trend, 'members' -> member_growth)."""
+    payload = {}
+    if current_user.can('giving'):
+        payload['donation_trend'] = _donation_trend_series()
+    if current_user.can('members'):
+        payload['member_growth'] = _member_growth_series()
+    return jsonify(payload)
 
-    member_growth = db.session.query(
+
+def _recent_donations(limit=5):
+    if not current_user.can('giving'):
+        return []
+    return Giving.query.filter_by(status='completed').order_by(
+        Giving.created_at.desc()
+    ).limit(limit).all()
+
+
+def _donation_trend_series():
+    # Donation Trend: daily totals for a rolling 30-day window, zero-filled
+    # so a day with no completed donations shows as an explicit dip to ₵0
+    # rather than being skipped — that's what makes the line read as a
+    # real day-to-day wave instead of a sparse, misleading one.
+    window_start = date.today() - timedelta(days=29)  # 30 calendar days inclusive of today
+    window_start_dt = datetime.combine(window_start, datetime.min.time())
+
+    donation_rows = db.session.query(
+        func.date(Giving.created_at).label('day'),
+        func.sum(Giving.amount)
+    ).filter(
+        Giving.status == 'completed',
+        Giving.created_at >= window_start_dt
+    ).group_by('day').order_by('day').all()
+
+    donation_by_day = {row[0]: float(row[1]) for row in donation_rows}
+
+    donation_trend_labels = []
+    donation_trend_values = []
+    for i in range(30):
+        day = window_start + timedelta(days=i)
+        donation_trend_labels.append(day.strftime('%d %b'))
+        donation_trend_values.append(donation_by_day.get(day, 0.0))
+
+    return {'labels': donation_trend_labels, 'values': donation_trend_values}
+
+
+def _member_growth_series():
+    # Member Growth: cumulative running total of all-time registrations by
+    # month, so the line is always non-decreasing (accumulated in Python —
+    # at most a few dozen months, no need for a SQL window function).
+    member_growth_rows = db.session.query(
         func.date_format(Member.created_at, '%Y-%m').label('month'),
         func.count(Member.id)
     ).group_by('month').order_by('month').all()
 
-    return jsonify({
-        'donation_trend': {
-            'labels': [row[0] for row in donation_trend],
-            'values': [float(row[1]) for row in donation_trend]
-        },
-        'member_growth': {
-            'labels': [row[0] for row in member_growth],
-            'values': [row[1] for row in member_growth]
-        }
-    })
+    member_growth_labels = []
+    member_growth_values = []
+    running_total = 0
+    for month, count in member_growth_rows:
+        running_total += count
+        member_growth_labels.append(month)
+        member_growth_values.append(running_total)
+
+    return {'labels': member_growth_labels, 'values': member_growth_values}
 
 
 # ============ LIVE STREAM ============
 
 @admin_bp.route('/live-stream', methods=['GET', 'POST'])
-@admin_required
+@permission_required('live_stream')
 def live_stream():
     setting = LiveStreamSetting.query.get(1)
     form = LiveStreamForm(obj=setting)
@@ -336,14 +498,14 @@ def live_stream():
 # ============ MEMBERS ============
 
 @admin_bp.route('/members')
-@admin_required
+@permission_required('members')
 def members_list():
-    members = Member.query.order_by(Member.created_at.desc()).all()
-    return render_template('admin/members_list.html', members=members)
+    pagination = _paginate(Member.query.order_by(Member.created_at.desc()))
+    return render_template('admin/members_list.html', members=pagination.items, pagination=pagination)
 
 
 @admin_bp.route('/members/add', methods=['GET', 'POST'])
-@admin_required
+@permission_required('members')
 def member_add():
     form = AdminMemberForm()
     if form.validate_on_submit():
@@ -365,7 +527,7 @@ def member_add():
 
 
 @admin_bp.route('/members/<int:member_id>/edit', methods=['GET', 'POST'])
-@admin_required
+@permission_required('members')
 def member_edit(member_id):
     member = Member.query.get_or_404(member_id)
     form = AdminMemberForm(obj=member)
@@ -383,7 +545,7 @@ def member_edit(member_id):
 
 
 @admin_bp.route('/members/<int:member_id>/delete', methods=['POST'])
-@admin_required
+@permission_required('members')
 def member_delete(member_id):
     """Soft delete only — never a hard DELETE, per the data-safety rule."""
     member = Member.query.get_or_404(member_id)
@@ -394,7 +556,7 @@ def member_delete(member_id):
 
 
 @admin_bp.route('/members/<int:member_id>')
-@admin_required
+@permission_required('members')
 def member_profile(member_id):
     member = Member.query.get_or_404(member_id)
     donations = member.donations.order_by(Giving.created_at.desc()).all()
@@ -404,14 +566,14 @@ def member_profile(member_id):
 # ============ VIDEO SERMONS ============
 
 @admin_bp.route('/sermons/video')
-@admin_required
+@permission_required('video_sermons')
 def video_sermons_list():
     sermons = VideoSermon.query.order_by(VideoSermon.sermon_date.desc()).all()
     return render_template('admin/sermons_video_list.html', sermons=sermons)
 
 
 @admin_bp.route('/sermons/video/add', methods=['GET', 'POST'])
-@admin_required
+@permission_required('video_sermons')
 def video_sermon_add():
     form = VideoSermonForm()
     if form.validate_on_submit():
@@ -430,7 +592,7 @@ def video_sermon_add():
 
 
 @admin_bp.route('/sermons/video/<int:sermon_id>/edit', methods=['GET', 'POST'])
-@admin_required
+@permission_required('video_sermons')
 def video_sermon_edit(sermon_id):
     sermon = VideoSermon.query.get_or_404(sermon_id)
     form = VideoSermonForm(obj=sermon)
@@ -447,7 +609,7 @@ def video_sermon_edit(sermon_id):
 
 
 @admin_bp.route('/sermons/video/<int:sermon_id>/delete', methods=['POST'])
-@admin_required
+@permission_required('video_sermons')
 def video_sermon_delete(sermon_id):
     sermon = VideoSermon.query.get_or_404(sermon_id)
     db.session.delete(sermon)
@@ -459,14 +621,14 @@ def video_sermon_delete(sermon_id):
 # ============ AUDIO SERMONS ============
 
 @admin_bp.route('/sermons/audio')
-@admin_required
+@permission_required('audio_sermons')
 def audio_sermons_list():
     sermons = AudioSermon.query.order_by(AudioSermon.sermon_date.desc()).all()
     return render_template('admin/sermons_audio_list.html', sermons=sermons)
 
 
 @admin_bp.route('/sermons/audio/add', methods=['GET', 'POST'])
-@admin_required
+@permission_required('audio_sermons')
 def audio_sermon_add():
     form = AudioSermonForm()
     if form.validate_on_submit():
@@ -500,7 +662,7 @@ def audio_sermon_add():
 
 
 @admin_bp.route('/sermons/audio/<int:sermon_id>/edit', methods=['GET', 'POST'])
-@admin_required
+@permission_required('audio_sermons')
 def audio_sermon_edit(sermon_id):
     sermon = AudioSermon.query.get_or_404(sermon_id)
     form = AudioSermonEditForm(obj=sermon)
@@ -537,7 +699,7 @@ def audio_sermon_edit(sermon_id):
 
 
 @admin_bp.route('/sermons/audio/<int:sermon_id>/delete', methods=['POST'])
-@admin_required
+@permission_required('audio_sermons')
 def audio_sermon_delete(sermon_id):
     sermon = AudioSermon.query.get_or_404(sermon_id)
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], '..', 'static', sermon.audio_path)
@@ -556,14 +718,14 @@ def audio_sermon_delete(sermon_id):
 # ============ DEVOTIONS ============
 
 @admin_bp.route('/devotions')
-@admin_required
+@permission_required('devotions')
 def devotions_list():
-    devotions = Devotion.query.order_by(Devotion.devotion_date.desc()).all()
-    return render_template('admin/devotions_list.html', devotions=devotions)
+    pagination = _paginate(Devotion.query.order_by(Devotion.devotion_date.desc()))
+    return render_template('admin/devotions_list.html', devotions=pagination.items, pagination=pagination)
 
 
 @admin_bp.route('/devotions/add', methods=['GET', 'POST'])
-@admin_required
+@permission_required('devotions')
 def devotion_add():
     today = date.today()
     already_posted = Devotion.query.filter_by(devotion_date=today).first()
@@ -619,7 +781,7 @@ def devotion_add():
 
 
 @admin_bp.route('/devotions/<int:devotion_id>/edit', methods=['GET', 'POST'])
-@admin_required
+@permission_required('devotions')
 def devotion_edit(devotion_id):
     """Fix a typo/mistake in an already-posted devotion. The date is never
     editable here either — same rule as when it's first created."""
@@ -642,7 +804,7 @@ def devotion_edit(devotion_id):
 # ============ E-BOOKS (Worship / Leadership reading lists) ============
 
 @admin_bp.route('/ebooks')
-@admin_required
+@permission_required('ebooks')
 def ebooks_list():
     ebooks = Ebook.query.order_by(Ebook.category.asc(), Ebook.title.asc()).all()
     return render_template('admin/ebooks_list.html', ebooks=ebooks)
@@ -680,7 +842,7 @@ def _remove_static_file(relative_path):
 
 
 @admin_bp.route('/ebooks/add', methods=['GET', 'POST'])
-@admin_required
+@permission_required('ebooks')
 def ebook_add():
     form = EbookForm()
     if form.validate_on_submit():
@@ -715,7 +877,7 @@ def ebook_add():
 
 
 @admin_bp.route('/ebooks/<int:ebook_id>/edit', methods=['GET', 'POST'])
-@admin_required
+@permission_required('ebooks')
 def ebook_edit(ebook_id):
     ebook = Ebook.query.get_or_404(ebook_id)
     form = EbookForm(obj=ebook)
@@ -751,7 +913,7 @@ def ebook_edit(ebook_id):
 
 
 @admin_bp.route('/ebooks/<int:ebook_id>/delete', methods=['POST'])
-@admin_required
+@permission_required('ebooks')
 def ebook_delete(ebook_id):
     ebook = Ebook.query.get_or_404(ebook_id)
     category = ebook.category
@@ -767,7 +929,7 @@ def ebook_delete(ebook_id):
 # ============ GIVING ============
 
 @admin_bp.route('/giving')
-@admin_required
+@permission_required('giving')
 def giving_list():
     status_filter = request.args.get('status')
     type_filter = request.args.get('type')
@@ -777,8 +939,10 @@ def giving_list():
         query = query.filter_by(status=status_filter)
     if type_filter:
         query = query.filter_by(giving_type=type_filter)
-    donations = query.order_by(Giving.created_at.desc()).all()
-    filtered_total = sum((d.amount for d in donations), start=0)
+    # Total is over the whole filtered set, not just the page shown.
+    filtered_total = query.with_entities(func.coalesce(func.sum(Giving.amount), 0)).scalar() or 0
+    pagination = _paginate(query.order_by(Giving.created_at.desc()))
+    donations = pagination.items
 
     # Per-type breakdown of money actually received (completed only),
     # regardless of whatever filter is currently applied above — this is
@@ -794,6 +958,7 @@ def giving_list():
     return render_template(
         'admin/giving_list.html',
         donations=donations,
+        pagination=pagination,
         status_filter=status_filter,
         type_filter=type_filter,
         filtered_total=filtered_total,
@@ -807,21 +972,34 @@ def giving_list():
 # admin visibility at all.
 
 @admin_bp.route('/prayer-requests')
-@admin_required
+@permission_required('prayer_requests')
 def prayer_requests_list():
-    requests_ = PrayerRequest.query.order_by(PrayerRequest.created_at.desc()).all()
-    return render_template('admin/prayer_requests_list.html', requests=requests_)
+    pagination = _paginate(PrayerRequest.query.order_by(PrayerRequest.created_at.desc()))
+    return render_template('admin/prayer_requests_list.html', requests=pagination.items, pagination=pagination)
 
 
 @admin_bp.route('/messages')
-@admin_required
+@permission_required('messages')
 def messages_list():
-    messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
-    return render_template('admin/messages_list.html', messages=messages)
+    pagination = _paginate(ContactMessage.query.order_by(ContactMessage.created_at.desc()))
+    return render_template('admin/messages_list.html', messages=pagination.items, pagination=pagination)
 
 
 @admin_bp.route('/newsletter-subscribers')
-@admin_required
+@permission_required('newsletter')
 def newsletter_subscribers_list():
-    subscribers = NewsletterSubscriber.query.order_by(NewsletterSubscriber.subscribed_at.desc()).all()
-    return render_template('admin/newsletter_subscribers_list.html', subscribers=subscribers)
+    pagination = _paginate(NewsletterSubscriber.query.order_by(NewsletterSubscriber.subscribed_at.desc()))
+    subscribers = pagination.items
+    from app.admin_newsletter import recent_campaigns, newsletter_panel_context
+    return render_template('admin/newsletter_subscribers_list.html', subscribers=subscribers,
+                           pagination=pagination, campaigns=recent_campaigns(),
+                           **newsletter_panel_context())
+
+
+# Account management (add/access/activate), testimonies and events routes
+# live in their own module but register on admin_bp; import last so admin_bp
+# exists. Keep this at the bottom of the file.
+from app import admin_manage  # noqa: E402,F401
+from app import admin_newsletter  # noqa: E402,F401  (newsletter compose/send via Mailchimp)
+from app import admin_site_settings  # noqa: E402,F401  (developer/pastor: public site info)
+from app import admin_integrations  # noqa: E402,F401  (developer only: Resend/email credentials)

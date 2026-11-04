@@ -1,0 +1,23 @@
+{#- Shown on newsletter pages while Resend isn't fully set up. Lists setting
+    NAMES only — never values. Expects nl_missing, nl_env_keys,
+    nl_integrations_url (None unless the viewer is the developer and the
+    Integrations page exists). -#}
+<section class="panel nl-connect" aria-labelledby="nlConnectTitle">
+    <div class="nl-connect-body">
+        <span class="nl-connect-icon" aria-hidden="true"><i class="fa-solid fa-plug-circle-xmark"></i></span>
+        <div>
+            <h2 class="panel-title" id="nlConnectTitle">Resend isn't connected yet</h2>
+            {% if nl_integrations_url %}
+            <p class="nl-connect-text">You can write, preview and save newsletters now. Sending stays switched off until these settings are filled in on the <a href="{{ nl_integrations_url }}">Integrations page</a>:</p>
+            {% else %}
+            <p class="nl-connect-text">You can write, preview and save newsletters now. Sending stays switched off until the developer connects Resend &mdash; ask them to fill in these settings:</p>
+            {% endif %}
+            <ul class="nl-key-list">
+                {% for key in nl_env_keys %}
+                <li><code>{{ key }}</code>{% if key in nl_missing %} <span class="status-pill status-failed">Missing</span>{% else %} <span class="status-pill status-sent">Set</span>{% endif %}</li>
+                {% endfor %}
+            </ul>
+            {% if 'SITE_URL' in nl_missing %}<p class="nl-connect-text mb-0"><code>SITE_URL</code> (the site's public https address, used for the logo in emails) is set in the server's <code>.env</code>.</p>{% endif %}
+        </div>
+    </div>
+</section>

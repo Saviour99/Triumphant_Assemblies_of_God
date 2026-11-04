@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{# Thank-you / receipt page shown after the Paystack popup on /giving.
+   Rendered by main.giving_thank_you, which passes only the `gift` dict
+   (first name, amount, fund, Accra-local date, reference) — never the
+   email, phone, full name or member record. Unknown and malformed
+   references share one generic state. Behaviour lives in js/payment.js
+   (no inline script); styles in css/payment.css. #}
+
+{% set titles = {
+    'completed': 'Thank you for giving',
+    'pending': 'Confirming your gift',
+    'failed': 'Payment not completed',
+    'unknown': 'Payment not found'
+} %}
+{% set status_labels = {'completed': 'Received', 'pending': 'Confirming', 'failed': 'Not completed'} %}
+
+{% block title %}{{ titles[status] }} - Triumphant Assemblies of God (TAG){% endblock %}
+{% block meta_description %}Confirmation of your gift to Triumphant Assemblies of God.{% endblock %}
+{% block extra_css %}
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+{% endblock %}
+{% block body_class %}page-payment{% endblock %}
+{% block footer_band %}{% endblock %}
+
+{% block content %}
+<section class="page-header pay-header" aria-labelledby="payTitle">
+    <div class="container">
+        <p class="pay-eyebrow">Online giving</p>
+        <h1 id="payTitle">
+            {%- if status == 'completed' -%}
+                Thank you{% if gift.first_name %}, {{ gift.first_name }}{% endif %}
+            {%- elif status == 'pending' -%}
+                We're confirming your payment
+            {%- elif status == 'failed' -%}
+                This payment didn't go through
+            {%- else -%}
+                We couldn't find that payment
+            {%- endif -%}
+        </h1>
+        <p class="lead">
+            {%- if status == 'completed' -%}
+                Your gift has been received. Thank you for partnering with the work of God at TAG.
+            {%- elif status == 'pending' -%}
+                Paystack is confirming the transaction. This usually takes a few seconds, so there's no need to pay again.
+            {%- elif status == 'failed' -%}
+                Nothing has been recorded as received for this gift. You're welcome to try again whenever you're ready.
+            {%- else -%}
+                The link may be incomplete or out of date. If you've just given, your Paystack email receipt has the details.
+            {%- endif -%}
+        </p>
+    </div>
+</section>
+
+<section class="pay-page">
+    <div class="container">
+        <div class="pay-wrap pay-state-{{ status }}"
+             {% if status == 'pending' %}id="payPending" data-reference="{{ gift.reference }}" data-verify-url="{{ url_for('api.paystack_verify') }}"{% endif %}>
+
+            {% if gift %}
+            <article class="pay-card" aria-labelledby="payCardTitle">
+                <div class="pay-mark" aria-hidden="true">
+                    {% if status == 'completed' %}
+                    <svg class="pay-check" viewBox="0 0 52 52" focusable="false">
+                        <circle class="pay-check-ring" cx="26" cy="26" r="24" fill="none"/>
+                        <path class="pay-check-tick" fill="none" d="M15 27l7 7 15-16"/>
+                    </svg>
+                    {% elif status == 'pending' %}
+                    <span class="pay-spinner"></span>
+                    {% else %}
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {% endif %}
+                </div>
+
+                <header class="pay-card-head">
+                    <p class="pay-church">Triumphant Assemblies of God</p>
+                    <p class="pay-address">Dansoman, between Atomic and Glefe, Accra, Ghana</p>
+                    <h2 id="payCardTitle" class="pay-card-title">{% if status == 'completed' %}Giving receipt{% else %}Gift details{% endif %}</h2>
+                </header>
+
+                <dl class="pay-details">
+                    <div class="pay-amount">
+                        <dt>Amount</dt>
+                        <dd>GH₵&nbsp;{{ '{:,.2f}'.format(gift.amount) }}</dd>
+                    </div>
+                    <div>
+                        <dt>Given towards</dt>
+                        <dd>{{ gift.fund }}</dd>
+                    </div>
+                    <div>
+                        <dt>Date</dt>
+                        <dd>{% if gift.given_at %}<time datetime="{{ gift.given_at.isoformat() }}">{{ gift.given_at.day }} {{ gift.given_at.strftime('%B %Y, %H:%M') }} GMT</time>{% else %}&mdash;{% endif %}</dd>
+                    </div>
+                    <div>
+                        <dt>Status</dt>
+                        <dd><span class="pay-pill pay-pill-{{ status }}">{{ status_labels[status] }}</span></dd>
+                    </div>
+                    <div class="pay-ref">
+                        <dt>Reference</dt>
+                        <dd>
+                            <code id="payRef">{{ gift.reference }}</code>
+                            <button type="button" class="pay-copy" id="payCopy" data-copy-target="payRef">
+                                <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy<span class="visually-hidden"> reference</span>
+                            </button>
+                            <span id="payCopyMsg" class="pay-copy-msg" role="status" aria-live="polite"></span>
+                        </dd>
+                    </div>
+                </dl>
+
+                {% if status == 'pending' %}
+                <div class="pay-poll">
+                    <p id="payPollMsg" class="pay-poll-msg" role="status" aria-live="polite">This page checks again on its own.</p>
+                    <button type="button" class="pay-check-again" id="payCheckAgain">
+                        <i class="fa-solid fa-rotate" aria-hidden="true"></i> Check again
+                    </button>
+                </div>
+                {% endif %}
+
+                {% if status == 'completed' %}
+                <blockquote class="pay-verse">
+                    <p>&ldquo;Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver.&rdquo;</p>
+                    <footer><cite>2 Corinthians 9:7 (NIV)</cite></footer>
+                </blockquote>
+                {% endif %}
+            </article>
+            {% else %}
+            <article class="pay-card pay-card-empty" aria-labelledby="payCardTitle">
+                <div class="pay-mark" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <h2 id="payCardTitle" class="pay-card-title">Need a hand?</h2>
+                <p>If money left your account and you can't find a receipt, get in touch with the church office and we'll look into it with you.</p>
+            </article>
+            {% endif %}
+
+            <div class="pay-actions">
+                {% if status == 'completed' %}
+                <button type="button" class="btn-primary-gold" id="payPrint"><i class="fa-solid fa-print" aria-hidden="true"></i> Print receipt</button>
+                <a href="{{ url_for('main.giving') }}" class="pay-btn-outline">Give again</a>
+                {% elif status == 'failed' %}
+                <a href="{{ url_for('main.giving') }}" class="btn-primary-gold">Try again</a>
+                <a href="{{ url_for('main.contact') }}" class="pay-btn-outline">Contact us</a>
+                {% elif status == 'unknown' %}
+                <a href="{{ url_for('main.giving') }}" class="btn-primary-gold">Go to giving</a>
+                <a href="{{ url_for('main.contact') }}" class="pay-btn-outline">Contact us</a>
+                {% endif %}
+                <a href="{{ url_for('main.index') }}" class="text-link">Back to home</a>
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/payment.js') }}" defer></script>
+{% endblock %}

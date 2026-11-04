@@ -1,0 +1,26 @@
+{#- Shared interior-page banner.
+
+    Usage in a page template:
+        {% from "public/_page_header.html" import page_header %}
+        {% block page_banner_image %}img/pages/sermons.jpg{% endblock %}
+        ...
+        {% call page_header(self.page_banner_image()) %}
+            <h1>Title</h1>
+            <p class="lead">One-line description</p>
+        {% endcall %}
+
+    The image path is relative to /static and comes from the page's own
+    page_banner_image block, so each page carries its own topic photo
+    (see static/img/pages/MANIFEST.md for sources and licences). If the
+    file is missing, the banner falls back to the deep-blue gradient. -#}
+{% macro page_header(image='') -%}
+{%- set image = (image or '')|trim -%}
+<section class="page-header bg-blue-gradient{{ ' has-image' if image }}">
+    {%- if image %}
+    <img class="page-header-img" src="{{ url_for('static', filename=image) }}" alt="" width="1600" height="900" fetchpriority="high" decoding="async">
+    {%- endif %}
+    <div class="container">
+        {{ caller() }}
+    </div>
+</section>
+{%- endmacro %}

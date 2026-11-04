@@ -3,112 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>{% block title %}Admin - Triumphant Assemblies of God{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="admin-body">
-    <div class="d-flex">
-        <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
-        <nav id="adminSidebar" class="admin-sidebar d-flex flex-column" style="width:260px; flex-shrink:0;">
-            <div class="brand d-flex align-items-center justify-content-between mb-4">
-                <div class="d-flex align-items-center gap-2">
-                    <img src="{{ url_for('static', filename='img/logo3.jpg') }}" alt="Church Logo" class="brand-logo">
-                    <div class="brand-text">
-                        <strong style="color: #ffc107; font-size:1.4rem;">Triumphant</strong>
-                        <small style="font-size:0.7rem; opacity:0.8;">Admin Dashboard</small>
-                    </div>
-                </div>
-                <button type="button" id="sidebarClose" class="sidebar-close-btn d-lg-none" aria-label="Close menu">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+{%- set ep = request.endpoint or '' -%}
+{%- set perms = current_user.permission_list if (current_user.is_authenticated and current_user.permission_list is defined) else [] -%}
+<div class="admin-shell">
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
-            <div id="adminSidebarNav" class="admin-sidebar-nav">
-                <ul class="nav flex-column">
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint and request.endpoint.startswith('admin.members') or request.endpoint == 'admin.member_add' or request.endpoint == 'admin.member_edit' or request.endpoint == 'admin.member_profile' %}active{% endif %}" href="{{ url_for('admin.members_list') }}"><i class="fa-solid fa-users"></i> Members</a></li>
-                    {% if current_user.is_authenticated and current_user.role == 'pastor' or current_user.role == 'developer' %}
-                    <li class="nav-item"><a class="nav-link {% if 'video_sermon' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.video_sermons_list') }}"><i class="fa-solid fa-video"></i> Video Sermons</a></li>
-                    <li class="nav-item"><a class="nav-link {% if 'audio_sermon' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.audio_sermons_list') }}"><i class="fa-solid fa-headphones"></i> Audio Sermons</a></li>
-                    <li class="nav-item"><a class="nav-link {% if 'devotion' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.devotions_list') }}"><i class="fa-solid fa-book-open"></i> Devotions</a></li>
-                    <li class="nav-item"><a class="nav-link {% if 'ebook' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.ebooks_list') }}"><i class="fa-solid fa-book"></i> E-Books</a></li>
-                    {% endif %}
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.giving_list' %}active{% endif %}" href="{{ url_for('admin.giving_list') }}"><i class="fa-solid fa-hand-holding-dollar"></i> Giving</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.live_stream' %}active{% endif %}" href="{{ url_for('admin.live_stream') }}"><i class="fa-solid fa-tower-broadcast"></i> Live Stream</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.prayer_requests_list' %}active{% endif %}" href="{{ url_for('admin.prayer_requests_list') }}"><i class="fa-solid fa-hands-praying"></i> Prayer Requests</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.messages_list' %}active{% endif %}" href="{{ url_for('admin.messages_list') }}"><i class="fa-solid fa-envelope"></i> Messages</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.newsletter_subscribers_list' %}active{% endif %}" href="{{ url_for('admin.newsletter_subscribers_list') }}"><i class="fa-solid fa-paper-plane"></i> Newsletter</a></li>
-                    {% if current_user.is_authenticated and current_user.role == 'developer' %}
-                    <li class="nav-item mt-3"><a class="nav-link {% if request.endpoint == 'admin.profile' %}active{% endif %}" href="{{ url_for('admin.profile') }}"><i class="fa-solid fa-id-badge"></i> My Profile</a></li>
-                    <li class="nav-item"><a class="nav-link {% if 'account' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('admin.accounts_list') }}"><i class="fa-solid fa-user-gear"></i> Manage Admins</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'admin.login_history' %}active{% endif %}" href="{{ url_for('admin.login_history') }}"><i class="fa-solid fa-clock-rotate-left"></i> Login History</a></li>
-                    {% endif %}
-                    <li class="nav-item mt-3"><a class="nav-link" href="{{ url_for('main.index') }}" target="_blank"><i class="fa-solid fa-globe"></i> View Site</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+    <nav id="adminSidebar" class="admin-sidebar" aria-label="Admin">
+        <div class="sidebar-brand">
+            <a href="{{ url_for('admin.dashboard') }}">
+                <img src="{{ url_for('static', filename='img/logo3.jpg') }}" alt="" class="brand-logo">
+                <span class="brand-text">
+                    <span class="brand-name">Triumphant AG</span>
+                    <span class="brand-sub">Church admin</span>
+                </span>
+            </a>
+            <button type="button" id="sidebarClose" class="sidebar-close-btn d-lg-none" aria-label="Close menu">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div id="adminSidebarNav" class="sidebar-nav">
+            <div class="nav-group">
+                <ul>
+                    <li><a class="nav-link {% if ep == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}" {% if ep == 'admin.dashboard' %}aria-current="page"{% endif %}><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Dashboard</a></li>
+                    {% if 'giving' in perms %}<li><a class="nav-link {% if ep == 'admin.giving_list' %}active{% endif %}" href="{{ url_for('admin.giving_list') }}" {% if ep == 'admin.giving_list' %}aria-current="page"{% endif %}><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i> Giving</a></li>{% endif %}
+                    {% if 'live_stream' in perms %}<li><a class="nav-link {% if ep == 'admin.live_stream' %}active{% endif %}" href="{{ url_for('admin.live_stream') }}" {% if ep == 'admin.live_stream' %}aria-current="page"{% endif %}><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i> Live stream</a></li>{% endif %}
                 </ul>
             </div>
 
-            {% if current_user.is_authenticated %}
-            <a href="{% if current_user.role == 'developer' %}{{ url_for('admin.profile') }}{% else %}#{% endif %}" class="text-decoration-none mt-auto">
-                <div class="admin-identity">
-                    {% if current_user.avatar_filename %}
-                        <img src="{{ url_for('static', filename=current_user.avatar_filename) }}" class="admin-avatar" alt="{{ current_user.username }}">
-                    {% else %}
-                        <div class="admin-avatar admin-avatar-placeholder">
-                            <i class="fa-solid fa-user"></i>
-                        </div>
-                    {% endif %}
-                    <div class="admin-name">{{ current_user.username }}</div>
-                    <span class="admin-role-badge {% if current_user.role == 'developer' %}role-developer{% elif current_user.role == 'pastor' %}role-pastor{% endif %}">{{ current_user.display_role }}</span>
-                </div>
-            </a>
+            {% if perms | select('in', ['members', 'prayer_requests', 'messages', 'newsletter']) | list %}
+            <div class="nav-group">
+                <p class="nav-group-label">People</p>
+                <ul>
+                    {% if 'members' in perms %}<li><a class="nav-link {% if ep.startswith('admin.member') %}active{% endif %}" href="{{ url_for('admin.members_list') }}" {% if ep.startswith('admin.member') %}aria-current="page"{% endif %}><i class="fa-solid fa-users" aria-hidden="true"></i> Members</a></li>{% endif %}
+                    {% if 'prayer_requests' in perms %}<li><a class="nav-link {% if ep == 'admin.prayer_requests_list' %}active{% endif %}" href="{{ url_for('admin.prayer_requests_list') }}" {% if ep == 'admin.prayer_requests_list' %}aria-current="page"{% endif %}><i class="fa-solid fa-hands-praying" aria-hidden="true"></i> Prayer requests</a></li>{% endif %}
+                    {% if 'messages' in perms %}<li><a class="nav-link {% if ep == 'admin.messages_list' %}active{% endif %}" href="{{ url_for('admin.messages_list') }}" {% if ep == 'admin.messages_list' %}aria-current="page"{% endif %}><i class="fa-solid fa-envelope" aria-hidden="true"></i> Messages</a></li>{% endif %}
+                    {% if 'newsletter' in perms %}<li><a class="nav-link {% if ep.startswith('admin.newsletter') %}active{% endif %}" href="{{ url_for('admin.newsletter_subscribers_list') }}" {% if ep.startswith('admin.newsletter') %}aria-current="page"{% endif %}><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Newsletter</a></li>{% endif %}
+                </ul>
+            </div>
             {% endif %}
-        </nav>
 
-        <div class="admin-main flex-grow-1">
-            <div class="admin-topbar d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
-                    <button type="button" id="sidebarToggle" class="sidebar-toggle-btn d-lg-none" aria-label="Toggle menu" aria-expanded="false" aria-controls="adminSidebar">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-                    <h5 class="mb-0" style="font-family:var(--font-display);">{% block page_title %}Dashboard{% endblock %}</h5>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    {% if live_stream and live_stream.is_live %}
-                        <a href="{{ url_for('admin.live_stream') }}" class="badge bg-danger text-decoration-none" style="letter-spacing:0.05em;">
-                            <i class="fa-solid fa-circle fa-fade"></i> LIVE NOW
-                        </a>
-                    {% endif %}
-                    {% if current_user.is_authenticated %}
-                        <span class="text-muted small"><i class="fa-solid fa-user-shield"></i> {{ current_user.username }}</span>
-                    {% endif %}
-                </div>
+            {# Each link only shows if the account has that section (see Admin.can);
+               the routes enforce the same rule server-side. #}
+            {% if perms | select('in', ['video_sermons', 'audio_sermons', 'devotions', 'ebooks', 'testimonies', 'events']) | list %}
+            <div class="nav-group">
+                <p class="nav-group-label">Content</p>
+                <ul>
+                    {% if 'video_sermons' in perms %}<li><a class="nav-link {% if 'video_sermon' in ep %}active{% endif %}" href="{{ url_for('admin.video_sermons_list') }}" {% if 'video_sermon' in ep %}aria-current="page"{% endif %}><i class="fa-solid fa-video" aria-hidden="true"></i> Video sermons</a></li>{% endif %}
+                    {% if 'audio_sermons' in perms %}<li><a class="nav-link {% if 'audio_sermon' in ep %}active{% endif %}" href="{{ url_for('admin.audio_sermons_list') }}" {% if 'audio_sermon' in ep %}aria-current="page"{% endif %}><i class="fa-solid fa-headphones" aria-hidden="true"></i> Audio sermons</a></li>{% endif %}
+                    {% if 'devotions' in perms %}<li><a class="nav-link {% if 'devotion' in ep %}active{% endif %}" href="{{ url_for('admin.devotions_list') }}" {% if 'devotion' in ep %}aria-current="page"{% endif %}><i class="fa-solid fa-book-open" aria-hidden="true"></i> Devotions</a></li>{% endif %}
+                    {% if 'ebooks' in perms %}<li><a class="nav-link {% if 'ebook' in ep %}active{% endif %}" href="{{ url_for('admin.ebooks_list') }}" {% if 'ebook' in ep %}aria-current="page"{% endif %}><i class="fa-solid fa-book" aria-hidden="true"></i> E-books</a></li>{% endif %}
+                    {% if 'testimonies' in perms %}<li><a class="nav-link {% if 'testimon' in ep %}active{% endif %}" href="{{ url_for('admin.testimonies_list') }}" {% if 'testimon' in ep %}aria-current="page"{% endif %}><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Testimonies</a></li>{% endif %}
+                    {% if 'events' in perms %}<li><a class="nav-link {% if ep.startswith('admin.event') %}active{% endif %}" href="{{ url_for('admin.events_list') }}" {% if ep.startswith('admin.event') %}aria-current="page"{% endif %}><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Events</a></li>{% endif %}
+                </ul>
             </div>
+            {% endif %}
 
-            <div class="admin-content">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'danger' else category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-
-                {% block content %}{% endblock %}
+            {% if current_user.is_authenticated and current_user.role == 'developer' %}
+            <div class="nav-group">
+                <p class="nav-group-label">Developer</p>
+                <ul>
+                    <li><a class="nav-link {% if ep == 'admin.profile' %}active{% endif %}" href="{{ url_for('admin.profile') }}" {% if ep == 'admin.profile' %}aria-current="page"{% endif %}><i class="fa-solid fa-id-badge" aria-hidden="true"></i> My profile</a></li>
+                    <li><a class="nav-link {% if 'account' in ep %}active{% endif %}" href="{{ url_for('admin.accounts_list') }}" {% if 'account' in ep %}aria-current="page"{% endif %}><i class="fa-solid fa-user-gear" aria-hidden="true"></i> Admin accounts</a></li>
+                    <li><a class="nav-link {% if ep == 'admin.login_history' %}active{% endif %}" href="{{ url_for('admin.login_history') }}" {% if ep == 'admin.login_history' %}aria-current="page"{% endif %}><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Login history</a></li>
+                    <li><a class="nav-link {% if ep and ep.startswith('admin.integration') %}active{% endif %}" href="{{ url_for('admin.integrations') }}" {% if ep and ep.startswith('admin.integration') %}aria-current="page"{% endif %}><i class="fa-solid fa-plug" aria-hidden="true"></i> Integrations</a></li>
+                </ul>
             </div>
+            {% endif %}
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
-    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+        <div class="sidebar-footer">
+            <ul>
+                <li><a class="nav-link" href="{{ url_for('main.index') }}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> View public site</a></li>
+                <li>
+                    <form method="post" action="{{ url_for('admin.logout') }}" style="margin:0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="nav-link" style="background:none;border:0;width:100%;text-align:left;cursor:pointer;font:inherit;"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <button type="button" id="sidebarToggle" class="sidebar-toggle-btn d-lg-none" aria-label="Open menu" aria-expanded="false" aria-controls="adminSidebar">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+
+            <div class="topbar-right">
+                {% if live_stream and live_stream.is_live %}
+                    <a href="{{ url_for('admin.live_stream') }}" class="live-indicator" title="The live stream is showing on the public site">
+                        <span class="live-dot" aria-hidden="true"></span><span class="live-indicator-text">Live now</span><span class="visually-hidden"> (live stream is on)</span>
+                    </a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'developer' %}<a href="{{ url_for('admin.profile') }}" class="user-chip" title="My profile">{% else %}<div class="user-chip">{% endif %}
+                        {% if current_user.avatar_filename %}
+                            <img src="{{ url_for('static', filename=current_user.avatar_filename) }}" class="admin-avatar" alt="">
+                        {% else %}
+                            <span class="admin-avatar admin-avatar-placeholder" aria-hidden="true">{{ current_user.username[:1] }}</span>
+                        {% endif %}
+                        <span class="user-chip-name">{{ current_user.username }}</span>
+                        <span class="role-pill role-{{ current_user.role }}">{{ current_user.display_role }}</span>
+                    {% if current_user.role == 'developer' %}</a>{% else %}</div>{% endif %}
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="admin-content" id="main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-stack">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'info' if category == 'message' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            {%- set _intro = self.page_intro() | trim -%}
+            {%- set _actions = self.page_actions() | trim -%}
+            {% if _intro or _actions %}
+            <div class="page-head">
+                {% if _intro %}<p class="page-intro">{% block page_intro %}{% endblock %}</p>{% endif %}
+                {% if _actions %}<div class="page-actions">{% block page_actions %}{% endblock %}</div>{% endif %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>

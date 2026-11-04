@@ -71,7 +71,7 @@ class AdminAccountManageForm(FlaskForm):
 
 class MemberRegisterForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired(), Length(max=255)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    email = StringField('Email', validators=[DataRequired(), Email(check_deliverability=True)])
     phone = StringField('Phone', validators=[Optional(), Length(max=50)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
     confirm_password = PasswordField(
@@ -100,14 +100,15 @@ class MemberResetPasswordForm(FlaskForm):
 class MemberAvatarForm(FlaskForm):
     avatar = FileField('Profile Photo', validators=[
         Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only (jpg, png, gif).')
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only (jpg, png, gif).'),
+        FileSize(max_size=2 * 1024 * 1024, message='Image must be 2MB or smaller.')
     ])
 
 
 class AdminMemberForm(FlaskForm):
     """Used by the admin dashboard to add/edit a member."""
     full_name = StringField('Full Name', validators=[DataRequired(), Length(max=255)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    email = StringField('Email', validators=[DataRequired(), Email(check_deliverability=True)])
     phone = StringField('Phone', validators=[Optional(), Length(max=50)])
     password = PasswordField(
         'Password',

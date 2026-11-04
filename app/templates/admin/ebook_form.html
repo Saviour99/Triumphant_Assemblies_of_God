@@ -1,52 +1,59 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
 {% block title %}{{ 'Edit' if ebook else 'Add' }} E-Book - Admin{% endblock %}
-{% block page_title %}{{ 'Edit' if ebook else 'Add' }} E-Book{% endblock %}
+{% block page_title %}{{ 'Edit e-book' if ebook else 'Add e-book' }}{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.ebooks_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All e-books</a>{% endblock %}
 
 {% block content %}
-<div class="admin-card" style="max-width:640px;">
-    <form method="POST" enctype="multipart/form-data" novalidate>
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            {{ form.title(class="form-control") }}
-            {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+<form method="POST" enctype="multipart/form-data" novalidate class="panel panel-narrow">
+    {{ form.hidden_tag() }}
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Book details</h2>
+            <p class="form-section-text">Shown on the public reading list.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Author</label>
-            {{ form.author(class="form-control") }}
-            {% for error in form.author.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        <div>
+            {{ field(form.title) }}
+            <div class="form-grid-2">
+                {{ field(form.author) }}
+                {{ field(form.category, cls='form-select') }}
+            </div>
+            {{ field(form.summary, optional=True, rows=4) }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Category</label>
-            {{ form.category(class="form-select") }}
-            {% for error in form.category.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-section">
+        <div>
+            <h2 class="form-section-title">Files</h2>
+            <p class="form-section-text">PDF up to 10 MB; cover image JPG or PNG up to 2 MB.</p>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Summary</label>
-            {{ form.summary(class="form-control", rows=4) }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">{{ 'Replace PDF (optional)' if ebook else 'PDF File (optional)' }}</label>
-            {% if ebook and ebook.file_path %}
-                <div class="mb-2"><a href="{{ url_for('static', filename=ebook.file_path) }}" target="_blank">Current file <i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>
-            {% endif %}
-            {{ form.file(class="form-control") }}
-            <div class="form-text">{{ form.file.description }}</div>
-            {% for error in form.file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">{{ 'Replace Cover Thumbnail (optional)' if ebook else 'Cover Thumbnail (optional)' }}</label>
-            {% if ebook and ebook.thumbnail_filename %}
-                <div class="mb-2">
-                    <img src="{{ url_for('static', filename=ebook.thumbnail_filename) }}" alt="{{ ebook.title }}" style="width:80px; height:110px; object-fit:cover; border-radius:6px;">
+        <div>
+            <div class="field">
+                {% if ebook and ebook.file_path %}
+                <div class="file-current">
+                    <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                    <a href="{{ url_for('static', filename=ebook.file_path) }}" target="_blank" rel="noopener">Current PDF <i class="fa-solid fa-arrow-up-right-from-square fa-xs" aria-hidden="true"></i></a>
                 </div>
-            {% endif %}
-            {{ form.thumbnail(class="form-control") }}
-            <div class="form-text">{{ form.thumbnail.description }}</div>
-            {% for error in form.thumbnail.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                {% endif %}
+                {{ field(form.file, label='Replace PDF' if (ebook and ebook.file_path) else 'PDF file', optional=True, help=form.file.description, accept="application/pdf") }}
+            </div>
+            <div class="field">
+                {% if ebook and ebook.thumbnail_filename %}
+                <div class="file-current">
+                    <img src="{{ url_for('static', filename=ebook.thumbnail_filename) }}" alt="Current cover of {{ ebook.title }}">
+                    <span class="cell-muted">Current cover</span>
+                </div>
+                {% endif %}
+                {{ field(form.thumbnail, label='Replace cover' if (ebook and ebook.thumbnail_filename) else 'Cover image', optional=True, help=form.thumbnail.description, accept="image/png,image/jpeg") }}
+            </div>
         </div>
-        <button type="submit" class="btn btn-admin-gold">{{ 'Save Changes' if ebook else 'Add E-Book' }}</button>
-        <a href="{{ url_for('admin.ebooks_list') }}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-</div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-admin-gold">{{ 'Save changes' if ebook else 'Add e-book' }}</button>
+        <a href="{{ url_for('admin.ebooks_list') }}" class="btn btn-admin-quiet">Cancel</a>
+    </div>
+</form>
 {% endblock %}

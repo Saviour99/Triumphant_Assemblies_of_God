@@ -1,36 +1,39 @@
 {% extends "admin/base.html" %}
+{% from "admin/_macros.html" import empty_row %}
 {% block title %}Video Sermons - Admin{% endblock %}
-{% block page_title %}Video Sermons{% endblock %}
+{% block page_title %}Video sermons{% endblock %}
+
+{% block page_intro %}Sermons hosted on YouTube and listed on the website's Sermons page.{% endblock %}
+{% block page_actions %}
+    <a href="{{ url_for('admin.video_sermon_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add video sermon</a>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-end mb-3">
-    <a href="{{ url_for('admin.video_sermon_add') }}" class="btn btn-admin-gold"><i class="fa-solid fa-plus"></i> Add Video Sermon</a>
-</div>
-
-<div class="admin-card">
-    <div class="table-responsive">
-        <table class="table table-admin align-middle">
-            <thead><tr><th>Title</th><th>Preacher</th><th>Date</th><th>YouTube</th><th class="text-end">Actions</th></tr></thead>
+<section class="panel panel-table">
+    <div class="table-wrap">
+        <table class="table-admin">
+            <thead><tr><th scope="col">Title</th><th scope="col">Date</th><th scope="col">Video</th><th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th></tr></thead>
             <tbody>
                 {% for s in sermons %}
                 <tr>
-                    <td>{{ s.title | capitalize }}</td>
-                    <td>{{ s.preacher | title }}</td>
-                    <td>{{ s.sermon_date.strftime('%d %b %Y') }}</td>
-                    <td><a href="{{ s.youtube_url }}" target="_blank" rel="noopener noreferrer">Watch <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
-                    <td class="text-end">
-                        <a href="{{ url_for('admin.video_sermon_edit', sermon_id=s.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        <form action="{{ url_for('admin.video_sermon_delete', sermon_id=s.id) }}" method="POST" class="d-inline confirm-delete" data-confirm-message="Delete this video sermon?">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                        </form>
+                    <td><span class="cell-primary">{{ s.title | capitalize }}</span><span class="cell-sub">{{ s.preacher | title }}</span></td>
+                    <td class="nowrap">{{ s.sermon_date.strftime('%d %b %Y') }}</td>
+                    <td class="nowrap"><a href="{{ s.youtube_url }}" target="_blank" rel="noopener noreferrer">Watch on YouTube <i class="fa-solid fa-arrow-up-right-from-square fa-xs" aria-hidden="true"></i></a></td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="{{ url_for('admin.video_sermon_edit', sermon_id=s.id) }}" class="btn btn-sm btn-admin-quiet">Edit</a>
+                            <form action="{{ url_for('admin.video_sermon_delete', sermon_id=s.id) }}" method="POST" class="confirm-delete" data-confirm-message="Delete this video sermon from the website? The YouTube video itself is not affected.">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-admin-danger">Delete</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-4">No video sermons yet.</td></tr>
+                {{ empty_row(4, 'fa-video', 'No video sermons yet', 'Paste a YouTube link to list a sermon on the website.', url_for('admin.video_sermon_add'), 'Add video sermon') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 {% endblock %}

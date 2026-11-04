@@ -1,0 +1,57 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field %}
+{% block title %}{{ 'Edit newsletter' if campaign else 'Write a newsletter' }} - Admin{% endblock %}
+{% block page_title %}{{ 'Edit newsletter' if campaign else 'Write a newsletter' }}{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_newsletter.css') }}">{% endblock %}
+
+{% block page_intro %}<a href="{{ url_for('admin.newsletter_subscribers_list') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Newsletter</a> &middot; Goes to all {{ subscriber_count }} subscriber{{ 's' if subscriber_count != 1 }}. Write in plain text; the design is added for you.{% endblock %}
+
+{% block content %}
+{% if not nl_configured %}{% include "admin/_newsletter_connect_notice.html" %}{% endif %}
+
+<div class="nl-split">
+    <form method="POST" novalidate class="panel nl-form" id="newsletterForm"
+          data-preview-url="{{ url_for('admin.newsletter_preview') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="panel-head">
+            <h2 class="panel-title">Message</h2>
+        </div>
+        <div class="panel-body">
+            {{ field(form.subject, placeholder="e.g. This Sunday: Thanksgiving service", maxlength=150, autocomplete="off") }}
+            {{ field(form.preview_text, optional=True, maxlength=150, autocomplete="off", help="The short grey line people see after the subject in their inbox.") }}
+            {{ field(form.body_text, rows=14, help="Leave a blank line between paragraphs. Start a line with \"- \" for a bullet point. Links starting with https:// become clickable, and **two asterisks** make text bold.") }}
+        </div>
+
+        <div class="panel-head nl-subhead">
+            <h2 class="panel-title">Button <span class="field-optional">optional</span><span class="panel-sub">A gold button under the message, e.g. "Watch the sermon" or "Give online".</span></h2>
+        </div>
+        <div class="panel-body">
+            <div class="form-grid-2">
+                {{ field(form.cta_label, label="Button label", maxlength=40, autocomplete="off", placeholder="Watch the sermon") }}
+                {{ field(form.cta_url, label="Button link", maxlength=500, autocomplete="off", placeholder="https://", type="url") }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" name="action" value="save" class="btn btn-admin-gold"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> {{ 'Save changes' if campaign else 'Save draft' }}</button>
+            <button type="submit" name="action" value="preview" class="btn btn-admin-quiet nl-nojs-preview"><i class="fa-solid fa-eye" aria-hidden="true"></i> Update preview</button>
+            <a href="{{ url_for('admin.newsletter_detail', campaign_id=campaign.id) if campaign else url_for('admin.newsletter_subscribers_list') }}" class="btn btn-admin-quiet">Cancel</a>
+            <span class="form-actions-note">You'll review it and can send a test before it goes out.</span>
+        </div>
+    </form>
+
+    <section class="panel nl-preview" aria-labelledby="nlPreviewTitle">
+        <div class="panel-head">
+            <h2 class="panel-title" id="nlPreviewTitle">Email preview</h2>
+            <span class="nl-preview-state" id="previewState" aria-live="polite"></span>
+        </div>
+        <div class="nl-preview-frame">
+            <iframe id="previewFrame" title="Email preview" sandbox="" srcdoc="{{ preview_html }}"></iframe>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{{ url_for('static', filename='js/admin_newsletter.js') }}"></script>{% endblock %}

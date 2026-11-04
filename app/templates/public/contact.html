@@ -1,17 +1,17 @@
 {% extends "base.html" %}
+{% from "public/_page_header.html" import page_header %}
 
 {% block title %}Contact Us - Triumphant Assemblies of God (TAG){% endblock %}
+{% block page_banner_image %}img/pages/contact.jpg{% endblock %}
 {% block meta_description %}Contact Triumphant Assemblies of God at {{ church_info.address }}. Get directions, service times, or send us a message.{% endblock %}
 
 {% block content %}
 
 <!-- Page Header -->
-<section class="page-header bg-blue-gradient">
-    <div class="container">
+{% call page_header(self.page_banner_image()) %}
         <h1>Contact Us</h1>
-        <p class="lead">We'd love to hear from you. Get in touch with us today!</p>
-    </div>
-</section>
+        <p class="lead">Visit, call, write, or ask us to pray with you</p>
+{% endcall %}
 
 
 <!-- =============================================
@@ -19,15 +19,15 @@
 ============================================= -->
 <section id="contact">
   <div class="container">
-    <div class="text-center mb-5 reveal">
-      <h2 class="section-title">Get in <span class="gold">Touch</span></h2>
-      <p class="text-muted mx-auto" style="max-width:500px">We'd love to hear from you. Reach out for enquiries, counselling requests, or to plan your visit.</p>
+    <div class="section-head">
+      <h2 class="display-heading">Get in touch</h2>
+      <p>Reach out for enquiries, counselling requests, or to plan your visit. We read every message.</p>
     </div>
     <div class="row g-4">
       <!-- Contact Info -->
       <div class="col-lg-5 reveal-left">
         <div class="contact-info-card">
-          <h4 style="font-family:var(--font-display); color:white; margin-bottom:28px">Contact Information</h4>
+          <h3 class="card-heading">Contact information</h3>
           <div class="contact-item">
             <div class="contact-item-icon"><i class="fa-solid fa-location-dot"></i></div>
             <div class="contact-item-text">
@@ -42,14 +42,21 @@
             <div class="contact-item-icon"><i class="fa-solid fa-phone"></i></div>
             <div class="contact-item-text">
               <h6>Phone</h6>
-              <p>+233 50 111 6130<br /></p>
+              <p><a href="tel:{{ church_info.phone|replace(' ', '') }}">{{ church_info.phone }}</a></p>
             </div>
           </div>
           <div class="contact-item">
             <div class="contact-item-icon"><i class="fa-solid fa-envelope"></i></div>
             <div class="contact-item-text">
               <h6>Email</h6>
-              <p>triumphantag@gmail.com<br /></p>
+              <p><a href="mailto:{{ church_info.email }}">{{ church_info.email }}</a></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa-solid fa-church"></i></div>
+            <div class="contact-item-text">
+              <h6>Sunday Service</h6>
+              <p>Joint Service: 7:00 – 10:30 AM<br />Weeknight meetings Monday to Thursday, 7:00 PM</p>
             </div>
           </div>
           <div class="contact-item">
@@ -60,7 +67,7 @@
             </div>
           </div>
           <hr style="border-color:rgba(255,255,255,0.15);" />
-          <h6 style="color:var(--gold-light); font-size:0.8rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px">Follow Us</h6>
+          <h4 class="follow-label">Follow us</h4>
           <div class="social-row">
             <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Facebook">
                 <i class="fa-brands fa-facebook-f"></i>
@@ -83,7 +90,7 @@
       <!-- Contact Form -->
       <div class="col-lg-7 reveal-right">
         <div class="contact-form-card">
-          <h4 style="font-family:var(--font-display); color:var(--royal-blue); margin-bottom:24px">Send Us a Message</h4>
+          <h3 class="card-heading">Send us a message</h3>
           <form id="contactForm" action="/contact" method="POST" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="row g-3">
@@ -120,7 +127,7 @@
                 <span class="field-error" id="contactMessageError"></span>
               </div>
               <div class="col-12">
-                <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer; font-size:0.95rem">
+                <button type="submit" class="btn-primary-gold">
                   <i class="fa-solid fa-paper-plane"></i> Send Message
                 </button>
               </div>
@@ -137,11 +144,10 @@
 ============================================= -->
 <section id="prayer">
   <div class="container">
-    <div class="row align-items-center g-5">
+    <div class="row align-items-center g-4 g-lg-5">
       <div class="col-lg-5 reveal-left">
-        <h3 style="font-size: 2.6rem;">Submit a <span class="text-gold">Prayer Request</span></h3>
-        <div class="section-divider"></div>
-        <p class="text-muted mb-4">Our prayer team intercedes faithfully for every need shared with us. Nothing is too big or too small for God. Share your heart we stand with you.</p>
+        <h2 class="display-heading">Let us pray with you</h2>
+        <p class="text-muted mb-4">Our prayer team intercedes faithfully for every need shared with us. Nothing is too big or too small for God. Share your heart; we stand with you.</p>
         <div class="d-flex align-items-start gap-3 mb-3">
           <div class="ministry-icon" style="width:48px;height:48px;min-width:48px;font-size:1.2rem">
             <i class="fa-solid fa-users"></i>
@@ -197,7 +203,7 @@
                 <span class="field-error" id="prayerMessageError" style="color:#ff9f9f"></span>
               </div>
               <div class="col-12">
-                <button type="submit" class="btn-primary-gold" style="border:none; cursor:pointer; font-size:1rem">
+                <button type="submit" class="btn-primary-gold">
                   <i class="fa-solid fa-paper-plane"></i> Submit Prayer Request
                 </button>
               </div>
@@ -212,12 +218,17 @@
 <!-- Map Section -->
 <section class="map-section" id="map-section">
     <div class="container-fluid p-0">
-        <h2 class="section-title text-center mb-4">Find Us On <span class="text-gold">The Map</span></h2>
+        <div class="container">
+          <div class="section-head">
+            <h2 class="display-heading">Find us</h2>
+            <p>{{ church_info.address }}.{% if church_info.digital_address %} Digital address {{ church_info.digital_address }}.{% endif %}</p>
+          </div>
+        </div>
         <div class="map-container">
-            <iframe src="https://maps.google.com/maps?q={{ 'Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana' | urlencode }}&output=embed" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe title="Map showing Triumphant Assemblies of God, Dansoman" src="https://maps.google.com/maps?q={{ 'Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana' | urlencode }}&output=embed" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
         <div class="text-center mt-4">
-            <button type="button" id="getDirectionsBtn" class="btn-primary-gold" style="border:none; cursor:pointer;">
+            <button type="button" id="getDirectionsBtn" class="btn-primary-gold">
                 <i class="fa-solid fa-diamond-turn-right"></i> Get Directions From My Location
             </button>
         </div>
@@ -226,82 +237,31 @@
 
 
 <!-- Additional Contact Options -->
-<section class="additional-contact bg-light">
+<section class="additional-contact" aria-labelledby="channels-title">
     <div class="container">
-        <div class="section-title">
-            <h2>Other Ways to Connect</h2>
-            <p class="section-subtitle">Stay connected with TAG through multiple channels</p>
+        <div class="section-head">
+            <h2 class="display-heading" id="channels-title">Other ways to connect</h2>
         </div>
-
-        <div class="row">
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="contact-option">
-                    <div class="option-icon">
-                        <i class="fab fa-whatsapp fa-3x"></i>
-                    </div>
-                    <h5>WhatsApp</h5>
-                    <p>Chat with us on WhatsApp for quick responses</p>
-                    <a href="https://wa.me/233501116130" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-whatsapp"></i> Message Us
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="contact-option">
-                    <div class="option-icon">
-                        <i class="fab fa-facebook fa-3x"></i>
-                    </div>
-                    <h5>Facebook</h5>
-                    <p>Follow us on Facebook for updates and news</p>
-                    <a href="https://facebook.com" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-facebook"></i> Follow Us
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="contact-option">
-                    <div class="option-icon">
-                        <i class="fab fa-youtube fa-3x"></i>
-                    </div>
-                    <h5>YouTube</h5>
-                    <p>Subscribe to our channel for sermons and videos</p>
-                    <a href="https://youtube.com" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-youtube"></i> Subscribe
-                    </a>
-                </div>
-            </div>
-        </div>
+        <ul class="channel-list">
+            <li>
+                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                <div><h3>WhatsApp</h3><p>Chat with us for quick responses.</p></div>
+                <a href="https://wa.me/233501116130" class="text-link" target="_blank" rel="noopener noreferrer">Message us</a>
+            </li>
+            <li>
+                <i class="fab fa-facebook" aria-hidden="true"></i>
+                <div><h3>Facebook</h3><p>Updates and church news.</p></div>
+                <a href="https://facebook.com" class="text-link" target="_blank" rel="noopener noreferrer">Follow us</a>
+            </li>
+            <li>
+                <i class="fab fa-youtube" aria-hidden="true"></i>
+                <div><h3>YouTube</h3><p>Sermons and service videos.</p></div>
+                <a href="https://youtube.com" class="text-link" target="_blank" rel="noopener noreferrer">Subscribe</a>
+            </li>
+        </ul>
     </div>
 </section>
 
-<script>
-document.getElementById('planVisitBtn')?.addEventListener('click', () => {
-    document.getElementById('contactSubject').value = 'visit';
-    document.getElementById('map-section')?.scrollIntoView({ behavior: 'smooth' });
-});
-
-document.getElementById('getDirectionsBtn')?.addEventListener('click', () => {
-    const destination = encodeURIComponent('Triumphant Assemblies of God Ghana, Zuman, Accra, Ghana');
-    const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
-
-    if (!navigator.geolocation) {
-        window.open(fallbackUrl, '_blank');
-        return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const origin = `${position.coords.latitude},${position.coords.longitude}`;
-            window.open(
-                `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`,
-                '_blank'
-            );
-        },
-        () => window.open(fallbackUrl, '_blank')
-    );
-});
-</script>
+<!-- Plan-your-visit and Get-directions buttons are wired in static/js/main.js: initializeContactPageButtons(). -->
 
 {% endblock %}
